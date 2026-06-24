@@ -1,0 +1,47 @@
+{
+  "name": "jdy_get_flow_approval_comments",
+  "display_name": "查询流程审批意见",
+  "description_zh": "获取单条流程表单数据的审批意见列表",
+  "description": "Get approval comments for a single workflow form record. Returns approveCommentList[] with flowNodeName, flowAction (forward/transfer/back/close/sign_before/sign_after/sign_parallel), comment text, optional signature_url (15-day valid), and operator info. Use 'skip' for pagination (max 100 per page). Rate limit: 30/s.",
+  "params": {
+    "app_id": {
+      "type": "string",
+      "description": "应用ID"
+    },
+    "entry_id": {
+      "type": "string",
+      "description": "表单ID"
+    },
+    "data_id": {
+      "type": "string",
+      "description": "流程表单数据ID"
+    },
+    "skip": {
+      "type": "integer",
+      "description": "偏移量，每页最多100条，默认0",
+      "default": 0
+    },
+    "limit": {
+      "type": "integer",
+      "description": "每页条数，最大100，默认100",
+      "default": 100
+    }
+  },
+  "api": {
+    "url": "https://api.jiandaoyun.com/api/v1/app/{app_id}/entry/{entry_id}/data/{data_id}/approval_comments",
+    "method": "POST",
+    "headers": {
+      "Authorization": "Bearer ${conn:jiandaoyun.api_key}",
+      "Content-Type": "application/json"
+    }
+  },
+  "requires_connections": [
+    {
+      "category": "jiandaoyun",
+      "fields": [
+        "api_key"
+      ],
+      "required": true
+    }
+  ]
+}
