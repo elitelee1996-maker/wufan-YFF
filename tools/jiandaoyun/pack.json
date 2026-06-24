@@ -1,0 +1,5 @@
+{
+  "name": "jiandaoyun",
+  "display_name": "简道云API",
+  "description": "简道云 Open API v5 完整工具集。覆盖应用接口、表单字段接口、数据增删改查、文件上传、流程操作、通讯录管理（成员/部门/角色/企业互联）。"
+}
