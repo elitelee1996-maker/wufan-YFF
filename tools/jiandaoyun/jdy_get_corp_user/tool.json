@@ -1,0 +1,29 @@
+{
+  "name": "jdy_get_corp_user",
+  "display_name": "获取成员信息",
+  "description_zh": "根据 username 获取指定成员的名称和部门编号",
+  "description": "Get a member's info by username. Returns user object with username, name, departments (dept_no list), type (0=regular, 2=external), status (0=unconfirmed, 1=joined), integrate_id. Rate limit: 30/s.",
+  "params": {
+    "username": {
+      "type": "string",
+      "description": "成员编号（username）"
+    }
+  },
+  "api": {
+    "url": "https://api.jiandaoyun.com/api/v5/corp/user/get",
+    "method": "POST",
+    "headers": {
+      "Authorization": "Bearer ${conn:jiandaoyun.api_key}",
+      "Content-Type": "application/json"
+    }
+  },
+  "requires_connections": [
+    {
+      "category": "jiandaoyun",
+      "fields": [
+        "api_key"
+      ],
+      "required": true
+    }
+  ]
+}
