@@ -1,0 +1,40 @@
+{
+  "name": "jdy_list_forms",
+  "display_name": "查询表单列表",
+  "description": "List all forms under a specific app. Returns forms[] with name, app_id, entry_id. Rate limit: 30/s.",
+  "description_zh": "获取指定应用下的所有表单",
+  "params": {
+    "app_id": {
+      "type": "string",
+      "required": false,
+      "description": "App ID (应用ID)"
+    },
+    "limit": {
+      "type": "integer",
+      "required": false,
+      "description": "Page size, 1-100 (default 100)"
+    },
+    "skip": {
+      "type": "integer",
+      "required": false,
+      "description": "Skip count for pagination (default 0)"
+    }
+  },
+  "api": {
+    "url": "https://api.jiandaoyun.com/api/v5/app/entry/list",
+    "method": "POST",
+    "headers": {
+      "Authorization": "Bearer ${conn:jiandaoyun.api_key}",
+      "Content-Type": "application/json"
+    }
+  },
+  "requires_connections": [
+    {
+      "category": "jiandaoyun",
+      "fields": [
+        "api_key"
+      ],
+      "required": true
+    }
+  ]
+}
