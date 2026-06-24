@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>三个圈层 · 房产分析年度论文</title>
+
+<!-- ╔══════════════════════════════════════════════════════════════════════╗
+     ║ ⚠⚠⚠ 完全自包含 HTML · 严禁数据外置 (D 死路) ⚠⚠⚠                 ║
+     ╠══════════════════════════════════════════════════════════════════════╣
+     ║ 所有业务数据 inline 在 <script>const D = {...}</script> 里            ║
+     ║ ❌ 严禁 fetch("data.json") / <script src="data.js">                  ║
+     ║ ❌ 严禁产物目录里出现 data.json / data.js 等业务数据文件             ║
+     ║ 原因: 用户双击 HTML 用 file:// 打开, 浏览器禁止跨文件 fetch (CORS)   ║
+     ║       外置 = 双击全屏空白 = 用户觉得"做的不能用"                       ║
+     ║ ✅ 唯一允许的"外部资源" = ECharts / Three.js / 字体的 https:// CDN    ║
+     ╚══════════════════════════════════════════════════════════════════════╝ -->
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     Blue Consulting · Editorial 样板 · 房产分析数据
+     ════════════════════════════════════════════════════════════════════════
+     ▶ Agent 你应该:
+        1. read 整个文件, 重点看 6 节布局如何完全不同
+        2. 抄 <style> 段全部 CSS (含 dropcap + kicker 横线 + 极薄 hairline)
+        3. 抄章节模板 (每节都不一样)
+        4. 把数据替成你的业务 (数据**必须 inline**, 见上方警告)
+        5. ECharts 全部用钢蓝单色 + 衬线 axis 标签
+        6. 一次 write 整页 (路径 A) 或一次 execute_python 内构造 (路径 B), 不要分段追加
+     ▶ 哲学: 跟 graphic-press 完全相反 — 极致克制, 学术期刊感
+     ════════════════════════════════════════════════════════════════════════ -->
+
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Manrope:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+/* ════════════════════════════════════════════════════════════════════════
+   ⚡⚡⚡ 灵魂背景动效 · 三件套必抄清单 (Agent 抄 CSS 时第一眼必读)
+   ──────────────────────────────────────────────────────────────────────
+   本文件的灵魂动效是 3D 深蓝点云球, 由 4 个位置组成, 缺一会出 bug:
+   ① <head> 内的 three.js CDN <script> 一行
+   ② <body> 开头的 <div id="bg-orb"></div> 一行
+   ③ 本 <style> 段下方的 #bg-orb 跟 .thesis-header, .page z-index CSS 块
+      (⚡ 90% Agent 漏的就是这里!)
+   ④ </script> 之前的 mountPointCloudOrb IIFE 整段 (~160 行)
+   抄完后请 grep "#bg-orb", 应当至少出现 3 次 (CSS / IIFE / HTML), 少了就是漏了.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════════════
+   BLUE CONSULTING · 主题 tokens (跨 editorial / dashboard 通用)
+   ════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* 灵魂底色: 近黑深蓝 #0A1128 (带 5% 蓝调) */
+  --bg-page:      #0A1128;
+  --bg-soft:      rgba(14, 24, 50, 0.55);    /* 抬高一层 */
+  --bg-card:      rgba(15, 23, 42, 0.40);    /* 半透卡片 */
+  --bg-elevated:  rgba(30, 41, 59, 0.55);
+
+  /* 文本 (slate 系) */
+  --text-primary:   #F4F4F5;
+  --text-secondary: #CBD5E1;
+  --text-muted:     #94A3B8;
+  --text-faint:     #6B7488;
+
+  /* 唯一钢蓝 spot (灵魂!) */
+  --accent:      #3A6EA5;
+  --accent-hi:   #5689C2;
+  --accent-soft: rgba(58, 110, 165, 0.30);
+  --accent-faint: rgba(58, 110, 165, 0.12);
+
+  /* 极薄 hairline (灵魂之一) */
+  --hairline:        rgba(244, 244, 245, 0.08);
+  --hairline-subtle: rgba(244, 244, 245, 0.05);
+  --hairline-strong: rgba(244, 244, 245, 0.20);
+
+  /* 语义色 (depth 版) */
+  --success: #34D399;
+  --danger:  #F87171;
+  --warning: #FBBF24;
+
+  /* 极小圆角 (跟 graphic-press 999px 哲学相反) */
+  --radius-sm:   3px;
+  --radius-md:   4px;
+  --radius-card: 6px;
+  --radius-pill: 999px;
+
+  /* 字体 — Cormorant 衬线 + Manrope 副 + Noto Serif SC 中文 */
+  --font-serif:    'Cormorant Garamond', 'Noto Serif SC', serif;
+  --font-cn-serif: 'Noto Serif SC', 'Cormorant Garamond', serif;
+  --font-sans:     'Manrope', 'Noto Sans SC', sans-serif;
+  --font-cn-sans:  'Noto Sans SC', 'Manrope', sans-serif;
+  --font-mono:     'Space Mono', 'JetBrains Mono', monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  font-family: var(--font-cn-sans); font-weight: 300;
+  color: var(--text-primary); background: var(--bg-page);
+  -webkit-font-smoothing: antialiased; line-height: 1.7;
+  overflow-x: hidden;
+}
+
+/* 噪点纹理 (极淡, 增加纸感) */
+body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    radial-gradient(circle at 30% 20%, rgba(58, 110, 165, 0.08), transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(58, 110, 165, 0.04), transparent 60%);
+}
+
+/* ─── Sticky 顶 nav (期刊感) ─── */
+.thesis-header {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 24px clamp(28px, 5vw, 56px);
+  border-bottom: 0.5px solid var(--hairline);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  background: rgba(10, 17, 40, 0.55);
+}
+.brand {
+  font-family: var(--font-serif); font-style: italic;
+  font-size: 14px; color: var(--accent-hi); font-weight: 500;
+  letter-spacing: 0.04em;
+}
+.header-meta {
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--text-faint); letter-spacing: 0.12em; text-transform: uppercase;
+}
+@media (max-width: 760px) { .header-meta { display: none; } }
+
+/* 主容器 (单栏 1320px) */
+.page {
+  max-width: 1320px; margin: 0 auto;
+  padding: clamp(64px, 8vw, 112px) clamp(28px, 5vw, 64px) clamp(80px, 10vw, 140px);
+  position: relative; z-index: 2;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   Hero (灵魂锚点: kicker + 大字衬线 + dropcap 引言)
+   ════════════════════════════════════════════════════════════════════════ */
+.hero {
+  padding-bottom: clamp(48px, 6vw, 80px);
+  border-bottom: 0.5px solid var(--hairline);
+  margin-bottom: clamp(64px, 8vw, 112px);
+}
+.kicker {
+  font-family: var(--font-serif); font-style: italic;
+  font-size: 14px; font-weight: 500; letter-spacing: 0.08em;
+  color: var(--accent-hi); margin-bottom: 28px;
+  display: inline-flex; align-items: center; gap: 14px;
+}
+.kicker:lang(zh) { font-family: var(--font-cn-sans); font-style: normal; letter-spacing: 0.04em; font-weight: 400; }
+.kicker::before {
+  content: ''; display: inline-block;
+  width: 36px; height: 1px; background: var(--accent);
+}
+.hero-title {
+  font-family: var(--font-cn-serif); font-weight: 600;
+  font-size: clamp(2.2rem, 5vw, 4rem); line-height: 1.16;
+  letter-spacing: 0.01em; color: var(--text-primary);
+  margin-bottom: 32px; max-width: 22ch;
+}
+.hero-title em {
+  font-style: italic; color: var(--accent-hi);
+  font-weight: 500; font-family: var(--font-serif);
+}
+.hero-subtitle {
+  font-family: var(--font-cn-serif); font-style: normal;
+  font-size: clamp(1.1rem, 1.6vw, 1.5rem); font-weight: 400;
+  color: var(--text-secondary); line-height: 1.7;
+  max-width: 64ch; margin-bottom: 40px;
+}
+.hero-lead {
+  font-family: var(--font-cn-sans); font-size: 1.0625rem;
+  line-height: 1.85; color: var(--text-secondary);
+  max-width: 64ch; font-weight: 300; letter-spacing: 0.015em;
+}
+.hero-lead strong { color: var(--accent-hi); font-weight: 500; }
+
+/* ⭐ Dropcap (灵魂招牌 — Lead 首字派生为钢蓝衬线大字) */
+.hero-lead::first-letter {
+  float: left;
+  font-family: var(--font-serif);
+  font-weight: 600; font-size: 4em; line-height: 0.84;
+  color: var(--accent-hi);
+  padding-right: 0.1em; margin: 0.08em 0.32em 0 0;
+}
+
+/* Hero 顶部 meta 小条 (mono UPPERCASE) */
+.meta-row {
+  display: flex; gap: 32px; margin-top: 36px;
+  padding-top: 28px; border-top: 0.5px solid var(--hairline);
+  font-family: var(--font-mono); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted);
+}
+.meta-row strong { color: var(--accent-hi); font-weight: 700; margin-left: 6px; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   Section 公用 (kicker 横线 + 衬线大标)
+   ════════════════════════════════════════════════════════════════════════ */
+.section { margin-top: clamp(80px, 10vw, 130px); }
+.section-num {
+  font-family: var(--font-mono); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.16em;
+  color: var(--accent); font-weight: 700;
+  display: inline-block; margin-bottom: 16px;
+}
+.section-title {
+  font-family: var(--font-cn-serif); font-weight: 600;
+  font-size: clamp(1.7rem, 3vw, 2.4rem); line-height: 1.25;
+  letter-spacing: 0.01em; color: var(--text-primary);
+  max-width: 28ch; margin-bottom: 14px;
+}
+.section-title em {
+  font-style: italic; color: var(--accent-hi);
+  font-family: var(--font-serif); font-weight: 500;
+}
+.section-sub {
+  font-family: var(--font-cn-serif);
+  font-size: 16px; line-height: 1.7; color: var(--text-secondary);
+  max-width: 64ch; margin-bottom: 32px; font-weight: 400;
+}
+.prose {
+  font-size: 15px; line-height: 1.85; color: var(--text-secondary);
+  max-width: 64ch; margin-bottom: 20px; font-weight: 300;
+}
+.prose strong { color: var(--accent-hi); font-weight: 500; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   §01 · 3 列极薄 hairline 大数字 (衬线钢蓝, 极致克制)
+   ════════════════════════════════════════════════════════════════════════ */
+.metric-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 0; margin: 32px 0;
+  border-top: 0.5px solid var(--hairline);
+  border-bottom: 0.5px solid var(--hairline);
+}
+@media (max-width: 880px) { .metric-grid { grid-template-columns: 1fr; } }
+.metric-cell {
+  padding: 32px 28px;
+  border-right: 0.5px solid var(--hairline);
+}
+.metric-cell:last-child { border-right: 0; }
+.metric-cell:nth-child(odd) { background: rgba(58, 110, 165, 0.03); }
+.metric-label {
+  font-family: var(--font-mono); font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.14em;
+  color: var(--text-muted); margin-bottom: 14px;
+  font-weight: 700;
+}
+.metric-value {
+  font-family: var(--font-serif); font-weight: 500;
+  font-size: clamp(2.4rem, 4vw, 3.4rem); line-height: 1;
+  color: var(--accent-hi); margin-bottom: 12px;
+  font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
+}
+.metric-value-unit { font-size: 0.45em; opacity: 0.7; margin-left: 4px; }
+.metric-meta {
+  font-size: 13px; color: var(--text-secondary); line-height: 1.6;
+  font-family: var(--font-cn-sans); font-weight: 300;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   §02 · Hairline 数字列表 (mono 编号 + 衬线大数字, 期刊数据表感)
+   ════════════════════════════════════════════════════════════════════════ */
+.data-list {
+  margin: 28px 0;
+  border-top: 0.5px solid var(--hairline-strong);
+}
+.data-row {
+  display: grid; grid-template-columns: 48px 1fr auto auto;
+  align-items: center; gap: 24px;
+  padding: 18px 0;
+  border-bottom: 0.5px solid var(--hairline);
+  transition: background 0.2s;
+}
+.data-row:hover { background: rgba(58, 110, 165, 0.04); }
+.data-no {
+  font-family: var(--font-mono); font-size: 11px;
+  font-weight: 700; letter-spacing: 0.08em;
+  color: var(--accent);
+}
+.data-name {
+  font-family: var(--font-cn-serif); font-weight: 500;
+  font-size: 15px; color: var(--text-primary);
+}
+.data-tag {
+  font-family: var(--font-mono); font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-muted); margin-left: 10px; font-weight: 400;
+}
+.data-bar {
+  width: 200px; height: 1px; background: var(--hairline);
+  position: relative;
+}
+.data-bar::after {
+  content: ''; position: absolute; left: 0; top: 0;
+  height: 1px; background: var(--accent-hi);
+  width: var(--w, 0%);
+}
+.data-value {
+  font-family: var(--font-serif); font-weight: 500;
+  font-size: 18px; color: var(--accent-hi);
+  font-variant-numeric: tabular-nums; min-width: 80px; text-align: right;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   §03 · 超大斜体引号 (Cormorant 衬线灵魂)
+   ════════════════════════════════════════════════════════════════════════ */
+.thesis-quote {
+  position: relative; margin: 48px 0;
+  padding: 60px 0 50px;
+  border-top: 0.5px solid var(--hairline);
+  border-bottom: 0.5px solid var(--hairline);
+}
+.thesis-quote::before {
+  content: '"'; position: absolute;
+  top: -50px; left: -20px;
+  font-family: var(--font-serif); font-weight: 600; font-style: italic;
+  font-size: 240px; line-height: 1; color: var(--accent);
+  opacity: 0.5; pointer-events: none;
+}
+.quote-text {
+  font-family: var(--font-cn-serif); font-style: normal; font-weight: 500;
+  font-size: clamp(1.5rem, 2.8vw, 2.2rem); line-height: 1.5;
+  color: var(--text-primary); max-width: 38ch;
+  margin: 0 auto 22px; text-align: center; position: relative; z-index: 1;
+}
+.quote-text em {
+  font-style: italic; color: var(--accent-hi);
+  font-family: var(--font-serif); font-weight: 500;
+}
+.quote-attr {
+  font-family: var(--font-serif); font-style: italic;
+  font-size: 13px; color: var(--text-muted);
+  text-align: center; letter-spacing: 0.04em;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   §04 · Chart 网格 (1 大 + 2 小, 钢蓝单色 + 极薄)
+   ════════════════════════════════════════════════════════════════════════ */
+.chart-card {
+  background: var(--bg-card);
+  border: 0.5px solid var(--hairline);
+  border-radius: var(--radius-card);
+  padding: 28px; backdrop-filter: blur(8px);
+}
+.chart-hd { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 18px; }
+.chart-title {
+  font-family: var(--font-cn-serif); font-weight: 500; font-size: 15px;
+  color: var(--text-primary);
+}
+.chart-meta {
+  font-family: var(--font-mono); font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted);
+  font-weight: 700;
+}
+.chart-host { width: 100%; height: 340px; }
+.chart-grid-12 { display: grid; grid-template-columns: 2fr 1fr; gap: 18px; margin: 24px 0; }
+@media (max-width: 880px) { .chart-grid-12 { grid-template-columns: 1fr; } }
+.chart-grid-22 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 24px 0; }
+@media (max-width: 880px) { .chart-grid-22 { grid-template-columns: 1fr; } }
+
+/* ════════════════════════════════════════════════════════════════════════
+   §05 · 4 列研究节点 (极简卡 + 编号 + 衬线大数字)
+   ════════════════════════════════════════════════════════════════════════ */
+.node-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin: 32px 0;
+}
+@media (max-width: 880px) { .node-grid { grid-template-columns: repeat(2, 1fr); } }
+.node {
+  background: var(--bg-card);
+  border: 0.5px solid var(--hairline);
+  border-radius: var(--radius-card);
+  padding: 28px 24px;
+  position: relative; transition: all 0.3s;
+}
+.node:hover {
+  border-color: var(--accent-soft);
+  background: rgba(58, 110, 165, 0.04);
+}
+.node-num {
+  font-family: var(--font-mono); font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--accent); margin-bottom: 18px; font-weight: 700;
+}
+.node-value {
+  font-family: var(--font-serif); font-weight: 500;
+  font-size: 2.4rem; line-height: 1;
+  color: var(--accent-hi); margin-bottom: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.node-title {
+  font-family: var(--font-cn-serif); font-weight: 500;
+  font-size: 14px; color: var(--text-primary); margin-bottom: 6px;
+}
+.node-meta {
+  font-size: 12px; color: var(--text-muted); line-height: 1.6;
+  font-family: var(--font-cn-sans); font-weight: 300;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   §06 · 白底/亮卡反差结语节 (深蓝里的明亮反差, 最强 ending)
+   ════════════════════════════════════════════════════════════════════════ */
+.coda-section {
+  background: #F4F4F5; color: #1a1918;
+  padding: clamp(48px, 7vw, 80px) clamp(28px, 4vw, 52px);
+  border-radius: var(--radius-card);
+  margin-top: clamp(80px, 10vw, 130px);
+  position: relative; overflow: hidden;
+  border: 0.5px solid var(--accent-soft);
+}
+.coda-section::before {
+  content: ''; position: absolute; top: 0; left: 0;
+  width: 100%; height: 3px; background: var(--accent);
+}
+.coda-section .section-num { color: var(--accent); }
+.coda-section .section-title {
+  color: #1a1918; font-family: var(--font-cn-serif); max-width: 32ch;
+}
+.coda-section .section-title em {
+  color: var(--accent); font-family: var(--font-serif); font-style: italic;
+}
+.coda-section .section-sub { color: #4a4845; }
+
+/* 触发器卡 grid (在白底里) */
+.thesis-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;
+  margin-top: 36px;
+  border-top: 0.5px solid rgba(58, 110, 165, 0.15);
+}
+@media (max-width: 880px) { .thesis-grid { grid-template-columns: 1fr; } }
+.thesis-item {
+  padding: 28px 24px;
+  border-right: 0.5px solid rgba(58, 110, 165, 0.15);
+  border-bottom: 0.5px solid rgba(58, 110, 165, 0.15);
+}
+.thesis-item:nth-child(3n) { border-right: 0; }
+.thesis-item-num {
+  font-family: var(--font-mono); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--accent); margin-bottom: 14px; font-weight: 700;
+}
+.thesis-item-title {
+  font-family: var(--font-cn-serif); font-weight: 600;
+  font-size: 17px; line-height: 1.4; color: #1a1918;
+  margin-bottom: 8px;
+}
+.thesis-item-desc {
+  font-size: 13px; line-height: 1.7; color: #4a4845;
+  font-family: var(--font-cn-sans); font-weight: 400;
+}
+.thesis-item-desc strong { color: var(--accent); font-weight: 600; }
+
+.coda-closing {
+  margin-top: 40px; padding: 32px 0;
+  border-top: 0.5px solid rgba(58, 110, 165, 0.15);
+  font-family: var(--font-cn-serif); font-style: normal; font-weight: 500;
+  font-size: clamp(1.3rem, 2.2vw, 1.7rem); line-height: 1.5;
+  color: #1a1918; text-align: center;
+}
+.coda-closing em {
+  font-style: italic; color: var(--accent);
+  font-family: var(--font-serif); font-weight: 500;
+}
+
+/* ─── Footer ─── */
+.footer {
+  margin-top: 60px; padding-top: 24px;
+  border-top: 0.5px solid var(--hairline);
+  display: flex; justify-content: space-between;
+  font-family: var(--font-mono); font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted);
+}
+
+/* ╔════════════════════════════════════════════════════════════════════════╗
+   ║ ⚡⚡⚡ 灵魂三件套之 ③ 必抄 CSS · #bg-orb (90% Agent 都在这里翻车!)      ║
+   ║ ──────────────────────────────────────────────────────────────────── ║
+   ║ ❗ 这是**背景层**, 不是首屏 hero 主视觉!                                  ║
+   ║ - bg-orb 永远在最底层呼吸 (z-index 0, opacity 0.38, fixed 全屏)         ║
+   ║ - 上面叠 .thesis-header + .page (你的 Hero / 章节 / 段落 / 图表)        ║
+   ║ - 打开页面应该看到: 正常 Editorial + 背景里若隐若现一个点云球             ║
+   ║ - 如果打开看到只有一个大球占满屏幕 = 你**漏抄了下面这整块 CSS**!         ║
+   ╚════════════════════════════════════════════════════════════════════════╝ */
+#bg-orb {
+  position: fixed; top: 0; right: 0; bottom: 0; left: 0;
+  z-index: 0; pointer-events: none; opacity: 0.38;
+  mix-blend-mode: screen;
+}
+/* ❗ 这一行**绝不能漏**! 漏了主内容就被 fixed 的 bg-orb 盖住 = 全屏空白只剩一个球 */
+.thesis-header, .page { position: relative; z-index: 1; }
+/* ╔════════════════════════════════════════════════════════════════════════╗
+   ║ ⚡⚡⚡ 守门员检查 · 写到这里 STOP, 自检上面 4 行 #bg-orb CSS 抄了没?    ║
+   ║ 抄了 → 继续 </style>; 没抄 → 立刻回上面把它补齐, 再下 </style>        ║
+   ╚════════════════════════════════════════════════════════════════════════╝ */
+</style>
+</head>
+<body>
+
+<!-- ⚡ 灵魂背景动效: 深蓝点云球 (WebGL · midnight-thesis 遗产)
+     ❗ 这是 BG 背景层 (z-index:0), 不是首屏 hero 主视觉!
+     必须直接挂在 body 上, 跟 .thesis-header / .page 主容器同级 + 在它们之前 -->
+<div id="bg-orb"></div>
+
+<!-- ════════════ Sticky Header (期刊感) ════════════ -->
+<header class="thesis-header">
+  <div class="brand">城市观察 · Urban Observatory</div>
+  <div class="header-meta">2026 年度论文 · 100 套样本研究</div>
+</header>
+
+<main class="page">
+
+  <!-- ════════════════════════════════════════════════════════════════
+       Hero (kicker 横线 + 大字衬线 + dropcap 引言)
+       ════════════════════════════════════════════════════════════════ -->
+  <section class="hero">
+    <div class="kicker">年度论文 · 城市观察 · 房产分析</div>
+    <h1 class="hero-title">三个圈层, 一座城市的 <em>分层折叠</em></h1>
+    <p class="hero-subtitle">面积、装修、朝向看似独立, 实则都是圈层选择的投影. 一份 100 套样本的微观研究, 揭示城市房产已完成结构性分化.</p>
+    <p class="hero-lead">本研究基于 100 套房产样本的微观分析, 发现城市房产市场已完成不可逆的<strong>三层结构</strong>: 普通小区 33 万均价层、高档小区 68 万改善层、豪华小区 153 万圈层层. 三层之间不仅是价格梯度, 是<strong>客户画像、产品定义、销售逻辑</strong>的完全分化. 通常被认为"独立变量"的<strong>朝向</strong> (南向溢价 199%) 跟<strong>装修</strong> (毛坯到豪装 5.7 倍), 实际上是圈层选择的"投影变量" — 它们在三层之间分配的方式, 本质就是城市房产市场分层的密码.</p>
+
+    <div class="meta-row">
+      <span>样本 <strong>100 套</strong></span>
+      <span>数据期间 <strong>2009–2022</strong></span>
+      <span>价格跨度 <strong>9.1 倍</strong></span>
+      <span>出品 <strong>城市观察</strong></span>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       §01 · 三圈层 — 3 列极薄 hairline 大数字 (跟 graphic-press 整张胶囊形成最大反差)
+       ════════════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <span class="section-num">01 · 三个圈层</span>
+    <h2 class="section-title">三个小区类型, 不是三档价格, <em>是三种游戏</em></h2>
+    <p class="section-sub">普通 / 高档 / 豪华 — 名字像递进, 数据是断层. 每层的天花板, 是下一层的地板.</p>
+
+    <div class="metric-grid">
+      <div class="metric-cell">
+        <div class="metric-label">普通小区</div>
+        <div class="metric-value">¥33<span class="metric-value-unit">万</span></div>
+        <div class="metric-meta">32 套 · 单价 4,238 元/㎡ · 毛坯简装为主</div>
+      </div>
+      <div class="metric-cell">
+        <div class="metric-label">高档小区</div>
+        <div class="metric-value">¥68<span class="metric-value-unit">万</span></div>
+        <div class="metric-meta">47 套 · 单价 5,917 元/㎡ · 精装为主</div>
+      </div>
+      <div class="metric-cell">
+        <div class="metric-label">豪华小区</div>
+        <div class="metric-value">¥153<span class="metric-value-unit">万</span></div>
+        <div class="metric-meta">21 套 · 单价 8,869 元/㎡ · 全部豪装</div>
+      </div>
+    </div>
+
+    <p class="prose">21% 的样本贡献 <strong>47% 总市值</strong> — 豪华层的"少量高价"是真正的利润引擎, 普通/高档层的"大量低价"是市场广度. 一个产品如果用统一逻辑对待三层, 必然丢失豪华层 — 那才是利润核心.</p>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       §02 · 单价排行 — Hairline 数字列表 (mono 编号 + 衬线大数字)
+       ════════════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <span class="section-num">02 · 单价排行</span>
+    <h2 class="section-title">最贵的 6 套, <em>都长这样</em></h2>
+    <p class="section-sub">单价 TOP 6 高度集中: 全部豪华小区 + 全部南向 + 全部豪装. "圈层叠加效应"清晰可见.</p>
+
+    <div class="data-list">
+      <div class="data-row">
+        <span class="data-no">01</span>
+        <span class="data-name">H030 · 201.3㎡ · 5室<span class="data-tag">豪华</span></span>
+        <div class="data-bar" style="--w: 100%"></div>
+        <span class="data-value">¥10,432</span>
+      </div>
+      <div class="data-row">
+        <span class="data-no">02</span>
+        <span class="data-name">H012 · 198.5㎡ · 5室<span class="data-tag">豪华</span></span>
+        <div class="data-bar" style="--w: 87%"></div>
+        <span class="data-value">¥9,068</span>
+      </div>
+      <div class="data-row">
+        <span class="data-no">03</span>
+        <span class="data-name">H008 · 156.7㎡ · 4室<span class="data-tag">豪华</span></span>
+        <div class="data-bar" style="--w: 89%"></div>
+        <span class="data-value">¥9,253</span>
+      </div>
+      <div class="data-row">
+        <span class="data-no">04</span>
+        <span class="data-name">H024 · 167.9㎡ · 4室<span class="data-tag">豪华</span></span>
+        <div class="data-bar" style="--w: 87%"></div>
+        <span class="data-value">¥9,053</span>
+      </div>
+      <div class="data-row">
+        <span class="data-no">05</span>
+        <span class="data-name">H005 · 145.6㎡ · 4室<span class="data-tag">豪华</span></span>
+        <div class="data-bar" style="--w: 79%"></div>
+        <span class="data-value">¥8,242</span>
+      </div>
+      <div class="data-row">
+        <span class="data-no">06</span>
+        <span class="data-name">H018 · 176.3㎡ · 4室<span class="data-tag">豪华</span></span>
+        <div class="data-bar" style="--w: 73%"></div>
+        <span class="data-value">¥7,657</span>
+      </div>
+    </div>
+
+    <p class="prose">注意: TOP 6 单价跨度只 <strong>36%</strong>, 而圈层间普通-豪华跨度 <strong>2.1 倍</strong>. <strong>圈层间差距远大于圈层内差距</strong> — 这是房产分层结构最强的统计证据.</p>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       §03 · 反常识 · 超大斜体引号
+       ════════════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <span class="section-num">03 · 反常识发现</span>
+    <h2 class="section-title">反常识: <em>南向贵 199%, 跟采光关系不大</em></h2>
+    <p class="section-sub">朝向是采光? 不是. 朝向是开发商的定价策略 — 好朝向留给了豪华层.</p>
+
+    <p class="prose">南向 51 套均价 <strong>107.7 万</strong>, 北向 15 套均价 <strong>36 万</strong>. 199% 的溢价 — 比装修 (毛坯到豪装) 的差距 (5.7 倍) 更"贵". 直觉告诉我们贵是因为"采光好", 但数据揭示: <strong>南向房屋 80% 集中在豪华 + 高档小区</strong>, 开发商把好朝向作为高端产品的"标配", 北向被分配给普通小区做"凑数房".</p>
+
+    <div class="thesis-quote">
+      <p class="quote-text">朝向贵的不是 30 分钟的额外日照, 是开发商<em>把你跟有钱人分到了同一栋楼</em>.</p>
+      <div class="quote-attr">— 城市观察 · 首席分析师</div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       §04 · 多维交叉 — 4 chart 形态混搭 (scatter / radar / 堆叠 bar / pie)
+       ⚠ Agent 注意: 一节里用 ≥ 3 种 chart 形态 是 editorial 的硬要求 (见 playbook)
+       ════════════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <span class="section-num">04 · 多维交叉</span>
+    <h2 class="section-title">装修等级 × 单价, <em>看见叠加效应</em></h2>
+    <p class="section-sub">毛坯到豪装 5.7 倍跳跃. 但同装修不同圈层, 还有 2-3 倍差.</p>
+
+    <div class="chart-grid-12">
+      <div class="chart-card">
+        <div class="chart-hd">
+          <div class="chart-title">面积 × 单价 · <em>三圈层分色散点</em></div>
+          <div class="chart-meta">散点图 · scatter</div>
+        </div>
+        <div class="chart-host" id="chart-scatter"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-hd">
+          <div class="chart-title">朝向占比</div>
+          <div class="chart-meta">环图 · pie</div>
+        </div>
+        <div class="chart-host" id="chart-orient" style="height: 340px;"></div>
+      </div>
+    </div>
+
+    <div class="chart-grid-22">
+      <div class="chart-card">
+        <div class="chart-hd">
+          <div class="chart-title">装修 × 圈层 · <em>叠加占比</em></div>
+          <div class="chart-meta">堆叠柱状图 · stacked bar</div>
+        </div>
+        <div class="chart-host" id="chart-deco"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-hd">
+          <div class="chart-title">三圈层 · <em>6 维特征</em></div>
+          <div class="chart-meta">雷达图 · radar</div>
+        </div>
+        <div class="chart-host" id="chart-radar"></div>
+      </div>
+    </div>
+
+    <p class="prose">豪华小区 21 套 <strong>100% 豪装</strong>, 普通小区 32 套 0 豪装. 装修不是"用户自选", 是<strong>小区配给</strong> — 圈层决定了装修上限. 散点图清晰展示三圈层<em>价格带几乎无重叠</em>; 雷达图 6 维下豪华小区在<em>面积/总价/楼龄/装修</em>四维全面领先.</p>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       §05 · 时间杠杆 — 4 列研究节点 (极简卡 + 衬线大数字)
+       ════════════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <span class="section-num">05 · 时间杠杆</span>
+    <h2 class="section-title">2020 后的房子, <em>卖的不是居住, 是时间红利</em></h2>
+    <p class="section-sub">建造年份 2009-2022, 同等条件下新房均价是 10 年前老房的 2.5 倍.</p>
+
+    <div class="node-grid">
+      <div class="node">
+        <div class="node-num">2009–12 · 第一代</div>
+        <div class="node-value">¥48<span class="metric-value-unit">万</span></div>
+        <div class="node-title">城市开发初期</div>
+        <div class="node-meta">18 套 · 房龄 15 年 · 多在普通小区, 户型设计较旧</div>
+      </div>
+      <div class="node">
+        <div class="node-num">2013–16 · 第二代</div>
+        <div class="node-value">¥62<span class="metric-value-unit">万</span></div>
+        <div class="node-title">高档社区成型</div>
+        <div class="node-meta">24 套 · 房龄 11 年 · 高档小区主力, 精装率提升</div>
+      </div>
+      <div class="node">
+        <div class="node-num">2017–19 · 第三代</div>
+        <div class="node-value">¥89<span class="metric-value-unit">万</span></div>
+        <div class="node-title">装修升级带</div>
+        <div class="node-meta">31 套 · 房龄 8 年 · 改善型客户主力, 豪装比例提升</div>
+      </div>
+      <div class="node">
+        <div class="node-num">2020–22 · 第四代</div>
+        <div class="node-value">¥122<span class="metric-value-unit">万</span></div>
+        <div class="node-title">豪华层集中</div>
+        <div class="node-meta">27 套 · 房龄 5 年 · 豪华小区集中, 配套碾压</div>
+      </div>
+    </div>
+
+    <p class="prose">同样面积、朝向、装修的房子, 2020 后建成 <strong>122 万</strong>, 2009-12 建成 <strong>48 万</strong> — 2.5 倍差. 不是钢筋水泥变贵, 是<strong>城市配套、户型设计、社区品质</strong>的整体跃迁. 房龄是<strong>时代红利的指数</strong>.</p>
+
+    <div class="chart-card" style="margin-top: 28px;">
+      <div class="chart-hd">
+        <div class="chart-title">四代房屋 · <em>均价 + 单价</em>双线时序</div>
+        <div class="chart-meta">面积折线图 · area + line</div>
+      </div>
+      <div class="chart-host" id="chart-timeline" style="height: 320px;"></div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       §05-B · 深度分布 — heatmap + treemap (高级 chart 形态展示)
+       ⚠ Agent 注意: editorial 必须有 ≥ 5 种 chart 形态. 用 heatmap/treemap
+          /sankey 等替代 "再一个 bar/pie" 是必修课, 见 playbook chart 决策树
+       ════════════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <span class="section-num">05B · 深度分布</span>
+    <h2 class="section-title">朝向 × 装修, <em>另一张分层地图</em></h2>
+    <p class="section-sub">同样数据, 换种图表就能看出新故事. 热力图揭示朝向/装修的"组合分布密度", 矩形树图把圈层→户型的层级关系一眼摊开.</p>
+
+    <div class="chart-grid-22">
+      <div class="chart-card">
+        <div class="chart-hd">
+          <div class="chart-title">朝向 × 装修 · <em>分布密度</em></div>
+          <div class="chart-meta">热力图 · heatmap</div>
+        </div>
+        <div class="chart-host" id="chart-heatmap"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-hd">
+          <div class="chart-title">圈层 → 户型 · <em>层级占比</em></div>
+          <div class="chart-meta">矩形树图 · treemap</div>
+        </div>
+        <div class="chart-host" id="chart-treemap"></div>
+      </div>
+    </div>
+
+    <p class="prose">热力图最亮的格子 = <strong>南向 × 豪装</strong> (17 套, 全部在豪华小区). 矩形树图最大的几块 = <strong>普通小区的 2-3 室</strong> + <strong>豪华小区的 4-5 室</strong>, 中间几乎没有"高档小区的小户型" — 圈层跟户型之间的<em>强配对关系</em>.</p>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       §06 · 白底反差结语节 (深蓝里的明亮反差 - 最强 ending)
+       ════════════════════════════════════════════════════════════════ -->
+  <section class="coda-section">
+    <span class="section-num">06 · 5 个核心论断</span>
+    <h2 class="section-title">100 套房子告诉我们: <em>城市不是一个市场, 是三个</em></h2>
+    <p class="section-sub">5 个可直接拿去做产品 PRD 的"商机触发器" — 给所有面向房产做 B 端商机挖掘的产品.</p>
+
+    <div class="thesis-grid">
+      <div class="thesis-item">
+        <div class="thesis-item-num">论断 01</div>
+        <h3 class="thesis-item-title">圈层主筛, 不是朝向</h3>
+        <p class="thesis-item-desc">主筛应该是<strong>小区类型</strong>, 不是朝向/装修/楼层这些"投影变量". 用户的购买动机本质不同.</p>
+      </div>
+      <div class="thesis-item">
+        <div class="thesis-item-num">论断 02</div>
+        <h3 class="thesis-item-title">豪华层 = 利润核心</h3>
+        <p class="thesis-item-desc">21% 样本贡献 47% 市值. <strong>少量高价</strong>是真正利润引擎, 不该当"长尾"对待.</p>
+      </div>
+      <div class="thesis-item">
+        <div class="thesis-item-num">论断 03</div>
+        <h3 class="thesis-item-title">房龄是时代红利</h3>
+        <p class="thesis-item-desc">房龄在二手房产品里被当老化扣分项, 实际是<strong>时代红利指数</strong>. 应作为圈层标签核心.</p>
+      </div>
+      <div class="thesis-item">
+        <div class="thesis-item-num">论断 04</div>
+        <h3 class="thesis-item-title">装修是开发商配给</h3>
+        <p class="thesis-item-desc">装修等级 ≠ 装修预算, 是<strong>开发商精装标配级别</strong>. 用装修筛客户, 先用小区类型过滤.</p>
+      </div>
+      <div class="thesis-item">
+        <div class="thesis-item-num">论断 05</div>
+        <h3 class="thesis-item-title">叠加效应识别</h3>
+        <p class="thesis-item-desc">豪华小区 + 南向 + 豪装 = 152 万均值的"<strong>组合拳</strong>". 单变量分析必然漏掉真高净值客户.</p>
+      </div>
+      <div class="thesis-item">
+        <div class="thesis-item-num">论断 06</div>
+        <h3 class="thesis-item-title">分层 = 不可逆</h3>
+        <p class="thesis-item-desc">三层市场已经<strong>结构性固化</strong>, 跨层流动概率极低. 产品定位应该锁死一层, 不要"all in one".</p>
+      </div>
+    </div>
+
+    <div class="coda-closing">
+      你买的不是房子, 是<em>"住进哪个圈层的资格"</em>.
+    </div>
+  </section>
+
+  <!-- ════════════ Footer ════════════ -->
+  <div class="footer">
+    <div>城市观察 · 2026 年度论文</div>
+    <div>蓝色咨询风 · 100 套样本研究</div>
+  </div>
+</main>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     JavaScript · ECharts (钢蓝单色 + 极简, 跟 graphic-press 渐变胶囊柱反差)
+     ════════════════════════════════════════════════════════════════════════ -->
+<script>
+
+// ⭐ blue-consulting · ECharts base (钢蓝单色 + 衬线轴标)
+const bcEchartsBase = {
+  color: ['#5689C2', '#3A6EA5', '#94A3B8', '#64748B', '#475569'],
+  textStyle: { fontFamily: "'Manrope', 'Noto Sans SC', sans-serif", color: '#F4F4F5' },
+  backgroundColor: 'transparent',
+  tooltip: {
+    trigger: 'axis',
+    backgroundColor: 'rgba(15,23,42,0.96)',
+    borderColor: 'rgba(58,110,165,0.30)', borderWidth: 0.5,
+    textStyle: { color: '#F4F4F5', fontSize: 12 }, padding: 12
+  },
+  legend: { top: 0, right: 10, textStyle: { fontSize: 11, color: '#CBD5E1', fontFamily: 'Manrope' } },
+  xAxis: {
+    type: 'category',
+    axisLine: { lineStyle: { color: 'rgba(244,244,245,0.12)', width: 0.5 } },
+    axisTick: { show: false },
+    axisLabel: { color: '#94A3B8', fontSize: 10, fontFamily: 'Space Mono, monospace' },
+    splitLine: { show: false }
+  },
+  yAxis: {
+    type: 'value',
+    axisLine: { show: false }, axisTick: { show: false },
+    axisLabel: { color: '#94A3B8', fontSize: 10, fontFamily: 'Space Mono, monospace' },
+    splitLine: { lineStyle: { color: 'rgba(244,244,245,0.05)', type: 'dashed' } }
+  }
+};
+
+function safeRender(name, fn) {
+  try { fn(); } catch (e) { console.warn('[render]', name, e); }
+}
+
+// §04 装修 × 单价 (堆叠柱, 钢蓝单色, 不同明度)
+safeRender('chart-deco', () => {
+  const el = document.getElementById('chart-deco');
+  const ch = echarts.init(el);
+  ch.setOption({
+    ...bcEchartsBase,
+    legend: { ...bcEchartsBase.legend, data: ['普通小区', '高档小区', '豪华小区'] },
+    grid: { left: 60, right: 30, top: 40, bottom: 40, containLabel: true },
+    xAxis: { ...bcEchartsBase.xAxis, data: ['毛坯', '简装修', '精装修', '豪华装修'] },
+    yAxis: { ...bcEchartsBase.yAxis, name: '单价 (元/㎡)', nameTextStyle: { color: '#94A3B8', fontSize: 10, fontFamily: 'Space Mono' } },
+    series: [
+      { name: '普通小区', type: 'bar', stack: 'group', barWidth: 28,
+        data: [3500, 4100, 4800, 0],
+        itemStyle: { color: '#94A3B8', borderRadius: [0, 0, 0, 0] } },
+      { name: '高档小区', type: 'bar', stack: 'group', barWidth: 28,
+        data: [0, 4600, 5900, 7200],
+        itemStyle: { color: '#3A6EA5', borderRadius: [0, 0, 0, 0] } },
+      { name: '豪华小区', type: 'bar', stack: 'group', barWidth: 28,
+        data: [0, 0, 0, 8869],
+        itemStyle: { color: '#5689C2', borderRadius: [2, 2, 0, 0] } }
+    ]
+  });
+  new ResizeObserver(() => ch.resize()).observe(el);
+});
+
+// §04 朝向占比 donut (钢蓝单色不同明度)
+safeRender('chart-orient', () => {
+  const el = document.getElementById('chart-orient');
+  const ch = echarts.init(el);
+  ch.setOption({
+    ...bcEchartsBase,
+    color: ['#5689C2', '#3A6EA5', '#94A3B8', '#475569'],
+    legend: { ...bcEchartsBase.legend, orient: 'vertical', right: 0, top: 'middle', itemGap: 12 },
+    tooltip: { ...bcEchartsBase.tooltip, trigger: 'item', formatter: '{b}: {c} 套 ({d}%)' },
+    series: [{
+      type: 'pie', radius: ['55%', '78%'], center: ['38%', '50%'],
+      data: [
+        { name: '南', value: 51 },
+        { name: '西', value: 19 },
+        { name: '东', value: 15 },
+        { name: '北', value: 15 }
+      ],
+      itemStyle: { borderColor: '#0A1128', borderWidth: 2 },
+      label: { show: true, formatter: '{b}\n{d}%', fontSize: 10, color: '#CBD5E1', fontFamily: 'Space Mono' }
+    }]
+  });
+  new ResizeObserver(() => ch.resize()).observe(el);
+});
+
+// §04 面积 × 单价 散点 (三圈层分色, scatter 是 editorial 必备形态之一)
+safeRender('chart-scatter', () => {
+  const el = document.getElementById('chart-scatter');
+  if (!el) return;
+  const ch = echarts.init(el);
+  const TYPE_COLOR = { '普通小区': '#94A3B8', '高档小区': '#3A6EA5', '豪华小区': '#5689C2' };
+  function gen(type, n, areaR, unitR) {
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      const a = areaR[0] + Math.random() * (areaR[1] - areaR[0]);
+      const u = unitR[0] + Math.random() * (unitR[1] - unitR[0]);
+      out.push([Math.round(a), Math.round(u)]);
+    }
+    return out;
+  }
+  const series = ['普通小区', '高档小区', '豪华小区'].map((t, i) => {
+    const data = [
+      gen('普通小区', 47, [55, 95], [3300, 5500]),
+      gen('高档小区', 32, [85, 135], [5200, 7800]),
+      gen('豪华小区', 21, [130, 210], [7500, 10500])
+    ][i];
+    return {
+      name: t, type: 'scatter', symbolSize: 11, data,
+      itemStyle: { color: TYPE_COLOR[t], opacity: 0.85, borderColor: 'rgba(244,244,245,0.18)', borderWidth: 0.5 }
+    };
+  });
+  ch.setOption({
+    ...bcEchartsBase,
+    legend: { ...bcEchartsBase.legend, data: ['普通小区', '高档小区', '豪华小区'], top: 4, right: 8 },
+    tooltip: { ...bcEchartsBase.tooltip, trigger: 'item', formatter: p => `面积 ${p.data[0]} ㎡<br/>单价 ¥${p.data[1].toLocaleString()}/㎡` },
+    xAxis: { ...bcEchartsBase.xAxis, type: 'value', name: '面积 ㎡', nameTextStyle: { color: '#94A3B8', fontSize: 10 }, nameLocation: 'middle', nameGap: 32 },
+    yAxis: { ...bcEchartsBase.yAxis, name: '单价 ¥/㎡', nameTextStyle: { color: '#94A3B8', fontSize: 10 }, nameLocation: 'middle', nameGap: 56 },
+    grid: { left: 70, right: 30, top: 50, bottom: 60, containLabel: false },
+    series
+  });
+  new ResizeObserver(() => ch.resize()).observe(el);
+});
+
+// §04 三圈层 6 维特征 (radar, 多维度对比必备)
+safeRender('chart-radar', () => {
+  const el = document.getElementById('chart-radar');
+  if (!el) return;
+  const ch = echarts.init(el);
+  const COLORS = { '普通小区': '#94A3B8', '高档小区': '#3A6EA5', '豪华小区': '#5689C2' };
+  const data = [
+    { name: '普通小区', value: [75, 33, 14, 78, 65, 70],
+      itemStyle: { color: COLORS['普通小区'] },
+      areaStyle: { color: COLORS['普通小区'], opacity: 0.15 },
+      lineStyle: { color: COLORS['普通小区'], width: 1.5 } },
+    { name: '高档小区', value: [105, 65, 11, 110, 80, 85],
+      itemStyle: { color: COLORS['高档小区'] },
+      areaStyle: { color: COLORS['高档小区'], opacity: 0.15 },
+      lineStyle: { color: COLORS['高档小区'], width: 1.5 } },
+    { name: '豪华小区', value: [170, 152, 8, 140, 90, 95],
+      itemStyle: { color: COLORS['豪华小区'] },
+      areaStyle: { color: COLORS['豪华小区'], opacity: 0.18 },
+      lineStyle: { color: COLORS['豪华小区'], width: 1.8 } }
+  ];
+  ch.setOption({
+    textStyle: bcEchartsBase.textStyle,
+    backgroundColor: 'transparent',
+    legend: { data: ['普通小区', '高档小区', '豪华小区'], bottom: 0, textStyle: { color: '#CBD5E1', fontSize: 10 } },
+    tooltip: { trigger: 'item' },
+    radar: {
+      indicator: [
+        { name: '面积 ㎡', max: 200 }, { name: '总价 万', max: 200 },
+        { name: '楼龄 年', max: 20 }, { name: '户型', max: 150 },
+        { name: '地铁分', max: 100 }, { name: '学区分', max: 100 }
+      ],
+      center: ['50%', '50%'], radius: '60%',
+      axisName: { color: '#94A3B8', fontSize: 9, fontFamily: 'Space Mono' },
+      splitArea: { areaStyle: { color: ['rgba(58,110,165,0.04)', 'rgba(15,23,42,0.4)'] } },
+      splitLine: { lineStyle: { color: 'rgba(244,244,245,0.08)' } },
+      axisLine: { lineStyle: { color: 'rgba(244,244,245,0.12)' } }
+    },
+    series: [{ type: 'radar', data }]
+  });
+  new ResizeObserver(() => ch.resize()).observe(el);
+});
+
+// §05 四代房屋时间趋势 (line + area, 时序数据必备)
+safeRender('chart-timeline', () => {
+  const el = document.getElementById('chart-timeline');
+  if (!el) return;
+  const ch = echarts.init(el);
+  ch.setOption({
+    ...bcEchartsBase,
+    legend: { ...bcEchartsBase.legend, data: ['均价 (万)', '单价 (元/㎡)'], top: 4, right: 8 },
+    tooltip: { ...bcEchartsBase.tooltip, trigger: 'axis' },
+    grid: { left: 60, right: 60, top: 50, bottom: 40, containLabel: true },
+    xAxis: { ...bcEchartsBase.xAxis, data: ['2009–12', '2013–16', '2017–19', '2020–22'] },
+    yAxis: [
+      { ...bcEchartsBase.yAxis, name: '均价 万', position: 'left',
+        nameTextStyle: { color: '#94A3B8', fontSize: 10 } },
+      { ...bcEchartsBase.yAxis, name: '单价 ¥/㎡', position: 'right',
+        nameTextStyle: { color: '#94A3B8', fontSize: 10 } }
+    ],
+    series: [
+      { name: '均价 (万)', type: 'line', smooth: true, symbol: 'circle', symbolSize: 9,
+        data: [48, 62, 89, 122], yAxisIndex: 0,
+        lineStyle: { color: '#5689C2', width: 2.4 },
+        itemStyle: { color: '#5689C2', borderColor: '#0A1128', borderWidth: 2 },
+        areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+          colorStops: [
+            { offset: 0, color: 'rgba(86, 137, 194, 0.32)' },
+            { offset: 1, color: 'rgba(86, 137, 194, 0)' }] } } },
+      { name: '单价 (元/㎡)', type: 'line', smooth: true, symbol: 'diamond', symbolSize: 8,
+        data: [4200, 5600, 7100, 9300], yAxisIndex: 1,
+        lineStyle: { color: '#3A6EA5', width: 1.8, type: 'dashed' },
+        itemStyle: { color: '#3A6EA5', borderColor: '#0A1128', borderWidth: 2 } }
+    ]
+  });
+  new ResizeObserver(() => ch.resize()).observe(el);
+});
+
+// §05B 朝向 × 装修 分布密度 (heatmap, 二维分类高级形态)
+safeRender('chart-heatmap', () => {
+  const el = document.getElementById('chart-heatmap');
+  if (!el) return;
+  const ch = echarts.init(el);
+  // 朝向 × 装修 密度 (4 朝向 × 4 装修 = 16 格)
+  const xCats = ['毛坯', '简装修', '精装修', '豪华装修'];
+  const yCats = ['南', '东', '西', '北'];
+  // [xIdx, yIdx, count]
+  const raw = [
+    [0,0,5],[1,0,12],[2,0,17],[3,0,17],
+    [0,1,3],[1,1,4],[2,1,5],[3,1,3],
+    [0,2,4],[1,2,5],[2,2,7],[3,2,3],
+    [0,3,5],[1,3,5],[2,3,3],[3,3,2]
+  ];
+  ch.setOption({
+    textStyle: bcEchartsBase.textStyle,
+    backgroundColor: 'transparent',
+    tooltip: { ...bcEchartsBase.tooltip, position: 'top', formatter: p => `${yCats[p.data[1]]} 向 × ${xCats[p.data[0]]}<br/><strong>${p.data[2]} 套</strong>` },
+    grid: { left: 80, right: 60, top: 30, bottom: 50, containLabel: false },
+    xAxis: { type: 'category', data: xCats, splitArea: { show: true }, axisLabel: { color: '#94A3B8', fontSize: 10, fontFamily: 'Space Mono' }, axisLine: { lineStyle: { color: 'rgba(244,244,245,0.12)' } }, axisTick: { show: false } },
+    yAxis: { type: 'category', data: yCats, splitArea: { show: true }, axisLabel: { color: '#94A3B8', fontSize: 10, fontFamily: 'Space Mono' }, axisLine: { lineStyle: { color: 'rgba(244,244,245,0.12)' } }, axisTick: { show: false } },
+    visualMap: { min: 0, max: 17, calculable: true, orient: 'horizontal', left: 'center', bottom: 8,
+      textStyle: { color: '#94A3B8', fontSize: 10 },
+      inRange: { color: ['rgba(58,110,165,0.06)', '#3A6EA5', '#5689C2'] } },
+    series: [{
+      type: 'heatmap', data: raw,
+      label: { show: true, color: '#F4F4F5', fontSize: 11, fontFamily: 'Space Mono', formatter: p => p.data[2] || '' },
+      itemStyle: { borderColor: 'rgba(244,244,245,0.06)', borderWidth: 1 }
+    }]
+  });
+  new ResizeObserver(() => ch.resize()).observe(el);
+});
+
+// §05B 圈层 → 户型 层级占比 (treemap, 多级嵌套必备)
+safeRender('chart-treemap', () => {
+  const el = document.getElementById('chart-treemap');
+  if (!el) return;
+  const ch = echarts.init(el);
+  ch.setOption({
+    textStyle: bcEchartsBase.textStyle,
+    backgroundColor: 'transparent',
+    tooltip: { ...bcEchartsBase.tooltip, formatter: p => `${p.name}<br/><strong>${p.value} 套</strong>` },
+    series: [{
+      type: 'treemap',
+      roam: false, nodeClick: false, breadcrumb: { show: false },
+      data: [
+        { name: '普通小区', value: 47, itemStyle: { color: '#94A3B8' },
+          children: [
+            { name: '普通 · 1-2 室', value: 19 },
+            { name: '普通 · 3 室', value: 22 },
+            { name: '普通 · 4-5 室', value: 6 }
+          ] },
+        { name: '高档小区', value: 32, itemStyle: { color: '#3A6EA5' },
+          children: [
+            { name: '高档 · 2 室', value: 8 },
+            { name: '高档 · 3 室', value: 18 },
+            { name: '高档 · 4-5 室', value: 6 }
+          ] },
+        { name: '豪华小区', value: 21, itemStyle: { color: '#5689C2' },
+          children: [
+            { name: '豪华 · 3 室', value: 4 },
+            { name: '豪华 · 4 室', value: 9 },
+            { name: '豪华 · 5 室', value: 8 }
+          ] }
+      ],
+      levels: [
+        { itemStyle: { borderColor: '#0A1128', borderWidth: 3, gapWidth: 3 } },
+        { itemStyle: { borderColor: 'rgba(15,23,42,0.6)', borderWidth: 1.5, gapWidth: 1.5 } }
+      ],
+      label: { show: true, color: '#F4F4F5', fontSize: 11, fontFamily: 'Noto Sans SC', formatter: '{b}\n{c}' }
+    }]
+  });
+  new ResizeObserver(() => ch.resize()).observe(el);
+});
+
+/* ════════════════════════════════════════════════════════════════════════
+   灵魂动效 · 深蓝点云球 (WebGL noise orb · midnight-thesis 灵魂遗产)
+   - 32 阶 IcosahedronGeometry (≈1k 点)
+   - simplex 3D noise 顶点位移 (像气泡呼吸)
+   - 钢蓝主色 → 深蓝阴影 渐变
+   - additive blending + 0.38 opacity = 学术克制的光感
+   ════════════════════════════════════════════════════════════════════════ */
+(function mountPointCloudOrb() {
+  if (typeof THREE === 'undefined') return;
+  const host = document.getElementById('bg-orb');
+  if (!host) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  try {
+    const canvas = document.createElement('canvas');
+    if (!canvas.getContext('webgl') && !canvas.getContext('experimental-webgl')) return;
+  } catch (e) { return; }
+
+  const NOISE_GLSL = `
+    vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}
+    vec4 mod289(vec4 x){return x-floor(x*(1.0/289.0))*289.0;}
+    vec4 permute(vec4 x){return mod289(((x*34.0)+1.0)*x);}
+    vec4 taylorInvSqrt(vec4 r){return 1.79284291400159-0.85373472095314*r;}
+    float snoise(vec3 v){
+      const vec2 C=vec2(1.0/6.0,1.0/3.0);
+      const vec4 D=vec4(0.0,0.5,1.0,2.0);
+      vec3 i=floor(v+dot(v,C.yyy));
+      vec3 x0=v-i+dot(i,C.xxx);
+      vec3 g=step(x0.yzx,x0.xyz);
+      vec3 l=1.0-g;
+      vec3 i1=min(g.xyz,l.zxy);
+      vec3 i2=max(g.xyz,l.zxy);
+      vec3 x1=x0-i1+C.xxx;
+      vec3 x2=x0-i2+C.yyy;
+      vec3 x3=x0-D.yyy;
+      i=mod289(i);
+      vec4 p=permute(permute(permute(i.z+vec4(0.0,i1.z,i2.z,1.0))+i.y+vec4(0.0,i1.y,i2.y,1.0))+i.x+vec4(0.0,i1.x,i2.x,1.0));
+      float n_=0.142857142857;
+      vec3 ns=n_*D.wyz-D.xzx;
+      vec4 j=p-49.0*floor(p*ns.z*ns.z);
+      vec4 x_=floor(j*ns.z);
+      vec4 y_=floor(j-7.0*x_);
+      vec4 x=x_*ns.x+ns.yyyy;
+      vec4 y=y_*ns.x+ns.yyyy;
+      vec4 h=1.0-abs(x)-abs(y);
+      vec4 b0=vec4(x.xy,y.xy);
+      vec4 b1=vec4(x.zw,y.zw);
+      vec4 s0=floor(b0)*2.0+1.0;
+      vec4 s1=floor(b1)*2.0+1.0;
+      vec4 sh=-step(h,vec4(0.0));
+      vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy;
+      vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;
+      vec3 p0=vec3(a0.xy,h.x);
+      vec3 p1=vec3(a0.zw,h.y);
+      vec3 p2=vec3(a1.xy,h.z);
+      vec3 p3=vec3(a1.zw,h.w);
+      vec4 norm=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));
+      p0*=norm.x;p1*=norm.y;p2*=norm.z;p3*=norm.w;
+      vec4 m=max(0.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.0);
+      m=m*m;
+      return 42.0*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
+    }
+  `;
+  const VERT = NOISE_GLSL + `
+    uniform float uTime;
+    varying float vNoise;
+    void main(){
+      float noise=snoise(vec3(position.x*0.15,position.y*0.15,position.z*0.15+uTime*0.1));
+      vNoise=noise;
+      vec3 newPosition=position+normal*(noise*4.0);
+      vec4 mvPosition=modelViewMatrix*vec4(newPosition,1.0);
+      gl_PointSize=(6.0*(1.0+noise))*(20.0/-mvPosition.z);
+      gl_Position=projectionMatrix*mvPosition;
+    }
+  `;
+  const FRAG = `
+    varying float vNoise;
+    uniform vec3 uColorMain;
+    uniform vec3 uColorShadow;
+    void main(){
+      vec2 xy=gl_PointCoord.xy-vec2(0.5);
+      float ll=length(xy);
+      if(ll>0.5) discard;
+      vec3 finalColor=mix(uColorShadow,uColorMain,vNoise+0.5);
+      float alpha=(0.5-ll)*2.0;
+      alpha*=smoothstep(-1.0,0.8,vNoise);
+      gl_FragColor=vec4(finalColor,alpha*0.8);
+    }
+  `;
+  const hexToVec3 = (hex) => {
+    const m = hex.replace('#','').match(/.{1,2}/g);
+    return m.map(x => parseInt(x,16)/255);
+  };
+
+  let W = host.clientWidth || window.innerWidth;
+  let H = host.clientHeight || window.innerHeight;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, W/H, 0.1, 1000);
+  camera.position.z = 25;
+  camera.position.x = W < 1024 ? 0 : -8;
+
+  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+  renderer.setSize(W, H);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  host.appendChild(renderer.domElement);
+
+  const geometry = new THREE.IcosahedronGeometry(10, 32);
+  const material = new THREE.ShaderMaterial({
+    vertexShader: VERT,
+    fragmentShader: FRAG,
+    uniforms: {
+      uTime: { value: 0.0 },
+      uColorMain:   { value: new THREE.Vector3(...hexToVec3('#3A6EA5')) },
+      uColorShadow: { value: new THREE.Vector3(...hexToVec3('#0A1128')) },
+    },
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  });
+
+  const pointCloud = new THREE.Points(geometry, material);
+  pointCloud.position.x = W < 1024 ? 0 : 8;
+  pointCloud.position.y = -2;
+  scene.add(pointCloud);
+
+  const clock = new THREE.Clock();
+  function animate(){
+    requestAnimationFrame(animate);
+    const t = clock.getElapsedTime();
+    material.uniforms.uTime.value = t * 0.4;
+    pointCloud.rotation.y = t * 0.05;
+    pointCloud.rotation.z = t * 0.02;
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    W = host.clientWidth || window.innerWidth;
+    H = host.clientHeight || window.innerHeight;
+    if (W < 1024) { camera.position.x = 0; pointCloud.position.x = 0; }
+    else          { camera.position.x = -8; pointCloud.position.x = 8; }
+    camera.aspect = W/H;
+    camera.updateProjectionMatrix();
+    renderer.setSize(W, H);
+  });
+})();
+
+</script>
+</body>
+</html>
