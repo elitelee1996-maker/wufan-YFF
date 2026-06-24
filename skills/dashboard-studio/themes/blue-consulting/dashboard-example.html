@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>房产分析 · 蓝色咨询风驾驶舱</title>
+
+<!-- ╔══════════════════════════════════════════════════════════════════════╗
+     ║ ⚠⚠⚠ 完全自包含 HTML · 严禁数据外置 (D 死路) ⚠⚠⚠                 ║
+     ╠══════════════════════════════════════════════════════════════════════╣
+     ║ 所有业务数据 inline 在 <script>const D = {...}</script> 里            ║
+     ║ ❌ 严禁 fetch("data.json") / <script src="data.js">                  ║
+     ║ ❌ 严禁产物目录里出现 data.json / data.js 等业务数据文件             ║
+     ║ 原因: 用户双击 HTML 用 file:// 打开, 浏览器禁止跨文件 fetch (CORS)   ║
+     ║       外置 = 双击全屏空白 = 用户觉得"做的不能用"                       ║
+     ║ ✅ 唯一允许的"外部资源" = ECharts / Three.js / 字体的 https:// CDN    ║
+     ╚══════════════════════════════════════════════════════════════════════╝ -->
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     Blue Consulting · Dashboard 样板 · 房产分析数据
+     ════════════════════════════════════════════════════════════════════════
+     ▶ Agent 你应该:
+        1. read 整个文件, 重点看 5 件套结构 + 极薄 hairline 美学
+        2. 抄 <style> 段全部 CSS (跟 editorial 共用变量)
+        3. KPI 一排 4 个, 极薄 hairline + 左侧 2px 钢蓝细线 + 衬线大数字
+        4. 把 D / D.rows 替成你的业务数据 (数据**必须 inline**, 见上方警告)
+        5. ECharts 全部钢蓝单色 (跟 graphic-press 渐变胶囊柱形成最大反差)
+        6. 一次 write 整页 (路径 A) 或一次 execute_python 内构造 (路径 B), 不要分段追加
+     ▶ 哲学: 跟 graphic-press 完全相反 — 咨询学术克制 vs 鲜艳报刊艺术
+     ════════════════════════════════════════════════════════════════════════ -->
+
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Manrope:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@500;600&family=Noto+Sans+SC:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+/* ════════════════════════════════════════════════════════════════════════
+   ⚡⚡⚡ 灵魂背景动效 · 三件套必抄清单 (Agent 抄 CSS 时第一眼必读)
+   ──────────────────────────────────────────────────────────────────────
+   本文件的灵魂动效是 3D 深蓝点云球, 由 4 个位置组成, 缺一会出 bug:
+   ① <head> 内的 three.js CDN <script> 一行
+   ② <body> 开头的 <div id="bg-orb"></div> 一行
+   ③ 本 <style> 段下方的 #bg-orb 跟 .dash z-index CSS 块 (⚡ 90% Agent 漏的就是这里!)
+   ④ </script> 之前的 mountPointCloudOrb IIFE 整段 (~160 行)
+   抄完后请 grep "#bg-orb", 应当至少出现 3 次 (CSS / IIFE / HTML), 少了就是漏了.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════════════
+   BLUE CONSULTING · 主题 tokens (跟 editorial 共用)
+   ════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --bg-page:#0A1128; --bg-soft:rgba(14,24,50,0.55);
+  --bg-card:rgba(15,23,42,0.40); --bg-elevated:rgba(30,41,59,0.55);
+  --bg-solid:#0F172A;
+  --text-primary:#F4F4F5; --text-secondary:#CBD5E1;
+  --text-muted:#94A3B8; --text-faint:#6B7488;
+  --accent:#3A6EA5; --accent-hi:#5689C2;
+  --accent-soft:rgba(58,110,165,0.30); --accent-faint:rgba(58,110,165,0.12);
+  --hairline:rgba(244,244,245,0.08);
+  --hairline-subtle:rgba(244,244,245,0.05);
+  --hairline-strong:rgba(244,244,245,0.20);
+  --success:#34D399; --danger:#F87171; --warning:#FBBF24;
+  --radius-sm:3px; --radius-md:4px; --radius-card:6px;
+  --font-serif:'Cormorant Garamond','Noto Serif SC',serif;
+  --font-cn-serif:'Noto Serif SC','Cormorant Garamond',serif;
+  --font-sans:'Manrope','Noto Sans SC',sans-serif;
+  --font-cn-sans:'Noto Sans SC','Manrope',sans-serif;
+  --font-mono:'Space Mono','JetBrains Mono',monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  font-family: var(--font-cn-sans); font-weight: 300;
+  color: var(--text-primary); background: var(--bg-page);
+  -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    radial-gradient(circle at 30% 10%, rgba(58,110,165,0.08), transparent 50%),
+    radial-gradient(circle at 80% 90%, rgba(58,110,165,0.04), transparent 60%);
+}
+
+.dash { position: relative; z-index: 1; max-width: 1440px; margin: 0 auto;
+  padding: clamp(20px, 3vw, 32px) clamp(16px, 2.5vw, 28px); }
+
+/* ─── 紧凑 Header ─── */
+.dash-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 24px; border-radius: var(--radius-card);
+  background: var(--bg-card);
+  border: 0.5px solid var(--hairline);
+  margin-bottom: 18px;
+  backdrop-filter: blur(8px);
+}
+.brand-mark {
+  font-family: var(--font-serif); font-style: italic;
+  font-size: 13px; color: var(--accent-hi);
+  letter-spacing: 0.04em; margin-right: 16px;
+}
+.dash-title {
+  font-family: var(--font-cn-serif); font-weight: 600;
+  font-size: 18px; color: var(--text-primary);
+  letter-spacing: 0.01em;
+}
+.dash-meta {
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--text-muted); letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   ⭐ Hero Spotlight (期刊式 meta-row 横幅, 不用色棍, 用极薄数据带)
+   ════════════════════════════════════════════════════════════════════════ */
+.spotlight {
+  display: grid; grid-template-columns: 2fr 3fr;
+  gap: 0; margin-bottom: 18px;
+  border-top: 0.5px solid var(--hairline);
+  border-bottom: 0.5px solid var(--hairline);
+}
+@media (max-width: 880px) { .spotlight { grid-template-columns: 1fr; } }
+.sp-left {
+  padding: 36px 32px;
+  border-right: 0.5px solid var(--hairline);
+  background: rgba(58,110,165,0.03);
+}
+.sp-kicker {
+  font-family: var(--font-serif); font-style: italic;
+  font-size: 13px; color: var(--accent-hi);
+  letter-spacing: 0.06em; margin-bottom: 14px;
+  display: inline-flex; align-items: center; gap: 12px;
+}
+.sp-kicker::before {
+  content: ''; width: 28px; height: 1px; background: var(--accent);
+}
+.sp-title {
+  font-family: var(--font-cn-serif); font-weight: 600;
+  font-size: clamp(1.4rem, 2vw, 1.8rem); line-height: 1.3;
+  color: var(--text-primary); max-width: 22ch;
+}
+.sp-title em {
+  font-style: italic; color: var(--accent-hi);
+  font-family: var(--font-serif); font-weight: 500;
+}
+.sp-right {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  padding: 0;
+}
+.sp-metric {
+  padding: 30px 24px;
+  border-right: 0.5px solid var(--hairline);
+  display: flex; flex-direction: column; justify-content: center;
+}
+.sp-metric:last-child { border-right: 0; }
+.sp-metric-label {
+  font-family: var(--font-mono); font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.14em;
+  color: var(--text-muted); margin-bottom: 10px; font-weight: 700;
+}
+.sp-metric-value {
+  font-family: var(--font-serif); font-weight: 500;
+  font-size: 1.8rem; line-height: 1;
+  color: var(--accent-hi); font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.sp-metric-unit { font-size: 0.5em; opacity: 0.7; margin-left: 3px; }
+.sp-metric-meta {
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--text-faint); margin-top: 6px; letter-spacing: 0.04em;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   ⭐ KPI 阵 (4 张, 极薄 hairline + 左 2px 钢蓝细线 + 衬线大数字)
+   ════════════════════════════════════════════════════════════════════════ */
+.kpi-row {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+  margin-bottom: 20px;
+}
+@media (max-width: 1080px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+
+.kpi {
+  position: relative;
+  background: var(--bg-card);
+  backdrop-filter: blur(8px);
+  border: 0.5px solid var(--hairline);
+  border-radius: var(--radius-card);
+  padding: 22px 24px;
+  min-height: 140px;
+  display: flex; flex-direction: column;
+}
+.kpi::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 2px; background: var(--accent-soft);
+  transition: background 0.3s;
+}
+.kpi:hover::before { background: var(--accent); box-shadow: 0 0 8px var(--accent-soft); }
+.kpi-label-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.kpi-label {
+  font-family: var(--font-mono); font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--text-muted); font-weight: 700;
+}
+.kpi-trend {
+  font-family: var(--font-mono); font-size: 11px;
+  letter-spacing: 0.04em; font-weight: 400;
+}
+.kpi-trend.up   { color: var(--success); }
+.kpi-trend.down { color: var(--danger); }
+.kpi-trend.flat { color: var(--text-faint); }
+.kpi-value {
+  font-family: var(--font-serif); font-weight: 500;
+  font-size: 2.2rem; line-height: 1.05;
+  color: var(--accent-hi); margin-bottom: 8px;
+  font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
+}
+.kpi-unit { font-size: 0.5em; opacity: 0.7; margin-left: 3px; }
+.kpi-meta {
+  font-size: 12px; color: var(--text-secondary); line-height: 1.5;
+  font-family: var(--font-cn-sans); font-weight: 300;
+  margin-top: auto;
+}
+.kpi-meta strong { color: var(--accent-hi); font-weight: 500; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   筛选条 (极简 toggle, 4-6px 圆角)
+   ════════════════════════════════════════════════════════════════════════ */
+.filter-bar {
+  display: grid; grid-template-columns: auto 1fr auto;
+  gap: 18px; align-items: center;
+  padding: 14px 22px; border-radius: var(--radius-card);
+  background: var(--bg-card); border: 0.5px solid var(--hairline);
+  margin-bottom: 20px; backdrop-filter: blur(8px);
+}
+.filter-label {
+  font-family: var(--font-mono); font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--text-muted); font-weight: 700;
+}
+.filter-groups { display: flex; gap: 22px; flex-wrap: wrap; }
+.filter-group { display: flex; gap: 4px; align-items: center; }
+.filter-group-label {
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--text-faint); margin-right: 8px;
+  text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700;
+}
+.pill-toggle {
+  padding: 5px 12px; border-radius: var(--radius-sm); border: 0.5px solid transparent;
+  font-size: 12px; cursor: pointer;
+  background: transparent; color: var(--text-secondary);
+  font-family: var(--font-cn-sans); font-weight: 300;
+  transition: all 0.15s;
+}
+.pill-toggle:hover { color: var(--accent-hi); border-color: var(--hairline); }
+.pill-toggle.is-active {
+  background: var(--accent-faint); color: var(--accent-hi);
+  border-color: var(--accent-soft); font-weight: 500;
+}
+.filter-summary {
+  display: flex; gap: 8px; align-items: baseline;
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--text-muted); letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.filter-summary .num {
+  font-family: var(--font-serif); font-weight: 500;
+  font-size: 22px; color: var(--accent-hi);
+  font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
+}
+.filter-reset {
+  margin-left: 14px; padding: 4px 12px; border-radius: var(--radius-sm);
+  background: transparent; border: 0.5px solid var(--hairline);
+  cursor: pointer; font-size: 10px; color: var(--text-muted);
+  font-family: var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase;
+}
+.filter-reset:hover { border-color: var(--accent); color: var(--accent-hi); }
+
+/* ════════════════════════════════════════════════════════════════════════
+   Panel grid
+   ════════════════════════════════════════════════════════════════════════ */
+.panel-grid {
+  display: grid; grid-template-columns: repeat(12, 1fr); gap: 14px;
+  margin-bottom: 20px;
+}
+.panel {
+  background: var(--bg-card); border-radius: var(--radius-card);
+  padding: 22px; border: 0.5px solid var(--hairline);
+  backdrop-filter: blur(8px);
+}
+.panel.col-6 { grid-column: span 6; }
+.panel.col-4 { grid-column: span 4; }
+.panel.col-8 { grid-column: span 8; }
+@media (max-width: 1080px) {
+  .panel.col-6, .panel.col-4, .panel.col-8 { grid-column: span 12; }
+}
+.panel-hd {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 16px;
+  padding-bottom: 12px; border-bottom: 0.5px solid var(--hairline);
+}
+.panel-title {
+  font-family: var(--font-cn-serif); font-weight: 500; font-size: 14px;
+  color: var(--text-primary);
+}
+.panel-meta {
+  font-family: var(--font-mono); font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted);
+  font-weight: 700;
+}
+.chart-host { width: 100%; height: 300px; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   明细表 (期刊数据表感 - mono 表头 + 衬线值)
+   ════════════════════════════════════════════════════════════════════════ */
+.table-panel {
+  background: var(--bg-card); border-radius: var(--radius-card);
+  padding: 22px; border: 0.5px solid var(--hairline);
+  margin-bottom: 20px; backdrop-filter: blur(8px);
+}
+.table-hd {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 14px; gap: 16px;
+  padding-bottom: 12px; border-bottom: 0.5px solid var(--hairline);
+}
+.table-title {
+  font-family: var(--font-cn-serif); font-weight: 500; font-size: 15px;
+}
+.table-search {
+  flex: 1; max-width: 280px;
+  padding: 8px 14px; border-radius: var(--radius-sm);
+  border: 0.5px solid var(--hairline); background: var(--bg-soft);
+  font-size: 13px; outline: 0; color: var(--text-primary);
+  font-family: var(--font-cn-sans); font-weight: 300;
+}
+.table-search:focus { border-color: var(--accent); background: var(--bg-solid); }
+.table-search::placeholder { color: var(--text-faint); }
+.table-hint {
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase;
+}
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table thead th {
+  padding: 12px 14px; text-align: left;
+  font-family: var(--font-mono); font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--text-muted); cursor: pointer; user-select: none;
+  border-bottom: 0.5px solid var(--hairline-strong);
+  font-weight: 700;
+}
+.data-table thead th:hover { color: var(--accent-hi); }
+.data-table thead th.sort-asc::after  { content: ' ▲'; font-size: 9px; color: var(--accent); }
+.data-table thead th.sort-desc::after { content: ' ▼'; font-size: 9px; color: var(--accent); }
+.data-table tbody tr {
+  cursor: pointer; border-bottom: 0.5px solid var(--hairline-subtle);
+  transition: background 0.15s;
+}
+.data-table tbody tr:hover { background: rgba(58,110,165,0.06); }
+.data-table td {
+  padding: 12px 14px; color: var(--text-secondary);
+  font-family: var(--font-cn-sans); font-weight: 300;
+}
+.data-table td.t-num {
+  font-family: var(--font-serif); font-weight: 500;
+  color: var(--accent-hi); font-variant-numeric: tabular-nums;
+}
+.data-table td.t-id {
+  font-family: var(--font-mono); font-size: 12px;
+  color: var(--text-primary); font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.type-tag {
+  display: inline-block; padding: 2px 8px; border-radius: var(--radius-sm);
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  border: 0.5px solid;
+}
+.type-tag.t-common { color: #94A3B8; border-color: rgba(148,163,184,0.4); }
+.type-tag.t-premium { color: #5689C2; border-color: rgba(86,137,194,0.4); }
+.type-tag.t-luxury { color: var(--accent-hi); border-color: var(--accent-soft); background: var(--accent-faint); }
+.table-pager {
+  display: flex; gap: 14px; align-items: center; justify-content: center;
+  padding-top: 16px; font-family: var(--font-mono); font-size: 11px;
+  color: var(--text-muted); letter-spacing: 0.1em;
+}
+.table-pager button {
+  padding: 6px 14px; border-radius: var(--radius-sm);
+  background: transparent; border: 0.5px solid var(--hairline);
+  cursor: pointer; font-family: var(--font-mono); font-size: 10px;
+  color: var(--text-secondary); letter-spacing: 0.1em; text-transform: uppercase;
+}
+.table-pager button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent-hi); }
+.table-pager button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   下钻抽屉
+   ════════════════════════════════════════════════════════════════════════ */
+.drawer {
+  position: fixed; top: 0; right: 0; bottom: 0;
+  width: 440px; max-width: 90vw;
+  background: #0F172A;
+  box-shadow: -12px 0 40px rgba(0,0,0,0.5);
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1000; overflow-y: auto;
+  border-left: 0.5px solid var(--accent-soft);
+}
+.drawer.is-open { transform: translateX(0); }
+.drawer-mask {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  z-index: 999; backdrop-filter: blur(2px);
+}
+.drawer-mask.is-open { opacity: 1; pointer-events: auto; }
+.drawer-hd {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 28px 32px; border-bottom: 0.5px solid var(--hairline);
+  position: sticky; top: 0; background: #0F172A; z-index: 1;
+}
+.drawer-id {
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--text-muted); letter-spacing: 0.12em;
+  display: block; margin-bottom: 6px;
+}
+.drawer-name {
+  font-family: var(--font-cn-serif); font-weight: 500; font-size: 17px;
+  color: var(--text-primary);
+}
+.drawer-close {
+  background: 0; border: 0.5px solid var(--hairline); border-radius: var(--radius-sm);
+  font-size: 18px; cursor: pointer;
+  color: var(--text-muted); width: 32px; height: 32px;
+  font-family: var(--font-mono);
+}
+.drawer-close:hover { border-color: var(--accent); color: var(--accent-hi); }
+.drawer-body { padding: 28px 32px; }
+.drawer-price {
+  font-family: var(--font-serif); font-weight: 500;
+  font-size: 42px; letter-spacing: -0.03em; margin-bottom: 6px;
+  color: var(--accent-hi); font-variant-numeric: tabular-nums;
+}
+.drawer-price-meta {
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--text-muted); letter-spacing: 0.08em;
+  margin-bottom: 28px; text-transform: uppercase;
+}
+.field-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+  border-top: 0.5px solid var(--hairline);
+  border-bottom: 0.5px solid var(--hairline);
+}
+.field-cell {
+  padding: 14px 16px;
+  border-right: 0.5px solid var(--hairline);
+  border-bottom: 0.5px solid var(--hairline);
+}
+.field-cell:nth-child(2n) { border-right: 0; }
+.field-cell:nth-last-child(-n+2) { border-bottom: 0; }
+.field-label {
+  font-family: var(--font-mono); font-size: 9px;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--text-muted); font-weight: 700;
+}
+.field-value {
+  font-family: var(--font-serif); font-weight: 500;
+  font-size: 16px; margin-top: 6px; color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.drawer-section { margin-top: 28px; padding-top: 18px; border-top: 0.5px solid var(--hairline); }
+.drawer-section-title {
+  font-family: var(--font-mono); font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--text-muted); margin-bottom: 14px; font-weight: 700;
+}
+
+/* ─── Footer ─── */
+.dash-footer {
+  margin-top: 18px; padding: 14px 24px;
+  display: flex; justify-content: space-between;
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--text-faint); letter-spacing: 0.1em; text-transform: uppercase;
+}
+
+/* ╔════════════════════════════════════════════════════════════════════════╗
+   ║ ⚡⚡⚡ 灵魂三件套之 ③ 必抄 CSS · #bg-orb (90% Agent 都在这里翻车!)      ║
+   ║ ──────────────────────────────────────────────────────────────────── ║
+   ║ ❗ 这是**背景层**, 不是首屏 hero 主视觉!                                  ║
+   ║ - bg-orb 永远在最底层呼吸 (z-index 0, opacity 0.32, fixed 全屏)         ║
+   ║ - 上面叠 .dash (你的 header / KPI / chart / table 全部内容)             ║
+   ║ - 打开页面应该看到: 正常 Dashboard + 背景里若隐若现一个点云球             ║
+   ║ - 如果打开看到只有一个大球占满屏幕 = 你**漏抄了下面这整块 CSS**!         ║
+   ╚════════════════════════════════════════════════════════════════════════╝ */
+#bg-orb {
+  position: fixed; top: 0; right: 0; bottom: 0; left: 0;
+  z-index: 0; pointer-events: none; opacity: 0.32;
+  mix-blend-mode: screen;
+}
+/* ❗ 这一行**绝不能漏**! 漏了主内容就被 fixed 的 bg-orb 盖住 = 全屏空白只剩一个球 */
+.dash { position: relative; z-index: 1; }
+/* ╔════════════════════════════════════════════════════════════════════════╗
+   ║ ⚡⚡⚡ 守门员检查 · 写到这里 STOP, 自检上面 4 行 #bg-orb CSS 抄了没?    ║
+   ║ 抄了 → 继续 </style>; 没抄 → 立刻回上面把它补齐, 再下 </style>        ║
+   ╚════════════════════════════════════════════════════════════════════════╝ */
+</style>
+</head>
+<body>
+
+<!-- ⚡ 灵魂背景动效: 深蓝点云球 (WebGL · midnight-thesis 遗产)
+     ❗ 这是 BG 背景层 (z-index:0), 不是首屏 hero 主视觉!
+     必须直接挂在 body 上, 跟 .dash 主容器同级 + 在它之前 -->
+<div id="bg-orb"></div>
+
+<div class="dash">
+
+  <!-- ════════════ Header ════════════ -->
+  <header class="dash-header">
+    <div style="display:flex;align-items:center;">
+      <span class="brand-mark">城市观察</span>
+      <span class="dash-title">房产分析驾驶舱</span>
+    </div>
+    <div class="dash-meta">2026-05-28 · 100 套样本</div>
+  </header>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       Spotlight (期刊式 meta-row 横幅, 不用色棍交叉 — 跟 graphic-press 哲学相反)
+       ════════════════════════════════════════════════════════════════ -->
+  <section class="spotlight">
+    <div class="sp-left">
+      <div class="sp-kicker">城市观察 · 三个圈层</div>
+      <h1 class="sp-title">一座城市的 <em>分层折叠</em></h1>
+    </div>
+    <div class="sp-right">
+      <div class="sp-metric">
+        <div class="sp-metric-label">价格跨度</div>
+        <div class="sp-metric-value">9.1<span class="sp-metric-unit">倍</span></div>
+        <div class="sp-metric-meta">最高 ÷ 最低</div>
+      </div>
+      <div class="sp-metric">
+        <div class="sp-metric-label">南向溢价</div>
+        <div class="sp-metric-value">+199<span class="sp-metric-unit">%</span></div>
+        <div class="sp-metric-meta">南向 vs 北向</div>
+      </div>
+      <div class="sp-metric">
+        <div class="sp-metric-label">豪华占值</div>
+        <div class="sp-metric-value">47<span class="sp-metric-unit">%</span></div>
+        <div class="sp-metric-meta">市值占比</div>
+      </div>
+      <div class="sp-metric">
+        <div class="sp-metric-label">样本数</div>
+        <div class="sp-metric-value">100<span class="sp-metric-unit"> 套</span></div>
+        <div class="sp-metric-meta">2009–2022 年</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       ⭐ KPI 阵 (4 张, 极薄 hairline + 左 2px 钢蓝细线)
+       ════════════════════════════════════════════════════════════════ -->
+  <section class="kpi-row">
+    <div class="kpi">
+      <div class="kpi-label-row">
+        <span class="kpi-label">平均房价</span>
+        <span class="kpi-trend up">↑ 31% vs 中位</span>
+      </div>
+      <div class="kpi-value" data-kpi="avg_price">¥74.6<span class="kpi-unit">万</span></div>
+      <div class="kpi-meta">100 套均值 · 中位 <strong>¥57 万</strong></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label-row">
+        <span class="kpi-label">平均单价</span>
+        <span class="kpi-trend flat">P10-P90 跨度 2.8x</span>
+      </div>
+      <div class="kpi-value" data-kpi="unit_price">¥6,000<span class="kpi-unit">/㎡</span></div>
+      <div class="kpi-meta">P10 ¥3,728 → P90 <strong>¥10,432</strong></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label-row">
+        <span class="kpi-label">南向占比</span>
+        <span class="kpi-trend up">↑ 主导朝向</span>
+      </div>
+      <div class="kpi-value" data-kpi="south_share">51<span class="kpi-unit">%</span></div>
+      <div class="kpi-meta">南 51 · 西 19 · 东 15 · 北 <strong>15</strong></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label-row">
+        <span class="kpi-label">豪华层</span>
+        <span class="kpi-trend up">利润核心</span>
+      </div>
+      <div class="kpi-value" data-kpi="luxury">21<span class="kpi-unit"> 套</span></div>
+      <div class="kpi-meta">21% 样本 · 占 <strong>47% 市值</strong></div>
+    </div>
+  </section>
+
+  <!-- ════════════ 全局筛选条 (极简 toggle) ════════════ -->
+  <section class="filter-bar">
+    <span class="filter-label">筛选维度</span>
+    <div class="filter-groups" id="filter-groups"></div>
+    <div class="filter-summary">
+      <span class="num" id="filter-count">100</span>
+      <span>套匹配</span>
+      <button class="filter-reset" onclick="resetFilters()">重置</button>
+    </div>
+  </section>
+
+  <!-- ════════════ Panel grid 1 ════════════ -->
+  <section class="panel-grid">
+    <div class="panel col-8">
+      <div class="panel-hd">
+        <div class="panel-title">面积 × 单价 (按小区类型分色)</div>
+        <div class="panel-meta">散点图</div>
+      </div>
+      <div class="chart-host" id="chart-scatter"></div>
+    </div>
+    <div class="panel col-4">
+      <div class="panel-hd">
+        <div class="panel-title">单价区间分布</div>
+        <div class="panel-meta">柱状图</div>
+      </div>
+      <div class="chart-host" id="chart-price-dist"></div>
+    </div>
+  </section>
+
+  <!-- ════════════ Panel grid 2 ════════════ -->
+  <section class="panel-grid">
+    <div class="panel col-4">
+      <div class="panel-hd">
+        <div class="panel-title">朝向分布</div>
+        <div class="panel-meta">环图</div>
+      </div>
+      <div class="chart-host" id="chart-orient"></div>
+    </div>
+    <div class="panel col-4">
+      <div class="panel-hd">
+        <div class="panel-title">装修等级占比</div>
+        <div class="panel-meta">环图</div>
+      </div>
+      <div class="chart-host" id="chart-decoration"></div>
+    </div>
+    <div class="panel col-4">
+      <div class="panel-hd">
+        <div class="panel-title">小区类型 · 6 维特征</div>
+        <div class="panel-meta">雷达图</div>
+      </div>
+      <div class="chart-host" id="chart-radar"></div>
+    </div>
+  </section>
+
+  <!-- ════════════ Panel grid 3: 高级形态 heatmap + treemap (chart 多样性必带) ════════════ -->
+  <section class="panel-grid">
+    <div class="panel col-8">
+      <div class="panel-hd">
+        <div class="panel-title">朝向 × 装修 · 分布密度</div>
+        <div class="panel-meta">热力图</div>
+      </div>
+      <div class="chart-host" id="chart-heatmap" style="height: 280px;"></div>
+    </div>
+    <div class="panel col-4">
+      <div class="panel-hd">
+        <div class="panel-title">圈层 → 户型 · 层级占比</div>
+        <div class="panel-meta">矩形树图</div>
+      </div>
+      <div class="chart-host" id="chart-treemap" style="height: 280px;"></div>
+    </div>
+  </section>
+
+  <!-- ════════════ 明细表 ════════════ -->
+  <section class="table-panel">
+    <div class="table-hd">
+      <div class="table-title">房源明细 · 100 套样本</div>
+      <input type="text" class="table-search" placeholder="搜索 编号 / 朝向 / 装修..." oninput="onSearch(this.value)">
+      <span class="table-hint">点行 → 详情抽屉</span>
+    </div>
+    <table class="data-table">
+      <thead><tr id="table-head"></tr></thead>
+      <tbody id="table-body"></tbody>
+    </table>
+    <div class="table-pager">
+      <button onclick="setPage(page - 1)" id="prev-btn">← 上一页</button>
+      <span id="page-info">1 / 5</span>
+      <button onclick="setPage(page + 1)" id="next-btn">下一页 →</button>
+    </div>
+  </section>
+
+  <!-- ─── Footer ─── -->
+  <div class="dash-footer">
+    <div>城市观察 · 房产分析驾驶舱 · 100 套样本研究</div>
+    <div>蓝色咨询风</div>
+  </div>
+
+</div>
+
+<!-- ════════════ 下钻抽屉 ════════════ -->
+<aside class="drawer" id="drawer">
+  <div class="drawer-hd">
+    <div>
+      <span class="drawer-id" id="drawer-id">H001</span>
+      <span class="drawer-name" id="drawer-name">100㎡ · 3 室 · 精装修</span>
+    </div>
+    <button class="drawer-close" onclick="closeDrawer()">×</button>
+  </div>
+  <div class="drawer-body">
+    <div class="drawer-price" id="drawer-price">¥60 万</div>
+    <div class="drawer-price-meta" id="drawer-price-meta">¥6,000/㎡ · 楼龄 5 年</div>
+    <div class="field-grid" id="drawer-fields"></div>
+    <div class="drawer-section">
+      <div class="drawer-section-title">本套 vs 同类型均值</div>
+      <div id="drawer-mini" style="height: 240px;"></div>
+    </div>
+  </div>
+</aside>
+<div class="drawer-mask" id="drawer-mask" onclick="closeDrawer()"></div>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     JavaScript · ECharts (钢蓝单色 + 极简, 跟 graphic-press 渐变胶囊柱反差)
+     ════════════════════════════════════════════════════════════════════════ -->
+<script>
+
+const bcEchartsBase = {
+  color: ['#5689C2', '#3A6EA5', '#94A3B8', '#64748B', '#475569'],
+  textStyle: { fontFamily: "'Manrope', 'Noto Sans SC', sans-serif", color: '#F4F4F5' },
+  backgroundColor: 'transparent',
+  tooltip: {
+    trigger: 'axis',
+    backgroundColor: 'rgba(15,23,42,0.96)',
+    borderColor: 'rgba(58,110,165,0.30)', borderWidth: 0.5,
+    textStyle: { color: '#F4F4F5', fontSize: 12 }, padding: 12
+  },
+  legend: { top: 0, right: 10, textStyle: { fontSize: 11, color: '#CBD5E1' } },
+  xAxis: {
+    type: 'category',
+    axisLine: { lineStyle: { color: 'rgba(244,244,245,0.12)', width: 0.5 } },
+    axisTick: { show: false },
+    axisLabel: { color: '#94A3B8', fontSize: 10, fontFamily: 'Space Mono, monospace' },
+    splitLine: { show: false }
+  },
+  yAxis: {
+    type: 'value',
+    axisLine: { show: false }, axisTick: { show: false },
+    axisLabel: { color: '#94A3B8', fontSize: 10, fontFamily: 'Space Mono, monospace' },
+    splitLine: { lineStyle: { color: 'rgba(244,244,245,0.05)', type: 'dashed' } }
+  }
+};
+
+// Demo 数据 30 行
+const D = {
+  rows: [
+    {id:'H001',area:85.5,rooms:2,bath:1,floor:8,total_floor:18,year:2015,subway:0.3,school:0.5,mall:0.4,decoration:'精装修',orient:'南',type:'高档小区',price:520000},
+    {id:'H002',area:120.3,rooms:3,bath:2,floor:12,total_floor:25,year:2018,subway:0.8,school:1.2,mall:0.6,decoration:'豪华装修',orient:'南',type:'豪华小区',price:1080000},
+    {id:'H003',area:95.2,rooms:2,bath:1,floor:5,total_floor:15,year:2012,subway:1.5,school:0.8,mall:1.1,decoration:'简装修',orient:'东',type:'普通小区',price:420000},
+    {id:'H004',area:68.8,rooms:1,bath:1,floor:3,total_floor:12,year:2010,subway:2.1,school:1.5,mall:0.9,decoration:'毛坯',orient:'北',type:'普通小区',price:280000},
+    {id:'H005',area:145.6,rooms:4,bath:2,floor:15,total_floor:28,year:2020,subway:0.4,school:0.6,mall:0.5,decoration:'豪华装修',orient:'南',type:'豪华小区',price:1200000},
+    {id:'H006',area:78.9,rooms:2,bath:1,floor:6,total_floor:18,year:2014,subway:0.6,school:0.9,mall:0.7,decoration:'精装修',orient:'西',type:'高档小区',price:450000},
+    {id:'H007',area:102.4,rooms:3,bath:2,floor:10,total_floor:22,year:2017,subway:1.2,school:0.8,mall:1.3,decoration:'精装修',orient:'南',type:'高档小区',price:580000},
+    {id:'H008',area:156.7,rooms:4,bath:3,floor:18,total_floor:30,year:2021,subway:0.3,school:0.4,mall:0.3,decoration:'豪华装修',orient:'南',type:'豪华小区',price:1450000},
+    {id:'H009',area:89.3,rooms:2,bath:1,floor:7,total_floor:20,year:2011,subway:1.8,school:1.3,mall:1.0,decoration:'简装修',orient:'东',type:'普通小区',price:350000},
+    {id:'H010',area:134.2,rooms:3,bath:2,floor:14,total_floor:25,year:2019,subway:0.5,school:0.7,mall:0.6,decoration:'豪华装修',orient:'南',type:'豪华小区',price:920000},
+    {id:'H011',area:72.1,rooms:2,bath:1,floor:4,total_floor:15,year:2013,subway:1.3,school:1.6,mall:1.4,decoration:'精装修',orient:'西',type:'高档小区',price:320000},
+    {id:'H012',area:198.5,rooms:5,bath:3,floor:20,total_floor:32,year:2022,subway:0.2,school:0.3,mall:0.4,decoration:'豪华装修',orient:'南',type:'豪华小区',price:1800000},
+    {id:'H013',area:91.7,rooms:2,bath:1,floor:6,total_floor:18,year:2015,subway:0.9,school:1.1,mall:0.8,decoration:'精装修',orient:'东',type:'高档小区',price:485000},
+    {id:'H014',area:115.8,rooms:3,bath:2,floor:11,total_floor:24,year:2018,subway:0.7,school:0.8,mall:0.9,decoration:'精装修',orient:'南',type:'高档小区',price:650000},
+    {id:'H015',area:63.4,rooms:1,bath:1,floor:2,total_floor:10,year:2009,subway:2.5,school:1.8,mall:1.6,decoration:'毛坯',orient:'北',type:'普通小区',price:230000},
+    {id:'H016',area:128.9,rooms:3,bath:2,floor:13,total_floor:26,year:2020,subway:0.4,school:0.5,mall:0.3,decoration:'豪华装修',orient:'南',type:'豪华小区',price:780000},
+    {id:'H017',area:87.6,rooms:2,bath:1,floor:5,total_floor:16,year:2014,subway:1.1,school:1.0,mall:0.9,decoration:'简装修',orient:'西',type:'普通小区',price:380000},
+    {id:'H018',area:176.3,rooms:4,bath:3,floor:17,total_floor:30,year:2021,subway:0.3,school:0.4,mall:0.5,decoration:'豪华装修',orient:'南',type:'豪华小区',price:1350000},
+    {id:'H019',area:94.8,rooms:2,bath:1,floor:8,total_floor:20,year:2016,subway:0.6,school:0.7,mall:0.5,decoration:'精装修',orient:'南',type:'高档小区',price:520000},
+    {id:'H020',area:108.2,rooms:3,bath:2,floor:9,total_floor:22,year:2017,subway:0.8,school:1.0,mall:0.7,decoration:'精装修',orient:'东',type:'高档小区',price:620000},
+    {id:'H021',area:75.5,rooms:2,bath:1,floor:4,total_floor:14,year:2012,subway:1.5,school:1.3,mall:1.2,decoration:'简装修',orient:'北',type:'普通小区',price:340000},
+    {id:'H022',area:142.7,rooms:3,bath:2,floor:15,total_floor:28,year:2019,subway:0.5,school:0.6,mall:0.4,decoration:'豪华装修',orient:'南',type:'豪华小区',price:1100000},
+    {id:'H023',area:82.3,rooms:2,bath:1,floor:6,total_floor:17,year:2013,subway:1.2,school:1.0,mall:1.1,decoration:'精装修',orient:'西',type:'高档小区',price:360000},
+    {id:'H024',area:167.9,rooms:4,bath:3,floor:18,total_floor:30,year:2021,subway:0.3,school:0.4,mall:0.3,decoration:'豪华装修',orient:'南',type:'豪华小区',price:1520000},
+    {id:'H025',area:96.1,rooms:3,bath:2,floor:7,total_floor:20,year:2016,subway:0.7,school:0.9,mall:0.6,decoration:'精装修',orient:'东',type:'高档小区',price:550000},
+    {id:'H026',area:119.4,rooms:3,bath:2,floor:12,total_floor:24,year:2018,subway:0.6,school:0.7,mall:0.5,decoration:'精装修',orient:'南',type:'高档小区',price:680000},
+    {id:'H027',area:71.8,rooms:2,bath:1,floor:3,total_floor:12,year:2011,subway:1.8,school:1.5,mall:1.4,decoration:'简装修',orient:'北',type:'普通小区',price:290000},
+    {id:'H028',area:153.6,rooms:4,bath:3,floor:16,total_floor:28,year:2020,subway:0.4,school:0.5,mall:0.4,decoration:'豪华装修',orient:'南',type:'豪华小区',price:1050000},
+    {id:'H029',area:88.7,rooms:2,bath:1,floor:5,total_floor:18,year:2014,subway:0.9,school:1.1,mall:0.8,decoration:'精装修',orient:'东',type:'高档小区',price:390000},
+    {id:'H030',area:201.3,rooms:5,bath:4,floor:22,total_floor:32,year:2022,subway:0.2,school:0.3,mall:0.3,decoration:'豪华装修',orient:'南',type:'豪华小区',price:2100000}
+  ],
+  facets: {
+    decoration: ['毛坯', '简装修', '精装修', '豪华装修'],
+    orient: ['南', '北', '东', '西'],
+    type: ['普通小区', '高档小区', '豪华小区'],
+    rooms: [1, 2, 3, 4, 5]
+  }
+};
+
+const state = {
+  filters: { decoration: null, orient: null, type: null, rooms: null },
+  search: '', sort: { key: null, dir: 1 }, page: 0, pageSize: 8
+};
+const charts = {};
+
+function safeRender(name, fn) { try { fn(); } catch (e) { console.warn('[render]', name, e); } }
+
+// ════════════════════════════════════════════════════════════════════════
+// 筛选条
+// ════════════════════════════════════════════════════════════════════════
+function renderFilters() {
+  const groups = document.getElementById('filter-groups');
+  const LABELS = { decoration: '装修', orient: '朝向', type: '小区', rooms: '房间' };
+  groups.innerHTML = Object.entries(D.facets).map(([key, options]) => `
+    <div class="filter-group">
+      <span class="filter-group-label">${LABELS[key]}</span>
+      <button class="pill-toggle ${state.filters[key] === null ? 'is-active' : ''}"
+              onclick="setFilter('${key}', null)">全部</button>
+      ${options.map(opt => `
+        <button class="pill-toggle ${state.filters[key] === opt ? 'is-active' : ''}"
+                onclick="setFilter('${key}', ${typeof opt === 'number' ? opt : `'${opt}'`})">${typeof opt === 'number' ? opt + '室' : opt}</button>
+      `).join('')}
+    </div>
+  `).join('');
+}
+function setFilter(key, value) { state.filters[key] = value; state.page = 0; applyAndRender(); }
+function resetFilters() {
+  Object.keys(state.filters).forEach(k => state.filters[k] = null);
+  state.search = ''; document.querySelector('.table-search').value = '';
+  state.page = 0; applyAndRender();
+}
+function onSearch(q) { state.search = q.trim().toLowerCase(); state.page = 0; applyAndRender(); }
+
+function applyFilters() {
+  return D.rows.filter(r => {
+    for (const [k, v] of Object.entries(state.filters)) {
+      if (v !== null && r[k] !== v) return false;
+    }
+    if (state.search) {
+      const hay = `${r.id} ${r.orient} ${r.decoration} ${r.type}`.toLowerCase();
+      if (!hay.includes(state.search)) return false;
+    }
+    return true;
+  });
+}
+
+function applyAndRender() {
+  const filtered = applyFilters();
+  document.getElementById('filter-count').textContent = filtered.length;
+  renderFilters();
+  renderKPI(filtered);
+  renderCharts(filtered);
+  renderTable(filtered);
+}
+
+// KPI 重算
+function renderKPI(rows) {
+  if (rows.length === 0) {
+    document.querySelectorAll('[data-kpi]').forEach(el => el.innerHTML = '— <span class="kpi-unit">无</span>');
+    return;
+  }
+  const n = rows.length;
+  const avg = (k) => rows.reduce((s, r) => s + r[k], 0) / n;
+  const fmt = (v) => (v / 10000).toFixed(1);
+
+  document.querySelector('[data-kpi="avg_price"]').innerHTML = '¥' + fmt(avg('price')) + '<span class="kpi-unit">万</span>';
+  document.querySelector('[data-kpi="unit_price"]').innerHTML = '¥' + Math.round(avg('price') / avg('area')).toLocaleString() + '<span class="kpi-unit">/㎡</span>';
+  const south = rows.filter(r => r.orient === '南').length;
+  document.querySelector('[data-kpi="south_share"]').innerHTML = Math.round(south / n * 100) + '<span class="kpi-unit">%</span>';
+  const luxury = rows.filter(r => r.type === '豪华小区').length;
+  document.querySelector('[data-kpi="luxury"]').innerHTML = luxury + '<span class="kpi-unit"> 套</span>';
+}
+
+// Charts
+function renderCharts(rows) {
+  renderScatter(rows);
+  renderPriceDist(rows);
+  renderOrient(rows);
+  renderDecoration(rows);
+  renderRadar(rows);
+  renderHeatmap(rows);
+  renderTreemap(rows);
+}
+
+function renderScatter(rows) {
+  safeRender('scatter', () => {
+    const el = document.getElementById('chart-scatter');
+    if (!charts.scatter) charts.scatter = echarts.init(el);
+    const TYPE_COLOR = { '普通小区': '#94A3B8', '高档小区': '#3A6EA5', '豪华小区': '#5689C2' };
+    const series = ['普通小区', '高档小区', '豪华小区'].map(t => ({
+      name: t, type: 'scatter', symbolSize: 12,
+      data: rows.filter(r => r.type === t).map(r => [r.area, Math.round(r.price / r.area)]),
+      itemStyle: { color: TYPE_COLOR[t], opacity: 0.85, borderColor: 'rgba(244,244,245,0.2)', borderWidth: 0.5 }
+    }));
+    charts.scatter.setOption({
+      ...bcEchartsBase,
+      legend: { ...bcEchartsBase.legend, data: ['普通小区', '高档小区', '豪华小区'] },
+      tooltip: { ...bcEchartsBase.tooltip, trigger: 'item', formatter: p => `面积 ${p.data[0]}㎡<br/>单价 ¥${p.data[1].toLocaleString()}/㎡` },
+      xAxis: { ...bcEchartsBase.xAxis, type: 'value', name: '面积 ㎡', nameTextStyle: { color: '#94A3B8', fontSize: 10 } },
+      yAxis: { ...bcEchartsBase.yAxis, name: '单价 ¥/㎡', nameTextStyle: { color: '#94A3B8', fontSize: 10 } },
+      grid: { left: 60, right: 30, top: 40, bottom: 40, containLabel: true },
+      series
+    });
+    new ResizeObserver(() => charts.scatter.resize()).observe(el);
+  });
+}
+
+function renderPriceDist(rows) {
+  safeRender('price-dist', () => {
+    const el = document.getElementById('chart-price-dist');
+    if (!charts.priceDist) charts.priceDist = echarts.init(el);
+    const bins = [
+      { label: '<40', max: 400000 }, { label: '40-70', max: 700000 },
+      { label: '70-100', max: 1000000 }, { label: '100-150', max: 1500000 }, { label: '>150', max: Infinity }
+    ];
+    let prev = 0;
+    const counts = bins.map(b => {
+      const c = rows.filter(r => r.price >= prev && r.price < b.max).length;
+      prev = b.max; return c;
+    });
+    charts.priceDist.setOption({
+      ...bcEchartsBase,
+      legend: { show: false },
+      tooltip: { ...bcEchartsBase.tooltip, formatter: p => `${p[0].name}万: ${p[0].value} 套` },
+      xAxis: { ...bcEchartsBase.xAxis, data: bins.map(b => b.label), axisLabel: { ...bcEchartsBase.xAxis.axisLabel, rotate: 0 } },
+      yAxis: { ...bcEchartsBase.yAxis, name: '套数' },
+      grid: { left: 50, right: 20, top: 30, bottom: 40, containLabel: true },
+      series: [{
+        type: 'bar', barWidth: 20, data: counts,
+        itemStyle: { color: '#3A6EA5', borderRadius: [2, 2, 0, 0] }
+      }]
+    });
+    new ResizeObserver(() => charts.priceDist.resize()).observe(el);
+  });
+}
+
+function renderOrient(rows) {
+  safeRender('orient', () => {
+    const el = document.getElementById('chart-orient');
+    if (!charts.orient) charts.orient = echarts.init(el);
+    const counts = ['南', '西', '东', '北'].map(o => ({
+      name: o, value: rows.filter(r => r.orient === o).length
+    }));
+    charts.orient.setOption({
+      ...bcEchartsBase,
+      color: ['#5689C2', '#3A6EA5', '#94A3B8', '#64748B'],
+      legend: { ...bcEchartsBase.legend, orient: 'vertical', right: 0, top: 'middle', itemGap: 10 },
+      tooltip: { ...bcEchartsBase.tooltip, trigger: 'item', formatter: '{b}: {c} 套 ({d}%)' },
+      series: [{
+        type: 'pie', radius: ['55%', '78%'], center: ['38%', '50%'],
+        data: counts,
+        itemStyle: { borderColor: '#0A1128', borderWidth: 2 },
+        label: { show: true, formatter: '{b}\n{d}%', fontSize: 10, color: '#CBD5E1', fontFamily: 'Space Mono' }
+      }]
+    });
+    new ResizeObserver(() => charts.orient.resize()).observe(el);
+  });
+}
+
+function renderDecoration(rows) {
+  safeRender('decoration', () => {
+    const el = document.getElementById('chart-decoration');
+    if (!charts.decoration) charts.decoration = echarts.init(el);
+    const counts = ['毛坯', '简装修', '精装修', '豪华装修'].map(d => ({
+      name: d, value: rows.filter(r => r.decoration === d).length
+    }));
+    charts.decoration.setOption({
+      ...bcEchartsBase,
+      color: ['#475569', '#94A3B8', '#3A6EA5', '#5689C2'],
+      legend: { ...bcEchartsBase.legend, orient: 'vertical', right: 0, top: 'middle', itemGap: 10 },
+      tooltip: { ...bcEchartsBase.tooltip, trigger: 'item', formatter: '{b}: {c} 套 ({d}%)' },
+      series: [{
+        type: 'pie', radius: ['55%', '78%'], center: ['38%', '50%'],
+        data: counts,
+        itemStyle: { borderColor: '#0A1128', borderWidth: 2 },
+        label: { show: true, formatter: '{b}\n{d}%', fontSize: 10, color: '#CBD5E1', fontFamily: 'Space Mono' }
+      }]
+    });
+    new ResizeObserver(() => charts.decoration.resize()).observe(el);
+  });
+}
+
+function renderRadar(rows) {
+  safeRender('radar', () => {
+    const el = document.getElementById('chart-radar');
+    if (!charts.radar) charts.radar = echarts.init(el);
+    const avgBy = (typeRows, k) => typeRows.length ? typeRows.reduce((s, r) => s + r[k], 0) / typeRows.length : 0;
+    const TYPES = ['普通小区', '高档小区', '豪华小区'];
+    const COLORS = { '普通小区': '#94A3B8', '高档小区': '#3A6EA5', '豪华小区': '#5689C2' };
+    const radarData = TYPES.map(t => {
+      const rs = rows.filter(r => r.type === t);
+      return {
+        name: t,
+        value: [
+          avgBy(rs, 'area'), avgBy(rs, 'price') / 10000,
+          (2026 - avgBy(rs, 'year')), avgBy(rs, 'rooms') * 30,
+          (1 - avgBy(rs, 'subway') / 3) * 100, (1 - avgBy(rs, 'school') / 3) * 100
+        ],
+        itemStyle: { color: COLORS[t] },
+        areaStyle: { color: COLORS[t], opacity: 0.15 },
+        lineStyle: { color: COLORS[t], width: 1.5 }
+      };
+    });
+    charts.radar.setOption({
+      textStyle: bcEchartsBase.textStyle,
+      backgroundColor: 'transparent',
+      legend: { data: TYPES, bottom: 0, textStyle: { fontSize: 10, color: '#CBD5E1' } },
+      tooltip: { trigger: 'item' },
+      radar: {
+        indicator: [
+          { name: '面积', max: 200 }, { name: '总价', max: 200 },
+          { name: '楼龄', max: 20 }, { name: '户型', max: 150 },
+          { name: '地铁', max: 100 }, { name: '学区', max: 100 }
+        ],
+        center: ['50%', '48%'], radius: '58%',
+        axisName: { color: '#94A3B8', fontSize: 9, fontFamily: 'Space Mono' },
+        splitArea: { areaStyle: { color: ['rgba(58,110,165,0.04)','rgba(15,23,42,0.4)'] } },
+        splitLine: { lineStyle: { color: 'rgba(244,244,245,0.08)' } },
+        axisLine: { lineStyle: { color: 'rgba(244,244,245,0.12)' } }
+      },
+      series: [{ type: 'radar', data: radarData }]
+    });
+    new ResizeObserver(() => charts.radar.resize()).observe(el);
+  });
+}
+
+// 朝向 × 装修 热力图 (chart 多样性必备 — 二维分类高级形态)
+function renderHeatmap(rows) {
+  safeRender('heatmap', () => {
+    const el = document.getElementById('chart-heatmap');
+    if (!el) return;
+    if (!charts.heatmap) charts.heatmap = echarts.init(el);
+    const xCats = ['毛坯', '简装修', '精装修', '豪华装修'];
+    const yCats = ['南', '东', '西', '北'];
+    const raw = [];
+    yCats.forEach((y, yi) => xCats.forEach((x, xi) => {
+      const c = rows.filter(r => r.orient === y && r.decoration === x).length;
+      raw.push([xi, yi, c]);
+    }));
+    const max = Math.max(1, ...raw.map(p => p[2]));
+    charts.heatmap.setOption({
+      textStyle: bcEchartsBase.textStyle,
+      backgroundColor: 'transparent',
+      tooltip: { ...bcEchartsBase.tooltip, position: 'top',
+        formatter: p => `${yCats[p.data[1]]} 向 × ${xCats[p.data[0]]}<br/><strong>${p.data[2]} 套</strong>` },
+      grid: { left: 70, right: 60, top: 20, bottom: 50, containLabel: false },
+      xAxis: { type: 'category', data: xCats, splitArea: { show: true }, axisTick: { show: false },
+        axisLabel: { color: '#94A3B8', fontSize: 10, fontFamily: 'Space Mono' },
+        axisLine: { lineStyle: { color: 'rgba(244,244,245,0.12)' } } },
+      yAxis: { type: 'category', data: yCats, splitArea: { show: true }, axisTick: { show: false },
+        axisLabel: { color: '#94A3B8', fontSize: 10, fontFamily: 'Space Mono' },
+        axisLine: { lineStyle: { color: 'rgba(244,244,245,0.12)' } } },
+      visualMap: { min: 0, max, calculable: true, orient: 'horizontal', left: 'center', bottom: 6,
+        textStyle: { color: '#94A3B8', fontSize: 10 },
+        inRange: { color: ['rgba(58,110,165,0.06)', '#3A6EA5', '#5689C2'] } },
+      series: [{ type: 'heatmap', data: raw,
+        label: { show: true, color: '#F4F4F5', fontSize: 11, fontFamily: 'Space Mono',
+          formatter: p => p.data[2] || '' },
+        itemStyle: { borderColor: 'rgba(244,244,245,0.06)', borderWidth: 1 } }]
+    });
+    new ResizeObserver(() => charts.heatmap.resize()).observe(el);
+  });
+}
+
+// 圈层 → 户型 矩形树图 (chart 多样性必备 — 层级嵌套占比)
+function renderTreemap(rows) {
+  safeRender('treemap', () => {
+    const el = document.getElementById('chart-treemap');
+    if (!el) return;
+    if (!charts.treemap) charts.treemap = echarts.init(el);
+    const TYPE_COLOR = { '普通小区': '#94A3B8', '高档小区': '#3A6EA5', '豪华小区': '#5689C2' };
+    function bucket(rs) {
+      const b = { '1-2 室': 0, '3 室': 0, '4-5 室': 0 };
+      rs.forEach(r => { if (r.rooms <= 2) b['1-2 室']++; else if (r.rooms === 3) b['3 室']++; else b['4-5 室']++; });
+      return b;
+    }
+    const data = ['普通小区', '高档小区', '豪华小区'].map(t => {
+      const rs = rows.filter(r => r.type === t); const b = bucket(rs);
+      return { name: t, value: rs.length, itemStyle: { color: TYPE_COLOR[t] },
+        children: Object.entries(b).filter(([_, v]) => v > 0)
+          .map(([k, v]) => ({ name: `${t.replace('小区', '')} · ${k}`, value: v })) };
+    });
+    charts.treemap.setOption({
+      textStyle: bcEchartsBase.textStyle,
+      backgroundColor: 'transparent',
+      tooltip: { ...bcEchartsBase.tooltip, formatter: p => `${p.name}<br/><strong>${p.value} 套</strong>` },
+      series: [{
+        type: 'treemap', roam: false, nodeClick: false, breadcrumb: { show: false },
+        data, levels: [
+          { itemStyle: { borderColor: '#0A1128', borderWidth: 3, gapWidth: 3 } },
+          { itemStyle: { borderColor: 'rgba(15,23,42,0.6)', borderWidth: 1.5, gapWidth: 1.5 } }
+        ],
+        label: { show: true, color: '#F4F4F5', fontSize: 10, fontFamily: 'Noto Sans SC', formatter: '{b}\n{c}' }
+      }]
+    });
+    new ResizeObserver(() => charts.treemap.resize()).observe(el);
+  });
+}
+
+// 明细表
+const COLS = [
+  { key: 'id', label: '编号', cls: 't-id' },
+  { key: 'area', label: '面积', cls: 't-num' },
+  { key: 'rooms', label: '户型' },
+  { key: 'floor', label: '楼层' },
+  { key: 'year', label: '年份' },
+  { key: 'decoration', label: '装修' },
+  { key: 'orient', label: '朝向' },
+  { key: 'type', label: '类型' },
+  { key: 'price', label: '总价', cls: 't-num' }
+];
+const TYPE_TAG = { '普通小区': 't-common', '高档小区': 't-premium', '豪华小区': 't-luxury' };
+
+function renderTable(rows) {
+  let sorted = [...rows];
+  if (state.sort.key) {
+    sorted.sort((a, b) => {
+      const av = a[state.sort.key], bv = b[state.sort.key];
+      if (av < bv) return -1 * state.sort.dir;
+      if (av > bv) return 1 * state.sort.dir;
+      return 0;
+    });
+  }
+  const head = document.getElementById('table-head');
+  if (!head.children.length) {
+    head.innerHTML = COLS.map(c => `<th onclick="onSort('${c.key}')" data-col="${c.key}">${c.label}</th>`).join('');
+  }
+  head.querySelectorAll('th').forEach(th => {
+    th.classList.remove('sort-asc', 'sort-desc');
+    if (th.dataset.col === state.sort.key) th.classList.add(state.sort.dir === 1 ? 'sort-asc' : 'sort-desc');
+  });
+  const start = state.page * state.pageSize;
+  const slice = sorted.slice(start, start + state.pageSize);
+  const totalPages = Math.max(1, Math.ceil(sorted.length / state.pageSize));
+  const tbody = document.getElementById('table-body');
+  if (slice.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="${COLS.length}" style="text-align:center;padding:40px;color:var(--text-faint);font-family:var(--font-mono);">无匹配数据</td></tr>`;
+  } else {
+    tbody.innerHTML = slice.map((r, i) => `
+      <tr onclick="openDrawer(${start + i})">
+        <td class="t-id">${r.id}</td>
+        <td class="t-num">${r.area}</td>
+        <td>${r.rooms}室${r.bath}卫</td>
+        <td>${r.floor}/${r.total_floor}</td>
+        <td>${r.year}</td>
+        <td>${r.decoration}</td>
+        <td>${r.orient}</td>
+        <td><span class="type-tag ${TYPE_TAG[r.type]}">${r.type}</span></td>
+        <td class="t-num">${(r.price / 10000).toFixed(0)} 万</td>
+      </tr>
+    `).join('');
+  }
+  document.getElementById('page-info').textContent = `${state.page + 1} / ${totalPages}`;
+  document.getElementById('prev-btn').disabled = state.page === 0;
+  document.getElementById('next-btn').disabled = state.page >= totalPages - 1;
+  window.__currentRows = sorted;
+}
+function onSort(key) {
+  if (state.sort.key === key) state.sort.dir *= -1;
+  else { state.sort.key = key; state.sort.dir = 1; }
+  renderTable(applyFilters());
+}
+function setPage(p) {
+  const filtered = applyFilters();
+  const totalPages = Math.ceil(filtered.length / state.pageSize);
+  state.page = Math.max(0, Math.min(totalPages - 1, p));
+  renderTable(filtered);
+}
+
+// 下钻抽屉
+function openDrawer(idx) {
+  const r = window.__currentRows[idx];
+  if (!r) return;
+  document.getElementById('drawer-id').textContent = r.id;
+  document.getElementById('drawer-name').textContent = `${r.area}㎡ · ${r.rooms}室${r.bath}卫 · ${r.decoration}`;
+  document.getElementById('drawer-price').textContent = '¥' + (r.price / 10000).toFixed(0) + ' 万';
+  document.getElementById('drawer-price-meta').textContent =
+    `¥${Math.round(r.price / r.area).toLocaleString()}/㎡ · 楼龄 ${2026 - r.year} 年`;
+  document.getElementById('drawer-fields').innerHTML = `
+    <div class="field-cell"><div class="field-label">面积</div><div class="field-value">${r.area} ㎡</div></div>
+    <div class="field-cell"><div class="field-label">户型</div><div class="field-value">${r.rooms}室${r.bath}卫</div></div>
+    <div class="field-cell"><div class="field-label">楼层</div><div class="field-value">${r.floor} / ${r.total_floor}</div></div>
+    <div class="field-cell"><div class="field-label">年份</div><div class="field-value">${r.year}</div></div>
+    <div class="field-cell"><div class="field-label">朝向</div><div class="field-value">${r.orient}</div></div>
+    <div class="field-cell"><div class="field-label">类型</div><div class="field-value">${r.type}</div></div>
+    <div class="field-cell"><div class="field-label">地铁</div><div class="field-value">${r.subway} km</div></div>
+    <div class="field-cell"><div class="field-label">学校</div><div class="field-value">${r.school} km</div></div>
+  `;
+  safeRender('drawer-mini', () => {
+    const el = document.getElementById('drawer-mini');
+    const sameType = D.rows.filter(x => x.type === r.type);
+    const avg = (k) => sameType.reduce((s, x) => s + x[k], 0) / sameType.length;
+    const ch = echarts.init(el);
+    ch.setOption({
+      textStyle: bcEchartsBase.textStyle,
+      backgroundColor: 'transparent',
+      radar: {
+        indicator: [
+          { name: '面积', max: 200 }, { name: '总价', max: 200 },
+          { name: '楼龄', max: 20 }, { name: '便利', max: 5 }
+        ],
+        center: ['50%', '52%'], radius: '58%',
+        axisName: { color: '#94A3B8', fontSize: 9, fontFamily: 'Space Mono' },
+        splitArea: { areaStyle: { color: ['rgba(58,110,165,0.04)','rgba(15,23,42,0.4)'] } },
+        splitLine: { lineStyle: { color: 'rgba(244,244,245,0.08)' } },
+        axisLine: { lineStyle: { color: 'rgba(244,244,245,0.12)' } }
+      },
+      legend: { data: ['当前房源', '同类型均值'], bottom: 0, textStyle: { fontSize: 10, color: '#CBD5E1' } },
+      series: [{
+        type: 'radar',
+        data: [
+          { name: '当前房源', value: [r.area, r.price / 10000, 2026 - r.year, 5 - (r.subway + r.school + r.mall)],
+            itemStyle: { color: '#5689C2' }, areaStyle: { color: '#5689C2', opacity: 0.2 },
+            lineStyle: { color: '#5689C2', width: 1.5 } },
+          { name: '同类型均值', value: [avg('area'), avg('price') / 10000, 2026 - avg('year'), 5 - (avg('subway') + avg('school') + avg('mall'))],
+            itemStyle: { color: '#94A3B8' }, areaStyle: { color: '#94A3B8', opacity: 0.12 },
+            lineStyle: { color: '#94A3B8', width: 1.5 } }
+        ]
+      }]
+    });
+  });
+  document.getElementById('drawer').classList.add('is-open');
+  document.getElementById('drawer-mask').classList.add('is-open');
+}
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('is-open');
+  document.getElementById('drawer-mask').classList.remove('is-open');
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+
+renderFilters();
+applyAndRender();
+
+/* ════════════════════════════════════════════════════════════════════════
+   灵魂动效 · 深蓝点云球 (WebGL noise orb)
+   - 32 阶 IcosahedronGeometry (≈1k 点)
+   - simplex 3D noise 顶点位移 (像气泡呼吸)
+   - sky-400 主色 → 深蓝阴影 渐变
+   - additive blending + 0.4 opacity = 光感
+   ════════════════════════════════════════════════════════════════════════ */
+(function mountPointCloudOrb() {
+  if (typeof THREE === 'undefined') return;
+  const host = document.getElementById('bg-orb');
+  if (!host) return;
+  // 弱 WebGL 设备直接跳过 (移动端低配, prefers-reduced-motion)
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  try {
+    const canvas = document.createElement('canvas');
+    if (!canvas.getContext('webgl') && !canvas.getContext('experimental-webgl')) return;
+  } catch (e) { return; }
+
+  const NOISE_GLSL = `
+    vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}
+    vec4 mod289(vec4 x){return x-floor(x*(1.0/289.0))*289.0;}
+    vec4 permute(vec4 x){return mod289(((x*34.0)+1.0)*x);}
+    vec4 taylorInvSqrt(vec4 r){return 1.79284291400159-0.85373472095314*r;}
+    float snoise(vec3 v){
+      const vec2 C=vec2(1.0/6.0,1.0/3.0);
+      const vec4 D=vec4(0.0,0.5,1.0,2.0);
+      vec3 i=floor(v+dot(v,C.yyy));
+      vec3 x0=v-i+dot(i,C.xxx);
+      vec3 g=step(x0.yzx,x0.xyz);
+      vec3 l=1.0-g;
+      vec3 i1=min(g.xyz,l.zxy);
+      vec3 i2=max(g.xyz,l.zxy);
+      vec3 x1=x0-i1+C.xxx;
+      vec3 x2=x0-i2+C.yyy;
+      vec3 x3=x0-D.yyy;
+      i=mod289(i);
+      vec4 p=permute(permute(permute(i.z+vec4(0.0,i1.z,i2.z,1.0))+i.y+vec4(0.0,i1.y,i2.y,1.0))+i.x+vec4(0.0,i1.x,i2.x,1.0));
+      float n_=0.142857142857;
+      vec3 ns=n_*D.wyz-D.xzx;
+      vec4 j=p-49.0*floor(p*ns.z*ns.z);
+      vec4 x_=floor(j*ns.z);
+      vec4 y_=floor(j-7.0*x_);
+      vec4 x=x_*ns.x+ns.yyyy;
+      vec4 y=y_*ns.x+ns.yyyy;
+      vec4 h=1.0-abs(x)-abs(y);
+      vec4 b0=vec4(x.xy,y.xy);
+      vec4 b1=vec4(x.zw,y.zw);
+      vec4 s0=floor(b0)*2.0+1.0;
+      vec4 s1=floor(b1)*2.0+1.0;
+      vec4 sh=-step(h,vec4(0.0));
+      vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy;
+      vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;
+      vec3 p0=vec3(a0.xy,h.x);
+      vec3 p1=vec3(a0.zw,h.y);
+      vec3 p2=vec3(a1.xy,h.z);
+      vec3 p3=vec3(a1.zw,h.w);
+      vec4 norm=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));
+      p0*=norm.x;p1*=norm.y;p2*=norm.z;p3*=norm.w;
+      vec4 m=max(0.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.0);
+      m=m*m;
+      return 42.0*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
+    }
+  `;
+  const VERT = NOISE_GLSL + `
+    uniform float uTime;
+    varying float vNoise;
+    void main(){
+      float noise=snoise(vec3(position.x*0.15,position.y*0.15,position.z*0.15+uTime*0.1));
+      vNoise=noise;
+      vec3 newPosition=position+normal*(noise*4.0);
+      vec4 mvPosition=modelViewMatrix*vec4(newPosition,1.0);
+      gl_PointSize=(6.0*(1.0+noise))*(20.0/-mvPosition.z);
+      gl_Position=projectionMatrix*mvPosition;
+    }
+  `;
+  const FRAG = `
+    varying float vNoise;
+    uniform vec3 uColorMain;
+    uniform vec3 uColorShadow;
+    void main(){
+      vec2 xy=gl_PointCoord.xy-vec2(0.5);
+      float ll=length(xy);
+      if(ll>0.5) discard;
+      vec3 finalColor=mix(uColorShadow,uColorMain,vNoise+0.5);
+      float alpha=(0.5-ll)*2.0;
+      alpha*=smoothstep(-1.0,0.8,vNoise);
+      gl_FragColor=vec4(finalColor,alpha*0.8);
+    }
+  `;
+  const hexToVec3 = (hex) => {
+    const m = hex.replace('#','').match(/.{1,2}/g);
+    return m.map(x => parseInt(x,16)/255);
+  };
+
+  let W = host.clientWidth || window.innerWidth;
+  let H = host.clientHeight || window.innerHeight;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, W/H, 0.1, 1000);
+  camera.position.z = 25;
+  camera.position.x = W < 1024 ? 0 : -8;
+
+  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+  renderer.setSize(W, H);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  host.appendChild(renderer.domElement);
+
+  const geometry = new THREE.IcosahedronGeometry(10, 32);
+  const material = new THREE.ShaderMaterial({
+    vertexShader: VERT,
+    fragmentShader: FRAG,
+    uniforms: {
+      uTime: { value: 0.0 },
+      uColorMain:   { value: new THREE.Vector3(...hexToVec3('#3A6EA5')) },
+      uColorShadow: { value: new THREE.Vector3(...hexToVec3('#0A1128')) },
+    },
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  });
+
+  const pointCloud = new THREE.Points(geometry, material);
+  pointCloud.position.x = W < 1024 ? 0 : 8;
+  pointCloud.position.y = -2;
+  scene.add(pointCloud);
+
+  const clock = new THREE.Clock();
+  function animate(){
+    requestAnimationFrame(animate);
+    const t = clock.getElapsedTime();
+    material.uniforms.uTime.value = t * 0.4;
+    pointCloud.rotation.y = t * 0.05;
+    pointCloud.rotation.z = t * 0.02;
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    W = host.clientWidth || window.innerWidth;
+    H = host.clientHeight || window.innerHeight;
+    if (W < 1024) { camera.position.x = 0; pointCloud.position.x = 0; }
+    else          { camera.position.x = -8; pointCloud.position.x = 8; }
+    camera.aspect = W/H;
+    camera.updateProjectionMatrix();
+    renderer.setSize(W, H);
+  });
+})();
+
+</script>
+</body>
+</html>
