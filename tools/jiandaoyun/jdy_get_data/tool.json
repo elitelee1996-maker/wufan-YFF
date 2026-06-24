@@ -1,0 +1,37 @@
+{
+  "name": "jdy_get_data",
+  "display_name": "查询单条数据",
+  "description_zh": "按数据ID查询单条表单记录",
+  "description": "Retrieve a single data record by its _id. Returns data object with all field values plus system fields: _id, appId, entryId, creator{username,name,departments,type,status}, createTime, updateTime. Field values vary by type: text/number/datetime as plain values; subform as array of objects each with _id; user/dept as username/dept_no. Rate limit: 30/s.",
+  "params": {
+    "app_id": {
+      "type": "string",
+      "description": "App ID (应用ID)"
+    },
+    "entry_id": {
+      "type": "string",
+      "description": "Form ID (表单ID)"
+    },
+    "data_id": {
+      "type": "string",
+      "description": "Data record ID (_id field value)"
+    }
+  },
+  "api": {
+    "url": "https://api.jiandaoyun.com/api/v5/app/entry/data/get",
+    "method": "POST",
+    "headers": {
+      "Authorization": "Bearer ${conn:jiandaoyun.api_key}",
+      "Content-Type": "application/json"
+    }
+  },
+  "requires_connections": [
+    {
+      "category": "jiandaoyun",
+      "fields": [
+        "api_key"
+      ],
+      "required": true
+    }
+  ]
+}

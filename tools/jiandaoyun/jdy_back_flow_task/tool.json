@@ -1,0 +1,44 @@
+{
+  "name": "jdy_back_flow_task",
+  "display_name": "流程待办回退",
+  "description_zh": "回退一个流程待办任务到指定节点",
+  "description": "Return/reject a pending workflow task back to a previous node. Requires username, instance_id (same as data_id), and task_id. Optional: flow_id, comment, back_type. Rate limit: 20/s.",
+  "params": {
+    "username": {
+      "type": "string",
+      "description": "操作人username（必填）"
+    },
+    "instance_id": {
+      "type": "string",
+      "description": "流程实例ID，即数据的_id（必填）"
+    },
+    "task_id": {
+      "type": "string",
+      "description": "待办任务ID（必填）"
+    },
+    "flow_id": {
+      "type": "number",
+      "description": "回退目标节点flow_id（可选，Number类型。节点配置为回退到指定节点时需要设置）",
+      "default": 0
+    },
+    "comment": {
+      "type": "string",
+      "description": "回退意见（可选）",
+      "default": ""
+    },
+    "back_type": {
+      "type": "number",
+      "description": "回退人选择：1=正常流转，2=直达目标节点（可选，节点配置了回退人选择时需要）",
+      "default": 0
+    }
+  },
+  "requires_connections": [
+    {
+      "category": "jiandaoyun",
+      "fields": [
+        "api_key"
+      ],
+      "required": true
+    }
+  ]
+}

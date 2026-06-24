@@ -1,0 +1,34 @@
+{
+  "name": "tm_api",
+  "description": "Execute any Tencent Meeting Open Platform API call with TC3-HMAC-SHA256 authentication. Agent decides the method, path, and parameters. Returns JSON response. Supports: /v1/meetings (query meetings), /v1/users/list (list users), /v1/records/transcripts/paragraphs (get transcript), /v1/addresses (get smart minutes), etc.",
+  "display_name": "腾讯会议API通用调用",
+  "description_zh": "腾讯会议开放平台API通用调用，自动处理TC3-HMAC-SHA256鉴权",
+  "timeout": 60,
+  "retry": 1,
+  "params": {
+    "method": {
+      "type": "string",
+      "description": "HTTP method: GET or POST",
+      "default": "GET"
+    },
+    "path": {
+      "type": "string",
+      "description": "API path, e.g. /v1/meetings, /v1/users/list, /v1/records/transcripts/paragraphs"
+    },
+    "query": {
+      "type": "object",
+      "description": "Query parameters as key-value pairs",
+      "default": {}
+    },
+    "body": {
+      "type": "object",
+      "description": "Request body for POST requests",
+      "default": {}
+    },
+    "userid": {
+      "type": "string",
+      "description": "Tencent Meeting userid for API calls that require it. If empty, uses operator_id from connection.",
+      "default": ""
+    }
+  }
+}

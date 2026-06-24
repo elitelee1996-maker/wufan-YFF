@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>预警看板 — 项目计划原型</title>
+<style>
+:root {
+  --primary: #4f46e5; --primary-light: #eef2ff; --primary-hover: #4338ca;
+  --green: #059669; --green-light: #d1fae5; --green-bg: #ecfdf5;
+  --amber: #d97706; --amber-light: #fef3c7; --amber-bg: #fffbeb;
+  --red: #dc2626; --red-light: #fee2e2; --red-bg: #fef2f2;
+  --blue: #2563eb; --blue-light: #dbeafe;
+  --slate-50: #f8fafc; --slate-100: #f1f5f9; --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1; --slate-400: #94a3b8; --slate-500: #64748b;
+  --slate-600: #475569; --slate-700: #334155; --slate-800: #1e293b; --slate-900: #0f172a;
+  --radius: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; background: var(--slate-100); color: var(--slate-800); font-size: 14px; line-height: 1.5; }
+
+.header { background: #fff; border-bottom: 1px solid var(--slate-200); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
+.header-left { display: flex; align-items: center; gap: 16px; }
+.header-left h1 { font-size: 17px; font-weight: 700; color: var(--slate-900); }
+.project-badge { background: var(--primary-light); color: var(--primary); padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+.header-actions { display: flex; gap: 8px; }
+
+.btn { padding: 7px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid var(--slate-200); background: #fff; color: var(--slate-700); transition: all 0.15s; display: inline-flex; align-items: center; gap: 5px; }
+.btn:hover { background: var(--slate-50); border-color: var(--slate-300); }
+.btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.btn-ghost { border: none; background: transparent; color: var(--slate-500); }
+.btn-ghost:hover { background: var(--slate-100); color: var(--slate-700); }
+
+.main-content { padding: 16px 24px; display: flex; flex-direction: column; gap: 16px; height: calc(100vh - 53px); overflow-y: auto; }
+
+/* Summary */
+.summary-bar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+.summary-card { background: #fff; border-radius: var(--radius); border: 1px solid var(--slate-200); padding: 14px 16px; box-shadow: var(--shadow); }
+.summary-card .label { font-size: 11px; color: var(--slate-400); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.summary-card .value { font-size: 22px; font-weight: 700; }
+.summary-card .sub { font-size: 11px; color: var(--slate-400); margin-top: 2px; }
+.summary-card.critical .value { color: var(--red); }
+.summary-card.warning .value { color: var(--amber); }
+.summary-card.info .value { color: var(--blue); }
+.summary-card.resolved .value { color: var(--green); }
+
+/* Filter Tabs */
+.filter-tabs { display: flex; gap: 4px; background: #fff; border-radius: var(--radius); border: 1px solid var(--slate-200); padding: 4px; box-shadow: var(--shadow); width: fit-content; }
+.filter-tab { padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; background: transparent; color: var(--slate-500); transition: all 0.15s; }
+.filter-tab:hover { background: var(--slate-50); color: var(--slate-700); }
+.filter-tab.active { background: var(--primary); color: #fff; }
+.filter-tab .count { margin-left: 4px; padding: 1px 6px; border-radius: 8px; font-size: 11px; }
+.filter-tab.active .count { background: rgba(255,255,255,0.2); }
+.filter-tab:not(.active) .count { background: var(--slate-100); }
+
+/* Warning Cards */
+.warning-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 12px; }
+
+.warning-card { background: #fff; border-radius: var(--radius); border: 1px solid var(--slate-200); box-shadow: var(--shadow); overflow: hidden; transition: all 0.2s; cursor: pointer; }
+.warning-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.warning-card.critical { border-left: 4px solid var(--red); }
+.warning-card.warning { border-left: 4px solid var(--amber); }
+.warning-card.info { border-left: 4px solid var(--blue); }
+.warning-card.resolved { border-left: 4px solid var(--green); opacity: 0.7; }
+
+.warning-card-header { padding: 12px 16px; display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.warning-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.warning-icon.critical { background: var(--red-light); }
+.warning-icon.warning { background: var(--amber-light); }
+.warning-icon.info { background: var(--blue-light); }
+.warning-icon.resolved { background: var(--green-light); }
+
+.warning-title { font-size: 14px; font-weight: 600; color: var(--slate-800); margin-bottom: 2px; }
+.warning-desc { font-size: 12px; color: var(--slate-500); }
+.warning-time { font-size: 11px; color: var(--slate-400); white-space: nowrap; }
+
+.warning-card-body { padding: 0 16px 12px; }
+.warning-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.warning-meta-item { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--slate-500); }
+.warning-meta-item .meta-icon { font-size: 12px; }
+
+.warning-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+.warning-tag { padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 500; }
+.warning-tag.type { background: var(--slate-100); color: var(--slate-600); }
+.warning-tag.level-critical { background: var(--red-light); color: var(--red); }
+.warning-tag.level-warning { background: var(--amber-light); color: var(--amber); }
+.warning-tag.level-info { background: var(--blue-light); color: var(--blue); }
+
+.warning-card-footer { padding: 8px 16px; border-top: 1px solid var(--slate-100); display: flex; align-items: center; justify-content: space-between; }
+.warning-actions { display: flex; gap: 4px; }
+.warning-status { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 10px; }
+.warning-status.pending { background: var(--red-light); color: var(--red); }
+.warning-status.processing { background: var(--amber-light); color: var(--amber); }
+.warning-status.resolved { background: var(--green-light); color: var(--green); }
+
+/* Detail Drawer */
+.drawer-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); z-index: 100; display: none; }
+.drawer-overlay.show { display: block; }
+.drawer { position: fixed; top: 0; right: -480px; width: 480px; height: 100vh; background: #fff; box-shadow: -4px 0 20px rgba(0,0,0,0.1); z-index: 101; transition: right 0.3s ease; overflow-y: auto; }
+.drawer.show { right: 0; }
+.drawer-header { padding: 16px 20px; border-bottom: 1px solid var(--slate-200); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: #fff; z-index: 1; }
+.drawer-header h2 { font-size: 16px; font-weight: 600; }
+.drawer-body { padding: 20px; }
+.drawer-section { margin-bottom: 20px; }
+.drawer-section h3 { font-size: 13px; font-weight: 600; color: var(--slate-500); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+.drawer-field { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--slate-100); }
+.drawer-field .label { font-size: 12px; color: var(--slate-400); }
+.drawer-field .value { font-size: 13px; font-weight: 500; }
+.drawer-timeline { display: flex; flex-direction: column; gap: 8px; }
+.timeline-item { display: flex; gap: 12px; }
+.timeline-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+.timeline-dot.red { background: var(--red); }
+.timeline-dot.amber { background: var(--amber); }
+.timeline-dot.green { background: var(--green); }
+.timeline-dot.blue { background: var(--blue); }
+.timeline-content { flex: 1; }
+.timeline-content .time { font-size: 11px; color: var(--slate-400); }
+.timeline-content .text { font-size: 13px; }
+</style>
+<link rel="stylesheet" href="paradigm-f-enhance.css">
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>🚨 预警看板</h1>
+    <span class="project-badge">全部项目</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn" onclick="refreshWarnings()">🔄 刷新</button>
+    <button class="btn btn-primary" onclick="exportWarnings()">📥 导出</button>
+  </div>
+</div>
+
+<div class="main-content">
+  <!-- Summary -->
+  <div class="summary-bar">
+    <div class="summary-card critical">
+      <div class="label">🔴 严重预警</div>
+      <div class="value" id="critical-count">3</div>
+      <div class="sub">需立即处理</div>
+    </div>
+    <div class="summary-card warning">
+      <div class="label">🟡 一般预警</div>
+      <div class="value" id="warning-count">5</div>
+      <div class="sub">建议关注</div>
+    </div>
+    <div class="summary-card info">
+      <div class="label">🔵 提示</div>
+      <div class="value" id="info-count">4</div>
+      <div class="sub">信息通知</div>
+    </div>
+    <div class="summary-card resolved">
+      <div class="label">✅ 已处理</div>
+      <div class="value" id="resolved-count">8</div>
+      <div class="sub">本周已解决</div>
+    </div>
+    <div class="summary-card">
+      <div class="label">平均处理时长</div>
+      <div class="value">2.3天</div>
+      <div class="sub">较上周 ↓0.5天</div>
+    </div>
+  </div>
+
+  <!-- Filter Tabs -->
+  <div style="display:flex;align-items:center;gap:16px;">
+    <div class="filter-tabs" id="filter-tabs">
+      <button class="filter-tab active" onclick="filterWarnings('all')">全部<span class="count">12</span></button>
+      <button class="filter-tab" onclick="filterWarnings('critical')">🔴 严重<span class="count">3</span></button>
+      <button class="filter-tab" onclick="filterWarnings('warning')">🟡 一般<span class="count">5</span></button>
+      <button class="filter-tab" onclick="filterWarnings('info')">🔵 提示<span class="count">4</span></button>
+      <button class="filter-tab" onclick="filterWarnings('resolved')">✅ 已处理<span class="count">8</span></button>
+    </div>
+    <div style="flex:1"></div>
+    <select style="padding:6px 10px;border:1px solid var(--slate-200);border-radius:6px;font-size:13px;" onchange="sortWarnings(this.value)">
+      <option value="time">按时间排序</option>
+      <option value="level">按级别排序</option>
+      <option value="project">按项目排序</option>
+    </select>
+  </div>
+
+  <!-- Warning Cards -->
+  <div class="warning-grid" id="warning-grid">
+    <!-- Rendered by JS -->
+  </div>
+</div>
+
+<!-- Detail Drawer -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <h2 id="drawer-title">预警详情</h2>
+    <button class="btn btn-ghost" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="drawer-body" id="drawer-body">
+    <!-- Rendered by JS -->
+  </div>
+</div>
+
+<script>
+const warnings = [
+  {
+    id: 'W001', level: 'critical', type: '进度延期', status: 'pending',
+    title: '资源调度任务延期4天',
+    desc: 'WBS 3.0 资源调度模块当前推算完成时间比基线晚4天，影响下游执行监控模块',
+    project: '华东大件运输', task: '资源调度 (WBS 3.0)', task_id: 'T09',
+    assignee: '李工', created: '2026-06-14 09:30', updated: '2026-06-14 09:30',
+    impact: '影响下游3个任务，项目总工期延长3天',
+    timeline: [
+      { time: '06-14 09:30', text: '系统自动生成预警', color: 'red' },
+      { time: '06-14 09:35', text: '通知已推送给李工', color: 'blue' },
+    ]
+  },
+  {
+    id: 'W002', level: 'critical', type: '资源冲突', status: 'pending',
+    title: '吊车A时间冲突',
+    desc: '吊车A在6/17-6/18同时被"设备吊装"和"二次吊装"占用，存在时间重叠',
+    project: '华东大件运输', task: '设备吊装 (T06)', task_id: 'T06',
+    assignee: '王师傅', created: '2026-06-14 08:15', updated: '2026-06-14 10:00',
+    impact: '两个任务均无法按时执行，需调整排程或替换设备',
+    timeline: [
+      { time: '06-14 08:15', text: '资源冲突检测触发', color: 'red' },
+      { time: '06-14 09:00', text: '王师傅已查看', color: 'amber' },
+      { time: '06-14 10:00', text: '等待决策中', color: 'amber' },
+    ]
+  },
+  {
+    id: 'W003', level: 'critical', type: '关键路径', status: 'processing',
+    title: '关键路径任务TF=-2',
+    desc: '冲突决策任务总浮动时间为-2天，已突破基线约束，需立即调整',
+    project: '华东大件运输', task: '冲突决策 (WBS 3.3)', task_id: 'T12',
+    assignee: '李工', created: '2026-06-13 16:00', updated: '2026-06-14 08:00',
+    impact: '关键路径延期将直接导致项目总工期延长',
+    timeline: [
+      { time: '06-13 16:00', text: 'CPM计算发现TF=-2', color: 'red' },
+      { time: '06-13 16:30', text: '通知推送给李工', color: 'blue' },
+      { time: '06-14 08:00', text: '李工开始处理', color: 'amber' },
+    ]
+  },
+  {
+    id: 'W004', level: 'warning', type: '进度偏差', status: 'pending',
+    title: 'WBS分解任务延期1天',
+    desc: 'WBS分解任务当前推算比基线晚1天，暂未影响关键路径',
+    project: '华东大件运输', task: 'WBS分解 (WBS 2.2)', task_id: 'T06',
+    assignee: '张工', created: '2026-06-14 07:00', updated: '2026-06-14 07:00',
+    impact: '暂不影响关键路径，但可能影响后续依赖定义任务',
+    timeline: [
+      { time: '06-14 07:00', text: '系统自动生成预警', color: 'amber' },
+    ]
+  },
+  {
+    id: 'W005', level: 'warning', type: '资源利用率', status: 'pending',
+    title: '张工资源利用率超90%',
+    desc: '张工本周资源占用率92%，同时承担安全方案评审和路线安全确认两个任务',
+    project: '华东大件运输', task: '安全方案评审 (T03)', task_id: 'T03',
+    assignee: '张工', created: '2026-06-13 18:00', updated: '2026-06-13 18:00',
+    impact: '高负荷可能导致任务质量下降或延期',
+    timeline: [
+      { time: '06-13 18:00', text: '资源利用率检测触发', color: 'amber' },
+    ]
+  },
+  {
+    id: 'W006', level: 'warning', type: '约束冲突', status: 'processing',
+    title: 'MSO约束无法满足',
+    desc: '运输执行任务设置了MSO(不早于开始)约束，但前驱任务延期导致无法满足',
+    project: '华东大件运输', task: '运输执行 (WBS 6.0)', task_id: 'T20',
+    assignee: '王师傅', created: '2026-06-14 06:00', updated: '2026-06-14 09:00',
+    impact: '约束日期需调整或前驱任务需加速',
+    timeline: [
+      { time: '06-14 06:00', text: '约束冲突检测触发', color: 'amber' },
+      { time: '06-14 09:00', text: '王师傅开始处理', color: 'amber' },
+    ]
+  },
+  {
+    id: 'W007', level: 'warning', type: '进度偏差', status: 'pending',
+    title: '依赖定义任务延期2天',
+    desc: '依赖定义任务因WBS分解延期而级联延期2天',
+    project: '华东大件运输', task: '依赖定义 (WBS 2.3)', task_id: 'T07',
+    assignee: '张工', created: '2026-06-14 07:30', updated: '2026-06-14 07:30',
+    impact: '级联影响CPM计算任务',
+    timeline: [
+      { time: '06-14 07:30', text: '级联更新触发', color: 'amber' },
+    ]
+  },
+  {
+    id: 'W008', level: 'warning', type: '基线偏差', status: 'pending',
+    title: '项目总工期偏差+3天',
+    desc: '当前推算项目总工期48天，超出基线45天，偏差+3天',
+    project: '华东大件运输', task: '项目整体', task_id: 'P01',
+    assignee: '李工', created: '2026-06-14 06:00', updated: '2026-06-14 06:00',
+    impact: '项目交付日期可能推迟3天',
+    timeline: [
+      { time: '06-14 06:00', text: '基线偏差检测触发', color: 'amber' },
+    ]
+  },
+  {
+    id: 'W009', level: 'info', type: '里程碑', status: 'resolved',
+    title: '项目启动里程碑已完成',
+    desc: '项目启动阶段所有任务已完成，进入计划编制阶段',
+    project: '华东大件运输', task: '项目启动 (WBS 1.0)', task_id: 'T01',
+    assignee: '李工', created: '2026-06-10 17:00', updated: '2026-06-10 17:00',
+    impact: '无',
+    timeline: [
+      { time: '06-10 17:00', text: '里程碑完成', color: 'green' },
+    ]
+  },
+  {
+    id: 'W010', level: 'info', type: '通知', status: 'resolved',
+    title: '安全审查任务提前2天完成',
+    desc: '安全审查模块整体提前2天完成，为后续任务争取了缓冲时间',
+    project: '华东大件运输', task: '安全审查 (WBS 5.0)', task_id: 'T17',
+    assignee: '张工', created: '2026-06-12 15:00', updated: '2026-06-12 15:00',
+    impact: '正面影响：节省2天缓冲',
+    timeline: [
+      { time: '06-12 15:00', text: '提前完成通知', color: 'green' },
+    ]
+  },
+  {
+    id: 'W011', level: 'info', type: '系统', status: 'resolved',
+    title: '基线V1.1已保存',
+    desc: '项目经理李工保存了第一次修订基线，包含WBS调整和资源重新分配',
+    project: '华东大件运输', task: '项目整体', task_id: 'P01',
+    assignee: '李工', created: '2026-06-01 14:00', updated: '2026-06-01 14:00',
+    impact: '新基线已生效',
+    timeline: [
+      { time: '06-01 14:00', text: '基线保存成功', color: 'blue' },
+    ]
+  },
+  {
+    id: 'W012', level: 'info', type: '通知', status: 'pending',
+    title: '华南冷链项目计划已导入',
+    desc: '从标准模板导入华南冷链项目计划，共32个任务节点',
+    project: '华南冷链', task: '项目整体', task_id: 'P02',
+    assignee: '赵工', created: '2026-06-14 10:00', updated: '2026-06-14 10:00',
+    impact: '无',
+    timeline: [
+      { time: '06-14 10:00', text: '模板导入完成', color: 'blue' },
+    ]
+  },
+];
+
+let currentFilter = 'all';
+
+function renderWarnings() {
+  const grid = document.getElementById('warning-grid');
+  const filtered = currentFilter === 'all'
+    ? warnings.filter(w => w.status !== 'resolved')
+    : warnings.filter(w => {
+        if (currentFilter === 'resolved') return w.status === 'resolved';
+        return w.level === currentFilter;
+      });
+
+  grid.innerHTML = filtered.map(w => {
+    const levelIcon = { critical: '🔴', warning: '🟡', info: '🔵', resolved: '✅' }[w.level] || '⚪';
+    const statusText = { pending: '待处理', processing: '处理中', resolved: '已处理' }[w.status];
+
+    return `<div class="warning-card ${w.level}" onclick="openDrawer('${w.id}')">
+      <div class="warning-card-header">
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <div class="warning-icon ${w.level}">${levelIcon}</div>
+          <div>
+            <div class="warning-title">${w.title}</div>
+            <div class="warning-desc">${w.desc}</div>
+          </div>
+        </div>
+        <div class="warning-time">${w.created.split(' ')[1]}</div>
+      </div>
+      <div class="warning-card-body">
+        <div class="warning-meta">
+          <div class="warning-meta-item"><span class="meta-icon">📁</span>${w.project}</div>
+          <div class="warning-meta-item"><span class="meta-icon">📋</span>${w.task}</div>
+          <div class="warning-meta-item"><span class="meta-icon">👤</span>${w.assignee}</div>
+        </div>
+        <div class="warning-tags">
+          <span class="warning-tag type">${w.type}</span>
+          <span class="warning-tag level-${w.level}">${w.level === 'critical' ? '严重' : w.level === 'warning' ? '一般' : '提示'}</span>
+        </div>
+      </div>
+      <div class="warning-card-footer">
+        <div class="warning-actions">
+          <button class="btn btn-sm" onclick="event.stopPropagation();handleWarning('${w.id}','acknowledge')">确认</button>
+          <button class="btn btn-sm btn-primary" onclick="event.stopPropagation();handleWarning('${w.id}','resolve')">处理</button>
+          <a class="jdy-link" href="javascript:void(0)" onclick="event.stopPropagation();simulateLoopback('${w.title}')" title="在简道云中打开预警详情">JDY</a>
+        </div>
+        <span class="warning-status ${w.status}">${statusText}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterWarnings(level) {
+  currentFilter = level;
+  document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
+  event.target.closest('.filter-tab').classList.add('active');
+  renderWarnings();
+}
+
+function sortWarnings(by) {
+  if (by === 'level') {
+    warnings.sort((a, b) => {
+      const order = { critical: 0, warning: 1, info: 2 };
+      return (order[a.level] || 3) - (order[b.level] || 3);
+    });
+  } else if (by === 'project') {
+    warnings.sort((a, b) => a.project.localeCompare(b.project));
+  }
+  renderWarnings();
+}
+
+function openDrawer(id) {
+  const w = warnings.find(x => x.id === id);
+  if (!w) return;
+
+  document.getElementById('drawer-title').textContent = w.title;
+  document.getElementById('drawer-body').innerHTML = `
+    <div class="drawer-section">
+      <h3>基本信息</h3>
+      <div class="drawer-field"><span class="label">预警编号</span><span class="value">${w.id}</span></div>
+      <div class="drawer-field"><span class="label">预警类型</span><span class="value">${w.type}</span></div>
+      <div class="drawer-field"><span class="label">预警级别</span><span class="value">${w.level === 'critical' ? '🔴 严重' : w.level === 'warning' ? '🟡 一般' : '🔵 提示'}</span></div>
+      <div class="drawer-field"><span class="label">状态</span><span class="value">${w.status === 'pending' ? '待处理' : w.status === 'processing' ? '处理中' : '已处理'}</span></div>
+      <div class="drawer-field"><span class="label">关联项目</span><span class="value">${w.project}</span></div>
+      <div class="drawer-field"><span class="label">关联任务</span><span class="value">${w.task}</span></div>
+      <div class="drawer-field"><span class="label">负责人</span><span class="value">${w.assignee}</span></div>
+      <div class="drawer-field"><span class="label">创建时间</span><span class="value">${w.created}</span></div>
+    </div>
+    <div class="drawer-section">
+      <h3>影响分析</h3>
+      <p style="font-size:13px;color:var(--slate-600);padding:8px 12px;background:var(--slate-50);border-radius:6px;">${w.impact}</p>
+    </div>
+    <div class="drawer-section">
+      <h3>处理时间线</h3>
+      <div class="drawer-timeline">
+        ${w.timeline.map(t => `
+          <div class="timeline-item">
+            <div class="timeline-dot ${t.color}"></div>
+            <div class="timeline-content">
+              <div class="time">${t.time}</div>
+              <div class="text">${t.text}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:20px;">
+      <button class="btn btn-primary" style="flex:1" onclick="handleWarning('${w.id}','resolve')">✅ 标记已处理</button>
+      <button class="btn" style="flex:1" onclick="handleWarning('${w.id}','create-action')">📋 创建行动项</button>
+    </div>
+  `;
+
+  document.getElementById('drawer-overlay').classList.add('show');
+  document.getElementById('drawer').classList.add('show');
+}
+
+function closeDrawer() {
+  document.getElementById('drawer-overlay').classList.remove('show');
+  document.getElementById('drawer').classList.remove('show');
+}
+
+function handleWarning(id, action) {
+  const w = warnings.find(x => x.id === id);
+  if (!w) return;
+
+  const actionMap = {
+    acknowledge: '已确认',
+    resolve: '已标记为已处理',
+    'create-action': '已创建行动项'
+  };
+
+  if (action === 'resolve') {
+    w.status = 'resolved';
+    w.level = 'resolved';
+    w.timeline.push({
+      time: new Date().toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(/\//g, '-'),
+      text: actionMap[action],
+      color: 'green'
+    });
+  }
+
+  renderWarnings();
+  closeDrawer();
+}
+
+function refreshWarnings() {
+  alert('刷新预警数据\n（生产环境将重新拉取API数据）');
+  renderWarnings();
+}
+
+function exportWarnings() {
+  alert('导出预警报告\n（生产环境将生成Excel文件）');
+}
+
+// Init
+renderWarnings();
+</script>
+<script src="paradigm-f-enhance.js"></script>
+<script>
+// 范式F增强 - 初始化
+document.addEventListener('DOMContentLoaded', function() {
+  renderParadigmFBar(
+    '预警看板',
+    '三级预警卡片 + 筛选 + 详情抽屉',
+    '简道云原生详情页',
+    '预警处理→智能助手→更新看板数据'
+  );
+});
+</script>
+</body>
+</html>

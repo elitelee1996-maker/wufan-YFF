@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{项目名称}}需求分析报告</title>
+  <style>
+    :root {
+      --blue: #007DD2;
+      --light-blue: #1EAAE6;
+      --gray: #969696;
+      --red: #F25949;
+      --teal: #2EB1B6;
+      --navy: #2F5597;
+      --ink: #111827;
+      --muted: #5d6673;
+      --line: #dbe5ee;
+      --soft: #f5f9fc;
+      --white: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: #eef4f8;
+      font: 14px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    .page {
+      width: min(1320px, calc(100vw - 40px));
+      margin: 24px auto 40px;
+      background: var(--white);
+      border: 1px solid var(--line);
+      box-shadow: 0 14px 34px rgba(17, 24, 39, .08);
+    }
+    header {
+      padding: 26px 32px 22px;
+      border-bottom: 4px solid var(--blue);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: end;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      line-height: 1.2;
+      color: var(--blue);
+      letter-spacing: 0;
+    }
+    .subtitle { color: var(--muted); font-size: 15px; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border: 1px solid rgba(0,125,210,.28);
+      background: #eef8ff;
+      color: var(--blue);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    main { padding: 24px 32px 34px; }
+    section { margin: 0 0 18px; }
+    h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+      color: var(--blue);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    h2::before {
+      content: "";
+      width: 6px;
+      height: 18px;
+      background: var(--blue);
+      display: inline-block;
+    }
+    h3 {
+      margin: 0 0 6px;
+      font-size: 14px;
+      color: var(--navy);
+    }
+    .summary {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .panel {
+      border: 1px solid var(--line);
+      background: var(--soft);
+      padding: 16px;
+    }
+    .verdict {
+      font-size: 16px;
+      margin: 0;
+    }
+    .metrics {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 8px;
+    }
+    .metric {
+      flex: 1 1 0;
+      min-width: 0;
+      background: var(--white);
+      border: 1px solid var(--line);
+      padding: 8px 10px;
+      min-height: 58px;
+    }
+    .metric b {
+      display: block;
+      color: var(--blue);
+      font-size: 20px;
+      line-height: 1.15;
+      margin: 2px 0 3px;
+      white-space: nowrap;
+    }
+    .metric span {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.25;
+    }
+    .grid-3, .grid-4 {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 8px;
+    }
+    .info-card, .next-card, .risk-card {
+      flex: 1 1 0;
+      min-width: 0;
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      background: #fff;
+    }
+    .info-card strong, .next-card strong, .risk-card strong {
+      display: block;
+      color: var(--navy);
+      margin-bottom: 4px;
+      font-size: 13px;
+    }
+    .info-card p, .next-card p, .risk-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.42;
+    }
+    .risk-card.high { border-color: rgba(242,89,73,.45); background: rgba(242,89,73,.06); }
+    .risk-card.mid { border-color: rgba(30,170,230,.45); background: rgba(30,170,230,.08); }
+    .diagram-wrap {
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 14px;
+      overflow-x: auto;
+    }
+    .diagram-placeholder {
+      min-height: 260px;
+      border: 1px dashed var(--gray);
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      text-align: center;
+      padding: 24px;
+    }
+    svg { max-width: 100%; height: auto; display: block; }
+    .note {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border: 1px solid var(--line);
+      table-layout: fixed;
+    }
+    .table-scroll {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+    .table-scroll table { border: 0; }
+    .assessment-scroll {
+      max-height: 70vh;
+      overflow: auto;
+    }
+    .interface-table { min-width: 1420px; }
+    .assessment-table { min-width: 2180px; }
+    th, td {
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      padding: 9px 10px;
+      vertical-align: top;
+      word-break: break-word;
+    }
+    th {
+      background: #edf7fd;
+      color: var(--blue);
+      text-align: left;
+      font-weight: 800;
+    }
+    tr:last-child td { border-bottom: 0; }
+    td:last-child, th:last-child { border-right: 0; }
+    .risk-high { color: var(--red); font-weight: 800; }
+    .risk-mid { color: var(--light-blue); font-weight: 800; }
+    .risk-low { color: var(--blue); font-weight: 800; }
+    .tag {
+      display: inline-block;
+      padding: 2px 7px;
+      border: 1px solid var(--line);
+      background: #f8fbfd;
+      color: var(--navy);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .compact-table td, .compact-table th { padding: 7px 8px; font-size: 13px; }
+    footer {
+      padding: 16px 32px 22px;
+      border-top: 1px solid var(--line);
+      color: var(--gray);
+      font-size: 12px;
+    }
+    @media (max-width: 900px) {
+      .page { width: 100%; margin: 0; border: 0; }
+      header, main, footer { padding-left: 18px; padding-right: 18px; }
+      header, .summary { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 560px) {
+      .metrics, .grid-3, .grid-4 { overflow-x: auto; }
+      .metric { flex-basis: 132px; }
+      .info-card, .next-card, .risk-card { flex-basis: 210px; }
+    }
+  </style>
+</head>
+<body><div class="page">
+<header><div><h1>{{项目名称}}需求分析报告</h1><div class="subtitle">{{报告副标题}} | 评估日期：{{评估日期}}</div></div><div class="badge">{{核心建议标签}}</div></header>
+<main>
+<section><h2>01 项目摘要与总体结论</h2><div class="panel"><p class="verdict">{{总体结论：1-2句话，说明项目是否适合简道云标准能力承载，关键风险点是什么}}</p></div><div class="metrics" style="margin-top:10px"><div class="metric"><b>{{需求项数}}</b><span>拆解需求项</span></div><div class="metric"><b>{{接口数}}</b><span>潜在接口/交互事项</span></div><div class="metric"><b>{{高风险数}}</b><span>高风险确认项</span></div><div class="metric"><b>{{预估人天}}</b><span>初步估算人天</span></div><div class="metric"><b>{{预估费用}}</b><span>按 2500 元/人天估算费用，不含许可</span></div></div></section>
+<section><h2>02 业务画像与场景分析</h2><div class="grid-4"><div class="info-card"><strong>业务主线</strong><p>{{业务主线描述}}</p></div><div class="info-card"><strong>组织特征</strong><p>{{组织特征描述}}</p></div><div class="info-card"><strong>系统现状</strong><p>{{系统现状描述}}</p></div><div class="info-card"><strong>核心痛点</strong><p>{{核心痛点描述}}</p></div></div><p class="note">{{数据来源说明}}</p></section>
+<section><h2>03 核心业务流程图</h2><div class="diagram-wrap"><svg width="2040" height="705" viewBox="0 0 2040 705" style="max-width:none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="项目运营核心流程泳道图">
+  <defs>
+    <marker id="arrow-blue" viewBox="0 0 8 8" markerWidth="8" markerHeight="8" refX="7.5" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L8,4 L0,8 Z" fill="#2F5597"/></marker>
+    <marker id="arrow-gray" viewBox="0 0 8 8" markerWidth="8" markerHeight="8" refX="7.5" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L8,4 L0,8 Z" fill="#969696"/></marker>
+    <style>
+      .sw-lane{fill:#f7fbfe;stroke:#dbe5ee}
+      .sw-head{fill:#edf7fd;stroke:#dbe5ee}
+      .sw-col{stroke:#eef4f8;stroke-width:1}
+      .sw-start{fill:#eef8ff;stroke:#007DD2;stroke-width:1.6}
+      .sw-task{fill:#fff;stroke:#007DD2;stroke-width:1.6}
+      .sw-auto{fill:#eef8ff;stroke:#1EAAE6;stroke-width:1.6}
+      .sw-risk{fill:#fff6f5;stroke:#F25949;stroke-width:1.6}
+      .sw-t{font:13px -apple-system,BlinkMacSystemFont,'Microsoft YaHei',sans-serif;fill:#111827;text-anchor:middle;dominant-baseline:middle}
+      .sw-s{font:12px -apple-system,BlinkMacSystemFont,'Microsoft YaHei',sans-serif;fill:#5d6673}
+      .sw-title{font:700 13px -apple-system,BlinkMacSystemFont,'Microsoft YaHei',sans-serif;fill:#007DD2}
+      .sw-phase{font:12px -apple-system,BlinkMacSystemFont,'Microsoft YaHei',sans-serif;fill:#5d6673;text-anchor:middle}
+      .sw-line{fill:none;stroke:#2F5597;stroke-width:2;stroke-linecap:butt;stroke-linejoin:round;marker-end:url(#arrow-blue)}
+      .sw-dash{fill:none;stroke:#969696;stroke-width:2;stroke-linecap:butt;stroke-linejoin:round;stroke-dasharray:7 5;marker-end:url(#arrow-gray)}
+      .sw-label{fill:#fff;stroke:#dbe5ee;stroke-width:1}
+    </style>
+  </defs>
+  <rect fill="#FFFFFF" x="0" y="0" width="2040" height="705"/>
+  <rect class="sw-head" x="12" y="34" width="118" height="612"/>
+  <rect class="sw-lane" x="130" y="34" width="1880" height="102"/>
+  <rect class="sw-lane" x="130" y="136" width="1880" height="102"/>
+  <rect class="sw-lane" x="130" y="238" width="1880" height="102"/>
+  <rect class="sw-lane" x="130" y="340" width="1880" height="102"/>
+  <rect class="sw-lane" x="130" y="442" width="1880" height="102"/>
+  <rect class="sw-lane" x="130" y="544" width="1880" height="102"/>
+  <line x1="130" y1="136" x2="2010" y2="136" stroke="#dbe5ee"/>
+  <line x1="130" y1="238" x2="2010" y2="238" stroke="#dbe5ee"/>
+  <line x1="130" y1="340" x2="2010" y2="340" stroke="#dbe5ee"/>
+  <line x1="130" y1="442" x2="2010" y2="442" stroke="#dbe5ee"/>
+  <line x1="130" y1="544" x2="2010" y2="544" stroke="#dbe5ee"/>
+  <g>
+    <line class="sw-col" x1="280" y1="34" x2="280" y2="646"/><line class="sw-col" x1="490" y1="34" x2="490" y2="646"/><line class="sw-col" x1="700" y1="34" x2="700" y2="646"/><line class="sw-col" x1="910" y1="34" x2="910" y2="646"/><line class="sw-col" x1="1120" y1="34" x2="1120" y2="646"/><line class="sw-col" x1="1330" y1="34" x2="1330" y2="646"/><line class="sw-col" x1="1540" y1="34" x2="1540" y2="646"/><line class="sw-col" x1="1750" y1="34" x2="1750" y2="646"/>
+  </g>
+  <text class="sw-title" x="42" y="88">销售/CRM</text><text class="sw-title" x="36" y="190">运营管理部</text><text class="sw-title" x="28" y="292">水处理事业部</text><text class="sw-title" x="28" y="394">供应链管理部</text><text class="sw-title" x="42" y="496">质量/制造</text><text class="sw-title" x="42" y="598">项目平台</text>
+  <text class="sw-phase" x="205" y="20">合同生效</text><text class="sw-phase" x="415" y="20">MPS 编制</text><text class="sw-phase" x="625" y="20">会签发布</text><text class="sw-phase" x="835" y="20">任务拆解</text><text class="sw-phase" x="1045" y="20">设计/采购</text><text class="sw-phase" x="1255" y="20">质量生产</text><text class="sw-phase" x="1465" y="20">验收整改</text><text class="sw-phase" x="1675" y="20">包装发运</text><text class="sw-phase" x="1885" y="20">归档复盘</text>
+  <rect class="sw-start" x="145" y="67" width="120" height="42" rx="21"/><text class="sw-t" x="205" y="88">合同生效</text>
+  <rect class="sw-task" x="350" y="169" width="130" height="42" rx="8"/><text class="sw-t" x="415" y="184">收集资料</text><text class="sw-t" x="415" y="201">编制 MPS</text>
+  <rect class="sw-task" x="560" y="169" width="130" height="42" rx="8"/><text class="sw-t" x="625" y="184">各部门确认</text><text class="sw-t" x="625" y="201">发布主计划</text>
+  <rect class="sw-auto" x="770" y="577" width="130" height="42" rx="8"/><text class="sw-t" x="835" y="592">自动拆解</text><text class="sw-t" x="835" y="609">节点待办</text>
+  <rect class="sw-task" x="980" y="271" width="130" height="42" rx="8"/><text class="sw-t" x="1045" y="286">设计启动</text><text class="sw-t" x="1045" y="303">资料/图纸</text>
+  <rect class="sw-task" x="980" y="373" width="130" height="42" rx="8"/><text class="sw-t" x="1045" y="388">采购签订</text><text class="sw-t" x="1045" y="405">供应商节点</text>
+  <rect class="sw-task" x="1190" y="475" width="130" height="42" rx="8"/><text class="sw-t" x="1255" y="490">ITP/W/H 点</text><text class="sw-t" x="1255" y="507">生产监控</text>
+  <rect class="sw-task" x="1400" y="475" width="130" height="42" rx="8"/><text class="sw-t" x="1465" y="490">预验收</text><text class="sw-t" x="1465" y="507">整改闭环</text>
+  <rect class="sw-task" x="1610" y="373" width="130" height="42" rx="8"/><text class="sw-t" x="1675" y="388">包装发运</text><text class="sw-t" x="1675" y="405">发运前置</text>
+  <polygon class="sw-risk" points="1885,560 1950,598 1885,636 1820,598"/><text class="sw-t" x="1885" y="592">异常/变更</text><text class="sw-t" x="1885" y="609">是否关闭？</text>
+  <path class="sw-line" d="M265 88 H310 V190 H350"/>
+  <path class="sw-line" d="M480 190 H560"/>
+  <path class="sw-line" d="M690 190 H735 V598 H770"/>
+  <path class="sw-line" d="M900 598 H945 V292 H980"/>
+  <path class="sw-line" d="M900 598 H945 V394 H980"/>
+  <path class="sw-line" d="M1110 394 H1150 V496 H1190"/>
+  <path class="sw-line" d="M1320 496 H1400"/>
+  <path class="sw-line" d="M1530 496 H1570 V394 H1610"/>
+  <path class="sw-line" d="M1740 394 H1780 V598 H1820"/>
+  <path class="sw-dash" d="M1885 636 V675 H415 V211"/>
+  <path class="sw-dash" d="M1885 560 V535 H1465 V517"/>
+  <rect class="sw-label" x="710" y="151" width="88" height="18"/><text class="sw-s" x="718" y="164">发布后触发</text>
+  <rect class="sw-label" x="1510" y="534" width="78" height="18"/><text class="sw-s" x="1518" y="547">整改复验</text>
+  <rect class="sw-label" x="620" y="656" width="94" height="18"/><text class="sw-s" x="628" y="669">退回调整计划</text>
+  <text class="sw-s" x="130" y="690">图例：蓝色实线=主流程；灰色虚线=退回/整改/变更；浅蓝节点=系统自动动作；红色菱形=风险判断。</text>
+</svg></div><p class="note">{{流程图说明：泳道图描述核心业务流程，主流程从 XX 到 XX，异常与变更回到 XX 或 XX。}}</p></section>
+<section><h2>04 接口与数据流及接口交互清单</h2><div class="diagram-wrap"><svg width="1500" height="620" viewBox="0 0 1500 620" style="max-width:none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="接口与数据流 DFD">
+  <defs>
+    <marker id="arrow" viewBox="0 0 8 8" markerWidth="8" markerHeight="8" refX="7.5" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L8,4 L0,8 Z" fill="#2F5597"/></marker>
+    <style>
+      .dfd-bg{fill:#FFFFFF}
+      .dfd-ext{fill:#fff;stroke:#2F5597;stroke-width:1.6}
+      .dfd-proc{fill:#eef8ff;stroke:#007DD2;stroke-width:1.6}
+      .dfd-store{fill:#fff;stroke:#1EAAE6;stroke-width:1.6}
+      .dfd-risk{fill:#fff6f5;stroke:#F25949;stroke-width:1.6}
+      .dfd-flow{fill:none;stroke:#2F5597;stroke-width:2;stroke-linecap:butt;stroke-linejoin:round;marker-end:url(#arrow)}
+      .dfd-t{font:12px -apple-system,BlinkMacSystemFont,'Microsoft YaHei',sans-serif;fill:#111827;text-anchor:middle}
+      .dfd-num{font:700 12px -apple-system,BlinkMacSystemFont,'Microsoft YaHei',sans-serif;fill:#007DD2;text-anchor:middle}
+      .dfd-s{font:11px -apple-system,BlinkMacSystemFont,'Microsoft YaHei',sans-serif;fill:#5d6673;text-anchor:middle}
+      .dfd-r{font:11px -apple-system,BlinkMacSystemFont,'Microsoft YaHei',sans-serif;fill:#2F5597}
+      .dfd-label{fill:#fff;stroke:#dbe5ee;stroke-width:1}
+      .dfd-band{fill:#f7fbfe;stroke:#dbe5ee}
+    </style>
+  </defs>
+  <rect class="dfd-bg" x="0" y="0" width="1500" height="620"/>
+  <rect class="dfd-band" x="20" y="38" width="220" height="450"/>
+  <rect class="dfd-band" x="300" y="38" width="675" height="450"/>
+  <rect class="dfd-band" x="1035" y="38" width="220" height="450"/>
+  <rect class="dfd-band" x="1305" y="38" width="160" height="450"/>
+  <text class="dfd-s" x="130" y="28">外部系统来源</text><text class="dfd-s" x="640" y="28">项目平台处理过程</text><text class="dfd-s" x="1145" y="28">数据存储</text><text class="dfd-s" x="1385" y="28">协同出口</text>
+  <rect class="dfd-ext" x="55" y="70" width="150" height="52"/><text class="dfd-t" x="130" y="92">CRM</text><text class="dfd-s" x="130" y="110">合同/订单</text>
+  <rect class="dfd-ext" x="55" y="170" width="150" height="52"/><text class="dfd-t" x="130" y="192">PLM</text><text class="dfd-s" x="130" y="210">设计/BOM/版本</text>
+  <rect class="dfd-ext" x="55" y="270" width="150" height="52"/><text class="dfd-t" x="130" y="292">SAP/SRM/WMS</text><text class="dfd-s" x="130" y="310">采购/库存/到货</text>
+  <rect class="dfd-ext" x="55" y="370" width="150" height="52"/><text class="dfd-t" x="130" y="392">质量/检验系统</text><text class="dfd-s" x="130" y="410">ITP/报检/资料</text>
+  <rect class="dfd-proc" x="330" y="70" width="150" height="56" rx="18"/><text class="dfd-num" x="405" y="91">1.0</text><text class="dfd-t" x="405" y="112">项目建档</text>
+  <rect class="dfd-proc" x="555" y="70" width="150" height="56" rx="18"/><text class="dfd-num" x="630" y="91">2.0</text><text class="dfd-t" x="630" y="112">MPS与节点</text>
+  <rect class="dfd-proc" x="780" y="70" width="150" height="56" rx="18"/><text class="dfd-num" x="855" y="91">3.0</text><text class="dfd-t" x="855" y="112">设计采购协同</text>
+  <rect class="dfd-proc" x="555" y="300" width="150" height="56" rx="18"/><text class="dfd-num" x="630" y="321">4.0</text><text class="dfd-t" x="630" y="342">ITP/生产监控</text>
+  <rect class="dfd-proc" x="780" y="300" width="150" height="56" rx="18"/><text class="dfd-num" x="855" y="321">5.0</text><text class="dfd-t" x="855" y="342">验收交付闭环</text>
+  <rect class="dfd-risk" x="555" y="440" width="150" height="56" rx="18"/><text class="dfd-num" x="630" y="461">6.0</text><text class="dfd-t" x="630" y="482">异常/变更处理</text>
+  <rect class="dfd-store" x="1065" y="72" width="160" height="46"/><line x1="1080" y1="72" x2="1080" y2="118" stroke="#1EAAE6"/><text class="dfd-s" x="1148" y="100">D1 项目台账</text>
+  <rect class="dfd-store" x="1065" y="172" width="160" height="46"/><line x1="1080" y1="172" x2="1080" y2="218" stroke="#1EAAE6"/><text class="dfd-s" x="1148" y="200">D2 节点任务库</text>
+  <rect class="dfd-store" x="1065" y="302" width="160" height="46"/><line x1="1080" y1="302" x2="1080" y2="348" stroke="#1EAAE6"/><text class="dfd-s" x="1148" y="330">D3 资料/质量库</text>
+  <rect class="dfd-store" x="1065" y="432" width="160" height="46"/><line x1="1080" y1="432" x2="1080" y2="478" stroke="#1EAAE6"/><text class="dfd-s" x="1148" y="460">D4 指标输出表</text>
+  <rect class="dfd-ext" x="1320" y="120" width="130" height="52"/><text class="dfd-t" x="1385" y="142">OA/统一身份</text><text class="dfd-s" x="1385" y="160">账号/待办</text>
+  <rect class="dfd-ext" x="1320" y="320" width="130" height="52"/><text class="dfd-t" x="1385" y="342">供应商/SRM</text><text class="dfd-s" x="1385" y="360">进度反馈</text>
+  <path class="dfd-flow" d="M205 96 H330"/><rect class="dfd-label" x="230" y="77" width="70" height="18"/><text class="dfd-r" x="237" y="90">合同订单</text>
+  <path class="dfd-flow" d="M480 98 H555"/><rect class="dfd-label" x="493" y="79" width="70" height="18"/><text class="dfd-r" x="500" y="92">项目主数据</text>
+  <path class="dfd-flow" d="M705 98 H780"/><rect class="dfd-label" x="720" y="79" width="58" height="18"/><text class="dfd-r" x="727" y="92">节点任务</text>
+  <path class="dfd-flow" d="M205 196 H270 V98 H330"/><rect class="dfd-label" x="228" y="150" width="74" height="18"/><text class="dfd-r" x="235" y="163">设计/BOM</text>
+  <path class="dfd-flow" d="M205 296 H270 V328 H555"/><rect class="dfd-label" x="287" y="309" width="118" height="18"/><text class="dfd-r" x="294" y="322">采购/到货/供应商</text>
+  <path class="dfd-flow" d="M205 396 H500 V328 H555"/><rect class="dfd-label" x="330" y="377" width="84" height="18"/><text class="dfd-r" x="337" y="390">ITP/检验</text>
+  <path class="dfd-flow" d="M930 98 H1065"/><rect class="dfd-label" x="966" y="79" width="64" height="18"/><text class="dfd-r" x="973" y="92">状态数据</text>
+  <path class="dfd-flow" d="M630 126 V172 H1065"/><rect class="dfd-label" x="760" y="149" width="78" height="18"/><text class="dfd-r" x="767" y="162">任务明细</text>
+  <path class="dfd-flow" d="M705 328 H780"/><rect class="dfd-label" x="718" y="309" width="64" height="18"/><text class="dfd-r" x="725" y="322">验收依据</text>
+  <path class="dfd-flow" d="M930 328 H1065"/><rect class="dfd-label" x="965" y="309" width="64" height="18"/><text class="dfd-r" x="972" y="322">质量资料</text>
+  <path class="dfd-flow" d="M855 356 V432 H1065"/><rect class="dfd-label" x="930" y="393" width="64" height="18"/><text class="dfd-r" x="937" y="406">验收结果</text>
+  <path class="dfd-flow" d="M705 468 H1010 V455 H1065"/><rect class="dfd-label" x="792" y="449" width="86" height="18"/><text class="dfd-r" x="799" y="462">异常/变更</text>
+  <path class="dfd-flow" d="M1225 95 H1285 V146 H1320"/><rect class="dfd-label" x="1260" y="108" width="48" height="18"/><text class="dfd-r" x="1267" y="121">待办</text>
+  <path class="dfd-flow" d="M1225 325 H1320"/><rect class="dfd-label" x="1240" y="306" width="64" height="18"/><text class="dfd-r" x="1247" y="319">进度反馈</text>
+  <path class="dfd-flow" d="M1148 478 V520 H630 V496"/><rect class="dfd-label" x="850" y="501" width="64" height="18"/><text class="dfd-r" x="857" y="514">指标加工</text>
+  <text class="dfd-s" x="360" y="590">{{DFD 说明文字}}</text>
+</svg></div><div class="table-scroll"><table class="interface-table"><thead><tr><th style="width:70px">编号</th><th>接口/交互事项</th><th>数据对象</th><th>同步方向</th><th>字段清单草案</th><th>频率/触发</th><th>失败重试</th><th>对账机制</th><th>责任方</th><th>联调窗口</th></tr></thead><tbody><tr><td>IF-01</td><td>CRM 合同/订单触发项目建档</td><td>合同、订单、客户、交期</td><td>CRM -&gt; 项目平台</td><td>合同号、订单号、客户、项目名称、交期、销售负责人、特殊条款</td><td>合同签订/订单生效后触发或定时同步</td><td>失败生成待办并允许手工补录</td><td>按合同号/订单号与项目台账对账</td><td>客户 IT/CRM 负责人 + 简道云实施/二开</td><td>Demo 后、接口文档确认后联调</td></tr>
+<tr><td>IF-02</td><td>PLM 设计资料与状态同步</td><td>设计任务、图纸版本、BOM/物料、下生产状态</td><td>PLM -&gt; 项目平台</td><td>项目号、物料类/物料号、文件清单、版本、状态、报工/下生产时间</td><td>定时同步或关键状态变更触发</td><td>同步失败保留上一状态并生成异常</td><td>按项目/物料类比对设计清单</td><td>客户 PLM 负责人 + 简道云二开</td><td>方案确认后联调</td></tr>
+<tr><td>IF-03</td><td>SAP/SRM 采购订单与供应商交期</td><td>采购计划、采购订单、供应商、交期、备货节点</td><td>SAP/SRM -&gt; 项目平台</td><td>采购订单号、行号、供应商编码、物料编码、数量、签订日期、交期、到货状态</td><td>每日/节点触发同步</td><td>失败进入接口日志，支持重试</td><td>按订单号/行号与项目节点对账</td><td>客户 SAP/SRM 负责人 + 简道云二开</td><td>接口字段确认后联调</td></tr>
+<tr><td>IF-04</td><td>WMS/库存到货状态同步</td><td>到货、收货、库存、检验状态</td><td>WMS/SAP -&gt; 项目平台</td><td>物料编码、项目号、到货日期、数量、检验状态、入库状态</td><td>定时同步</td><td>失败重试并人工核对</td><td>按物料编码和项目号对账</td><td>客户 WMS/SAP 负责人 + 简道云二开</td><td>二期或一期扩展</td></tr>
+<tr><td>IF-05</td><td>质量/检验系统资料与报检状态</td><td>ITP、W/H 点、报检、见证、质量文件</td><td>质量系统/SRM -&gt; 项目平台</td><td>ITP 编号、设备、检验点、报检日期、见证结果、附件链接</td><td>节点触发或定时同步</td><td>失败保留待补资料状态</td><td>按 ITP 清单与质量文件清单对账</td><td>质量系统负责人 + 简道云二开</td><td>质量模板确认后联调</td></tr>
+<tr><td>IF-06</td><td>OA/统一身份/消息待办</td><td>组织、人员、岗位、待办/通知</td><td>OA/统一身份 &lt;-&gt; 项目平台</td><td>用户 ID、部门、岗位、角色、手机号/邮箱、待办链接</td><td>定时同步或登录/消息触发</td><td>账号映射失败进入人工处理</td><td>按组织人员清单对账</td><td>客户信息化 + 简道云实施/二开</td><td>上线前联调</td></tr></tbody></table></div></section>
+<section><h2>05 需求拆解与可行性评估</h2><div class="table-scroll assessment-scroll"><table class="assessment-table"><thead><tr><th style="width:90px">需求编号</th><th>L1 需求模块</th><th>L2 需求场景</th><th>L3 需求描述</th><th style="width:90px">实现方式</th><th>产品 / 交付卡点</th><th>建议方案</th><th style="width:80px">风险等级</th><th>需客户确认事项</th></tr></thead><tbody><tr><td>SR-01</td><td>项目立项与主数据</td><td>CRM 合同触发项目建档</td><td>CRM 收到合同后，自动或手动创建项目台账，带入客户、订单、合同交期、项目编号等基础字段，减少二次录入。</td><td>轻量二开</td><td>原因：CRM 是否开放接口、字段口径和唯一键尚未确认。示例/影响：若合同、订单、项目编号口径不一致，项目台账可能重复或漏建。</td><td>方案1：CRM 暂不对接时，先通过项目立项流程和导入模板建档。方案2：CRM 提供接口后，通过 API / Webhook / HTTP 触发创建项目，并设置唯一键校验、失败待办和对账表。</td><td class="risk-mid">中</td><td>CRM 接口文档、合同/订单唯一键、字段清单、是否允许先手工导入。</td></tr>
+<tr><td>SR-02</td><td>项目立项与主数据</td><td>销售移交与补资料</td><td>支持合同签订后销售/事业部移交资料，记录特殊条款、客户要求、交期变更和补资料状态。</td><td>标准配置</td><td>无</td><td>配置销售移交流程表、资料清单普通表单、附件字段、节点字段权限和补资料提醒，运营管理部可追踪资料完整度。</td><td class="risk-low">低</td><td>销售移交清单模板、必须归档资料与仅留痕资料边界。</td></tr>
+<tr><td>SR-03</td><td>MPS 主计划</td><td>主计划模板与 WBS 拆解</td><td>按项目类型/产品类别维护 MPS 模板，支持主计划节点、责任部门、计划周期、前后置关系和预警规则。</td><td>标准配置</td><td>原因：不同产业和水处理项目颗粒度不一致。示例/影响：若模板过细，会增加维护成本；过粗则无法形成有效预警。</td><td>配置项目类型、节点模板、节点责任矩阵和计划节点表；先以水处理产业试点模板落地，再抽象可复用模板。</td><td class="risk-mid">中</td><td>一期模板覆盖哪些项目类型、节点是否固定、是否需要跨产业复用。</td></tr>
+<tr><td>SR-04</td><td>MPS 主计划</td><td>编制、会签、发布与变更</td><td>运营管理部编制主计划后，各部门限时确认，确认通过后发布；计划变更需发起审批、留痕并影响后续节点。</td><td>标准配置</td><td>原因：计划变更是否自动重算后续节点尚未明确。示例/影响：若变更后全部节点自动重排，需明确规则，否则容易造成验收争议。</td><td>用流程表承载编制、会签、发布、变更；通过智能助手生成/更新节点任务，变更影响范围先按规则配置，复杂重排先做 Demo 验证。</td><td class="risk-mid">中</td><td>变更审批路径、变更后是否重算后续节点、历史版本保留规则。</td></tr>
+<tr><td>SR-05</td><td>MPS 主计划</td><td>节点任务自动拆解</td><td>主计划发布后按节点责任部门/责任人生成待办任务，展示节点状态、计划时间、完成时间和超期状态。</td><td>标准配置</td><td>无</td><td>配置计划节点明细表、任务表、关联数据、智能助手生成任务、状态回写和节点看板。</td><td class="risk-low">低</td><td>节点负责人来源、责任到部门还是到人、是否允许临时改派。</td></tr>
+<tr><td>SR-06</td><td>设计协同</td><td>设备设计开始提醒</td><td>按 MPS 提前 1 个月提醒水处理事业部/项目执行确认设备设计是否开始，并记录确认结果。</td><td>标准配置</td><td>无</td><td>配置定时智能助手、待办通知、确认表单和逾期状态回写；支持移动端和电脑端提醒。</td><td class="risk-low">低</td><td>提醒提前量、提醒对象、未确认时是否升级到部门负责人。</td></tr>
+<tr><td>SR-07</td><td>设计协同</td><td>设计资料清单与交付节点</td><td>将设计文件、接口文件、技术协议、认可图等资料清单线上化，支持节点交付、负责人、版本状态和完成度统计。</td><td>标准配置</td><td>原因：设计资料数量与文件层级尚未定稿。示例/影响：若要求按每个物料号管理全部文件，会显著增加表结构和维护量。</td><td>按“项目文件 + 物料类文件”先建普通表单，关联项目和物料类；用状态字段、负责人和交付节点控制完成度。</td><td class="risk-mid">中</td><td>资料管理到项目、物料类还是物料号；是否一期只管关键资料。</td></tr>
+<tr><td>SR-08</td><td>设计协同</td><td>图纸/认可图/意见单版本交互</td><td>支持图纸、认可图、意见单多轮交互，记录版本、客户/设计院反馈、终版关闭和重新打开。</td><td>轻量二开</td><td>原因：客户提到单份文件可能出现大量版本，附件字段有单字段文件数、单文件大小和预览边界。示例/影响：若把全部版本大文件直接存入单字段附件，可能影响预览、归档和检索体验。</td><td>方案1：标准表单记录版本台账，每轮意见单作为独立记录并上传附件。方案2：大文件或超多版本通过外部文件服务/对象存储承载，简道云保存链接、版本和审批状态。</td><td class="risk-high">高</td><td>单份文件最大版本数、单文件大小、是否必须在线预览、是否接受外部文件存储。</td></tr>
+<tr><td>SR-09</td><td>设计协同</td><td>设计下生产与后下达物料异常</td><td>监控设备/材料设计下生产时间，MPS 到期未下生产报警；设计报工后补下达物料作为异常或变更记录，用于复盘。</td><td>轻量二开</td><td>原因：物料类、物料号、采购单据层级需要定口径。示例/影响：从物料类下沉到物料号/订单行后，数据量和接口工作量会明显增加。</td><td>一期按物料类或关键物料建立下生产节点；后下达物料通过变更/异常表记录。若需自动识别补下达，需对接 PLM/ERP/SAP 的报工和物料数据。</td><td class="risk-high">高</td><td>一期管理颗粒度、后下达判定规则、PLM/ERP 可提供字段。</td></tr>
+<tr><td>SR-10</td><td>采购协同</td><td>采购订单签订监控</td><td>按 MPS 到期监控采购订单是否按时签订，形成异常预警和责任追踪。</td><td>轻量二开</td><td>原因：采购订单数据来源可能在 SAP/SRM，是否自动同步未明确。示例/影响：若采购订单不维护或接口不可用，只能人工确认，自动预警准确性受限。</td><td>标准配置采购节点确认表和逾期提醒；接口可用后通过 SAP/SRM API 同步订单号、签订日期、供应商、交期字段。</td><td class="risk-mid">中</td><td>采购订单主系统、订单创建/签订字段、同步频率。</td></tr>
+<tr><td>SR-11</td><td>采购协同</td><td>采购计划/订单/供应商交期数据接入</td><td>汇总采购计划、采购订单、供应商交期、到货、检验等信息，为项目节点和看板提供数据。</td><td>轻量二开</td><td>原因：多系统接口和字段规则未形成责任矩阵。示例/影响：SAP/SRM/WMS 字段不一致会导致项目看板数据不可追溯。</td><td>先形成接口交互清单；一期可用导入或人工维护补齐关键字段，接口阶段采用 API/中间表定时同步、失败重试和对账。</td><td class="risk-high">高</td><td>SAP/SRM/WMS 接口负责人、字段清单、项目编号/物料编码/供应商编码规则。</td></tr>
+<tr><td>SR-12</td><td>供应商与外购生产</td><td>外购设备关键生产节点</td><td>对外购设备按关键节点监控原材料齐套、开工、图纸确认、生产进度、报检、终检等大节点。</td><td>轻量二开</td><td>原因：客户明确不希望供应商登录多个系统，供应商节点宜优先沿用 SRM。示例/影响：若另建供应商入口，会增加供应商工作量并影响使用率。</td><td>方案1：供应链管理部代维护关键节点。方案2：SRM 作为供应商入口，简道云同步关键节点。方案3：少量关键供应商通过企业互联/外部流程协同，但需确认账号边界。</td><td class="risk-high">高</td><td>供应商是否直接填报、SRM 是否已有字段、一期只管哪些关键设备/关键物料。</td></tr>
+<tr><td>SR-13</td><td>质量/ITP 管理</td><td>外购 ITP 设备生产监控</td><td>监控厂家 ITP 提交、事业部审核、采购催交、W/H 点资料、见证、会签和质量文件归档。</td><td>轻量二开</td><td>原因：W/H 点资料和质量文件附件量、会签规则未明确。示例/影响：大附件和多轮会签会影响表单设计和验收口径。</td><td>标准配置 ITP 台账、W/H 点明细、报检/见证流程、会签流程、附件归档；若需从 SRM/质量系统自动获取文件，单独做接口。</td><td class="risk-mid">中</td><td>ITP 模板、W/H 点清单、会签角色、质量文件是否来自供应商/SRM。</td></tr>
+<tr><td>SR-14</td><td>质量/ITP 管理</td><td>自制 ITP 设备生产监控</td><td>依据 MPS 触发编码、报审、传递装配制造中心，监控自制设备 W/H 点和 ITP 签字点。</td><td>轻量二开</td><td>原因：装配制造中心是否已有生产/报检系统及数据接口未明确。示例/影响：若仍线下维护，系统只能做到提醒和台账，不能自动判断完成。</td><td>配置自制 ITP 流程、装配制造中心待办、W/H 点检查记录和会签；接口可用时同步报工/报检状态。</td><td class="risk-mid">中</td><td>装配制造中心系统边界、报检记录字段、签字点是否需电子签名。</td></tr>
+<tr><td>SR-15</td><td>生产监控</td><td>非 ITP 设备生产监控</td><td>按生产日期和最终验收节点监控供应商备货、报检、终检，并进行到期预警。</td><td>轻量二开</td><td>原因：非 ITP 设备清单和供应商进度来源未明确。示例/影响：若依赖供应商人工反馈，数据及时性受使用率影响。</td><td>配置非 ITP 设备台账、关键节点确认、逾期提醒；若 SRM 可提供节点，则通过接口同步。</td><td class="risk-mid">中</td><td>非 ITP 设备范围、节点字段、责任方是供应链还是供应商。</td></tr>
+<tr><td>SR-16</td><td>生产监控</td><td>自产排产与物料齐套</td><td>根据车间产能排产，监控物料准备、报检、生产进度、过程检验点和齐套情况。</td><td>轻量二开</td><td>原因：排产属于车间生产管理能力，若要求复杂产能排程或 MES 级实时执行，不宜由简道云标准能力直接承诺。示例/影响：拖拽排产、强实时报工需外部系统或专门页面。</td><td>一期用排产台账、齐套检查表、过程节点表和看板管理关键状态；复杂排程或 MES 数据通过接口同步或外部页面增强。</td><td class="risk-high">高</td><td>是否只做计划/状态监控，还是要求车间排产优化和实时生产执行。</td></tr>
+<tr><td>SR-17</td><td>生产监控</td><td>生产异常处理闭环</td><td>对生产异常点进行报检、跟踪、责任分派、处理进度推动和关闭留痕。</td><td>标准配置</td><td>无</td><td>配置异常上报流程、责任分派、处理反馈、复核关闭、逾期提醒和异常统计仪表盘。</td><td class="risk-low">低</td><td>异常分类、责任归属、关闭标准和升级规则。</td></tr>
+<tr><td>SR-18</td><td>验收与交付</td><td>预验收流程</td><td>支持预验收触发、验收图纸确认、文件检查、视频/外观预验收、验收结论记录。</td><td>标准配置</td><td>原因：视频/大文件预览存在大小边界。示例/影响：若验收视频过大，需外部存储或只存链接。</td><td>配置预验收流程、检查项、附件/链接字段、验收结论和权限；大视频按外部存储方案处理。</td><td class="risk-mid">中</td><td>是否上传视频原文件、文件大小、预验收检查模板。</td></tr>
+<tr><td>SR-19</td><td>验收与交付</td><td>问题整改闭环</td><td>预验收问题反馈后，支持 +3 天确认整改方案、+7 天完成整改、整改进度实时监控和复验关闭。</td><td>标准配置</td><td>无</td><td>配置问题整改流程、整改时限、责任部门、复验节点、逾期升级和整改台账。</td><td class="risk-low">低</td><td>整改时限是否固定、复验角色、整改延期是否需审批。</td></tr>
+<tr><td>SR-20</td><td>验收与交付</td><td>包装与发运前置</td><td>外购及自制设备按项目要求在规定周期内完成包装，并与发运前置条件关联。</td><td>轻量二开</td><td>原因：发运计划和包装记录的数据来源未明确。示例/影响：若 WMS/物流系统不对接，包装完成需人工确认。</td><td>一期配置包装确认表、包装计划、完成记录和发运前置检查；WMS/物流接口作为扩展同步包装/发运状态。</td><td class="risk-mid">中</td><td>包装周期、发运计划主系统、是否纳入一期发运管理。</td></tr>
+<tr><td>SR-21</td><td>变更与复盘</td><td>计划/设计/物料变更管理</td><td>对计划变更、设计升版、后下达物料、现场增补等事项进行发起、审批、留痕和复盘分析。</td><td>标准配置</td><td>原因：现场增补可能类似小合同，范围可大可小。示例/影响：若要求重新打开全部接口和流程，需作为独立变更项目评估。</td><td>配置变更申请流程、变更类型、影响范围、审批、关联节点和复盘报表；大型现场增补按新项目/子项目处理。</td><td class="risk-mid">中</td><td>变更类型、是否区分业主要求/设计错误/现场增补、是否影响合同范围。</td></tr>
+<tr><td>SR-22</td><td>提醒预警</td><td>节点提醒、逾期和升级</td><td>按 MPS 前置时间触发提醒，到期未完成报警，并可升级到责任部门负责人或运营管理部。</td><td>标准配置</td><td>原因：批量导入或接口同步数据不一定都触发智能助手。示例/影响：若节点状态来自批量同步，需用定时扫描方式补充预警。</td><td>配置定时智能助手、状态字段、提醒策略、升级规则和提醒日志；接口/批量数据采用定时检查而非完全依赖提交触发。</td><td class="risk-mid">中</td><td>提醒提前量、升级层级、通知渠道、是否需要企业微信/OA 待办。</td></tr>
+<tr><td>SR-23</td><td>看板与分析</td><td>项目全局驾驶舱</td><td>提供项目台账、进度台账、人员负载、延期预警、甘特图、采购/质量/生产分析和多项目下达及时率统计。</td><td>轻量二开</td><td>原因：看板指标依赖数据源和权限，跨系统数据实时性需确认。示例/影响：若指标来自 SAP/SRM/PLM 且无接口，看板只能展示平台内维护数据。</td><td>标准仪表盘 + 数据工厂承载轻中量统计；复杂跨系统分析通过接口/中间表供数，权限按访问、取数、操作三层设计。</td><td class="risk-mid">中</td><td>管理层指标清单、刷新频率、权限范围、是否需要下钻到原始数据。</td></tr>
+<tr><td>SR-24</td><td>权限与组织</td><td>组织架构、角色和 SSO</td><td>按运营管理部、水处理事业部、供应链、质量安全环保部、装配制造中心、信息化等角色控制数据范围和操作权限，必要时对接统一身份。</td><td>轻量二开</td><td>原因：复杂权限和 SSO 都依赖客户组织、账号来源和版本能力。示例/影响：一人多岗、跨项目授权和临时授权会增加权限矩阵复杂度。</td><td>标准权限组、流程节点字段权限和仪表盘权限先落地；SSO/通讯录同步按客户身份平台接口单独配置或开发。</td><td class="risk-mid">中</td><td>组织/岗位来源、一人多岗、项目级权限、是否必须 SSO。</td></tr>
+<tr><td>SR-25</td><td>附件与归档</td><td>项目全生命周期资料归档</td><td>归档项目过程中的合同、设计资料、质量文件、验收文件、包装资料、异常和变更记录。</td><td>轻量二开</td><td>原因：附件字段文件数、单文件大小、预览能力和批量迁移存在边界。示例/影响：大量设计文件或视频如果全部存平台内，可能带来容量和预览风险。</td><td>标准附件表 + 资料分类 + 项目关联归档；大文件采用外部对象存储或文件系统，平台保存链接、版本和权限。</td><td class="risk-high">高</td><td>文件量、单文件大小、是否批量导入、是否必须在线预览/下载。</td></tr>
+<tr><td>SR-26</td><td>系统集成</td><td>CRM/PLM/SAP/WMS/SRM/质量/OA 数据打通</td><td>梳理并分阶段打通合同订单、设计资料、物料/BOM、采购订单、库存到货、供应商、质量/检验、OA 待办/组织权限等数据。</td><td>深度二开</td><td>原因：外部系统多、字段和接口责任未明确，且接口受频率、批量、鉴权和失败处理边界影响。示例/影响：没有接口文档和联调窗口时，不建议承诺确定工期。</td><td>先输出接口责任矩阵；一期建议优先 CRM 项目建档、PLM 设计状态、SAP/SRM 采购关键字段，其余用导入补齐。接口采用中间表/API、队列、重试、对账和失败待办。</td><td class="risk-high">高</td><td>一期必须打通哪些系统、每个系统接口负责人、字段清单、联调窗口和失败补偿机制。</td></tr>
+<tr><td>SR-27</td><td>数据初始化</td><td>模板导入与历史数据</td><td>支持主计划模板、节点模板、项目台账、资料清单、关键设备/物料清单等基础数据导入；历史项目是否迁移待确认。</td><td>轻量二开</td><td>原因：历史数据质量、唯一键和关联顺序决定迁移工作量。示例/影响：在途流程和大量历史附件迁移会显著扩大范围。</td><td>一期提供标准 Excel 导入模板和基础数据初始化；历史数据按客户清洗后的模板分批导入，复杂迁移另行评估。</td><td class="risk-mid">中</td><td>是否迁移历史项目、迁移字段、附件是否迁移、客户是否负责清洗。</td></tr>
+<tr><td>SR-28</td><td>推广与运维</td><td>水处理试点与多产业复制</td><td>以水处理产业为试点沉淀流程、节点模板和看板口径，后续推广至船舶等其他产业。</td><td>标准配置</td><td>原因：不同产业节点标准化程度不同。示例/影响：水处理模板不能直接假设适配所有产业。</td><td>一期固化水处理试点，输出可复制模板、字段口径和权限模型；推广前按产业差异做模板微调。</td><td class="risk-mid">中</td><td>一期只上线水处理还是同步考虑其他产业；推广节奏和验收口径。</td></tr></tbody></table></div></section>
+<section><h2>06 待二次确认风险项</h2><div class="table-scroll"><table><thead><tr><th style="width:80px">编号</th><th style="width:160px">风险项</th><th>风险说明</th><th style="width:80px">等级</th><th style="width:180px">建议责任方</th><th>确认节点</th></tr></thead><tbody><tr><td>R-01</td><td>接口范围不清</td><td>CRM、PLM、SAP、WMS、SRM、质量/OA 多系统并存，当前仅明确方向，未形成接口字段和责任矩阵。</td><td class="risk-high">高</td><td>客户信息化部/各系统负责人</td><td>方案确认前完成系统清单、字段清单、主数据归属和联调窗口。</td></tr>
+<tr><td>R-02</td><td>管理颗粒度下沉</td><td>物料类、物料号、采购订单行、供应商生产节点层级未定，颗粒度越细，配置、接口和数据量越大。</td><td class="risk-high">高</td><td>运营管理部/水处理事业部/供应链</td><td>Demo 阶段确定一期颗粒度，建议先管项目-物料类-关键设备大节点。</td></tr>
+<tr><td>R-03</td><td>供应商入口冲突</td><td>客户明确不希望供应商登录多个系统；若另建供应商门户，使用率和维护成本风险高。</td><td class="risk-high">高</td><td>供应链管理部/信息化部</td><td>优先复用 SRM 入口，简道云同步关键结果；供应商直填另行评估。</td></tr>
+<tr><td>R-04</td><td>设计资料版本和大附件</td><td>设计文件版本可能很多，且可能包含大文件/视频，标准附件字段存在数量、大小和预览边界。</td><td class="risk-high">高</td><td>水处理事业部/信息化部</td><td>明确文件量和存储策略，大文件采用外部文件服务或链接归档。</td></tr>
+<tr><td>R-05</td><td>看板指标数据来源</td><td>项目驾驶舱依赖多系统数据，若外部数据不接入或维护不及时，指标准确性受影响。</td><td class="risk-mid">中</td><td>运营管理部/信息化部</td><td>逐项确认指标口径和数据来源，先上线平台内可闭环指标。</td></tr>
+<tr><td>R-06</td><td>计划变更重算规则</td><td>MPS 变更后是否自动影响后续节点未明确，若规则复杂需 Demo 验证。</td><td class="risk-mid">中</td><td>运营管理部/各业务部门</td><td>确认变更审批、影响范围、重算规则和历史版本留痕。</td></tr>
+<tr><td>R-07</td><td>权限矩阵复杂</td><td>跨部门、跨项目、一人多岗和领导看板权限可能复杂，不能只按角色名称判断。</td><td class="risk-mid">中</td><td>信息化部/业务负责人</td><td>上线前形成角色-数据-字段-操作权限矩阵。</td></tr>
+<tr><td>R-08</td><td>历史数据迁移</td><td>如要求迁移历史项目、在途流程和附件，工作量与客户数据质量强相关。</td><td class="risk-mid">中</td><td>客户业务/信息化部</td><td>一期建议仅初始化模板和在手项目，历史迁移另行评估。</td></tr></tbody></table></div></section>
+<section><h2>07 下一步建议</h2><div class="table-scroll"><table><thead><tr><th style="width:60px">序号</th><th style="width:160px">建议动作</th><th>说明</th></tr></thead><tbody><tr><td>1</td><td>确认一期范围</td><td>建议一期以水处理试点为主，优先覆盖 MPS、节点任务、设计资料、采购关键节点、ITP/验收、异常和驾驶舱。</td></tr>
+<tr><td>2</td><td>组织专项调研</td><td>按运营、设计、供应链、质量、制造、信息化分别确认字段、节点、责任和系统边界。</td></tr>
+<tr><td>3</td><td>先做 Demo 验证</td><td>用 1 个正常项目和 1 个延期/复杂项目验证节点颗粒度、版本文件、预警和看板效果。</td></tr>
+<tr><td>4</td><td>接口分阶段落地</td><td>先手工/导入补齐业务闭环，再按 CRM、PLM、SAP/SRM、质量/OA 优先级逐步联调。</td></tr></tbody></table></div><p class="note">建议报价按“一期标准配置 + 必要轻量接口 + 实施服务”先行测算；CRM/PLM/SAP/SRM/质量/OA 的深度集成，应在接口清单确认后进入正式工期承诺。</p></section>
+</main><footer>本报告为售前需求分析与初步报价依据，不包含简道云软件许可、客户侧系统改造、第三方接口开发费用、外部文件存储费用及未确认的深度定制页面。</footer></div></body></html>

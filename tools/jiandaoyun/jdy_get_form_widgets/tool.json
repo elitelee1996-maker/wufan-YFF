@@ -1,0 +1,33 @@
+{
+  "name": "jdy_get_form_widgets",
+  "display_name": "查询表单字段结构",
+  "description_zh": "获取指定表单的全部字段定义",
+  "description": "Get all widget/field definitions of a form (v5). Returns: widgets[] with label/name/widgetName/type (subform has items[]), sysWidgets[] (system fields: flowState/creator/createTime/updateTime etc), dataModifyTime. Field types: text, textarea, number, datetime, radiogroup, checkboxgroup, combo, combocheck, address, location, image, upload, subform, linkdata, lookup, signature, user, usergroup, dept, deptgroup. Rate limit: 30/s.",
+  "params": {
+    "app_id": {
+      "type": "string",
+      "description": "App ID (应用ID)"
+    },
+    "entry_id": {
+      "type": "string",
+      "description": "Form ID (表单ID)"
+    }
+  },
+  "api": {
+    "url": "https://api.jiandaoyun.com/api/v5/app/entry/widget/list",
+    "method": "POST",
+    "headers": {
+      "Authorization": "Bearer ${conn:jiandaoyun.api_key}",
+      "Content-Type": "application/json"
+    }
+  },
+  "requires_connections": [
+    {
+      "category": "jiandaoyun",
+      "fields": [
+        "api_key"
+      ],
+      "required": true
+    }
+  ]
+}

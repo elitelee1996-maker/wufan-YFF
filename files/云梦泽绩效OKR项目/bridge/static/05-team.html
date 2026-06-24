@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>团队看板 - 云梦泽 OKR</title>
+<link rel="stylesheet" href="https://docs.fanruan.design/assets/react/fine-design-runtime/fine-design/fine-design.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+
+:root {
+  --primary: var(--fd-color-brand-6, #00b899); --primary-dark: var(--fd-color-brand-7, #00937a); --primary-light: var(--fd-color-brand-1, #e6f8f5); --primary-50: var(--fd-color-brand-1, #e6f8f5);
+  --green: #34c759; --green-light: #f0fdf4; --green-dark: #16a34a;
+  --yellow: #f5a623; --yellow-light: #fffbeb;
+  --red: #ff3b30; --red-light: #fef2f2;
+  --purple: #7c3aed; --purple-light: #f5f3ff;
+  --cyan: #06b6d4; --cyan-light: #ecfeff;
+  --text-1: #1f2329; --text-2: #646a73; --text-3: #8f959e; --text-4: #b4b8bf;
+  --bg-0: #f5f6f7; --bg-1: #ffffff; --bg-2: #f9fafb; --bg-3: #f0f1f2;
+  --border-1: #dee0e3; --border-2: #e8eaed; --border-3: #f0f1f2;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.06); --shadow: 0 2px 8px rgba(0,0,0,.08); --shadow-lg: 0 8px 24px rgba(0,0,0,.12);
+  --r: 4px; --r-sm: 4px; --r-lg: 8px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg-0);color:var(--text-1);font-size:14px;line-height:1.6;}
+.app{display:block;min-height:100vh;}
+
+/* Main */
+.main{display:block;width:100%;}
+.topbar{display:none;}
+
+
+
+
+
+
+
+.content{padding:20px;}
+.page-standalone{display:block;}
+
+/* Cards */
+.card{background:var(--bg-1);border:1px solid var(--border-2);border-radius:var(--r);box-shadow:var(--shadow-sm);}
+.card-h{padding:14px 18px;border-bottom:1px solid var(--border-3);display:flex;align-items:center;justify-content:space-between;}
+.card-t{font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px;}
+.card-b{padding:18px;}
+.card-f{padding:10px 18px;border-top:1px solid var(--border-3);background:var(--bg-2);border-radius:0 0 var(--r) var(--r);}
+
+/* OKR Card */
+.okr-card{background:var(--bg-1);border:1px solid var(--border-2);border-radius:var(--r-lg);padding:18px;margin-bottom:14px;transition:all .2s;position:relative;overflow:hidden;}
+.okr-card:hover{box-shadow:var(--shadow);border-color:var(--border-1);}
+
+.o-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:12px;}
+.o-ring{flex-shrink:0;}
+.o-info{flex:1;min-width:0;}
+.o-title{font-size:15px;font-weight:700;margin-bottom:3px;line-height:1.4;}
+.o-meta{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-3);flex-wrap:wrap;}
+.o-meta .mi{display:flex;align-items:center;gap:3px;}
+.o-actions{display:flex;gap:4px;flex-shrink:0;}
+.o-score-badge{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;font-size:13px;font-weight:800;color:#fff;}
+.o-score-badge.high{background:linear-gradient(135deg,#34c759,#16a34a);}
+.o-score-badge.mid{background:linear-gradient(135deg,#f5a623,#d97706);}
+.o-score-badge.low{background:linear-gradient(135deg,#ff3b30,#dc2626);}
+.o-score-badge.none{background:var(--border-1);color:var(--text-3);}
+
+/* KR */
+.kr-list{border-top:1px solid var(--border-3);padding-top:10px;margin-top:2px;}
+.kr-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r-sm);transition:all .15s;margin-bottom:2px;}
+.kr-row:hover{background:var(--bg-2);}
+.kr-bar-wrap{flex:1;}
+.kr-name{font-size:13px;font-weight:500;margin-bottom:2px;}
+.kr-vals{font-size:11px;color:var(--text-3);margin-top:2px;}
+.kr-bar{height:6px;background:var(--border-2);border-radius:3px;overflow:hidden;margin-top:3px;}
+.kr-fill{height:100%;border-radius:3px;transition:width .5s;}
+.kr-fill.g{background:linear-gradient(90deg,#4ade80,#16a34a);}
+.kr-fill.y{background:linear-gradient(90deg,#fbbf24,#d97706);}
+.kr-fill.r{background:linear-gradient(90deg,#f87171,#dc2626);}
+.kr-fill.b{background:linear-gradient(90deg,#60a5fa,#3370ff);}
+.kr-pct{font-size:14px;font-weight:700;min-width:44px;text-align:right;}
+.kr-pct.g{color:var(--green-dark);}.kr-pct.y{color:var(--yellow);}.kr-pct.r{color:var(--red);}
+.kr-score{font-size:12px;font-weight:700;color:var(--text-2);min-width:32px;text-align:center;padding:2px 6px;background:var(--bg-3);border-radius:10px;}
+.kr-btn{padding:3px 10px;border-radius:12px;font-size:11px;cursor:pointer;border:1px solid var(--border-1);background:var(--bg-1);color:var(--text-2);transition:all .15s;white-space:nowrap;}
+.kr-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-light);}
+
+/* Tags */
+.tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;}
+.tg-g{background:var(--green-light);color:var(--green-dark);}
+.tg-y{background:var(--yellow-light);color:#92400e;}
+.tg-r{background:var(--red-light);color:var(--red);}
+.tg-b{background:var(--primary-light);color:var(--primary);}
+.tg-p{background:var(--purple-light);color:var(--purple);}
+.tg-c{background:var(--cyan-light);color:var(--cyan);}
+.tg-gray{background:var(--bg-3);color:var(--text-2);}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:3px;}
+.dot.g{background:var(--green);}.dot.y{background:var(--yellow);}.dot.r{background:var(--red);}
+
+/* Buttons */
+.btn{padding:7px 16px;border-radius:var(--r-sm);font-size:13px;cursor:pointer;border:1px solid var(--border-1);background:var(--bg-1);color:var(--text-1);transition:all .15s;font-weight:500;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
+.btn:hover{background:var(--bg-2);}
+.btn-p{background:var(--primary);color:#fff;border-color:var(--primary);}.btn-p:hover{background:var(--primary-dark);}
+.btn-s{background:var(--green);color:#fff;border-color:var(--green);}
+.btn-d{background:var(--red);color:#fff;border-color:var(--red);}
+.btn-o{background:transparent;border-color:var(--primary);color:var(--primary);}.btn-o:hover{background:var(--primary-light);}
+.btn-g{background:transparent;border-color:transparent;color:var(--text-2);}.btn-g:hover{background:var(--bg-3);color:var(--text-1);}
+.btn-sm{padding:4px 10px;font-size:12px;}
+.btn-lg{padding:9px 22px;font-size:14px;}
+.btn-ic{width:30px;height:30px;padding:0;justify-content:center;border-radius:50%;}
+
+/* Forms */
+.fg{margin-bottom:14px;}
+.fl{font-size:12px;color:var(--text-2);margin-bottom:5px;display:block;font-weight:600;}
+.fl .rq{color:var(--red);}
+.fi,.fs,.ft{width:100%;padding:8px 12px;border:1px solid var(--border-1);border-radius:var(--r-sm);font-size:13px;transition:all .15s;background:#fff;color:var(--text-1);}
+.fi:focus,.fs:focus,.ft:focus{border-color:var(--primary);outline:none;box-shadow:0 0 0 3px rgba(0,184,153,.1);}
+.ft{min-height:72px;resize:vertical;line-height:1.5;}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.fh{font-size:11px;color:var(--text-3);margin-top:3px;}
+.slider-w{display:flex;align-items:center;gap:10px;}
+.slider-w input[type=range]{flex:1;accent-color:var(--primary);height:5px;}
+.slider-v{font-size:18px;font-weight:800;color:var(--primary);min-width:44px;text-align:center;}
+
+/* Modal */
+.mo{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(3px);}
+.mo.show{display:flex;}
+.md{background:var(--bg-1);border-radius:var(--r-lg);width:560px;max-height:85vh;overflow-y:auto;box-shadow:var(--shadow-lg);}
+.md.lg{width:780px;}.md.xl{width:960px;}
+.md-h{padding:18px 22px;border-bottom:1px solid var(--border-2);display:flex;align-items:center;justify-content:space-between;}
+.md-h h3{font-size:16px;font-weight:700;}
+.md-x{cursor:pointer;font-size:18px;color:var(--text-3);background:none;border:none;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.md-x:hover{background:var(--bg-3);color:var(--text-1);}
+.md-b{padding:22px;}
+.md-f{padding:14px 22px;border-top:1px solid var(--border-2);display:flex;justify-content:flex-end;gap:8px;}
+
+/* Tabs */
+.tabs{display:flex;border-bottom:2px solid var(--border-2);margin-bottom:16px;gap:2px;}
+.tab{padding:9px 16px;cursor:pointer;color:var(--text-2);font-size:13px;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;font-weight:500;border-radius:6px 6px 0 0;}
+.tab:hover{color:var(--primary);background:var(--primary-50);}
+.tab.on{color:var(--primary);border-bottom-color:var(--primary);}
+.tc{display:none;}.tc.on{display:block;}
+
+/* Table */
+table{width:100%;border-collapse:collapse;}
+th{padding:9px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--text-2);background:var(--bg-2);border-bottom:1px solid var(--border-1);text-transform:uppercase;letter-spacing:.3px;}
+td{padding:10px 12px;border-bottom:1px solid var(--border-3);font-size:13px;}
+tr:hover td{background:var(--primary-50);}
+
+/* Steps */
+.steps{display:flex;margin-bottom:20px;}
+.step{flex:1;text-align:center;position:relative;}
+.step::after{content:'';position:absolute;top:14px;left:50%;width:100%;height:2px;background:var(--border-2);}
+.step:last-child::after{display:none;}
+.step-dot{width:28px;height:28px;border-radius:50%;background:var(--bg-2);border:2px solid var(--border-2);display:inline-flex;align-items:center;justify-content:center;font-size:12px;color:var(--text-3);position:relative;z-index:1;}
+.step.on .step-dot{background:var(--primary);border-color:var(--primary);color:#fff;}
+.step.dn .step-dot{background:var(--green);border-color:var(--green);color:#fff;}
+.step.on::after,.step.dn::after{background:var(--primary);}
+.step-lb{font-size:11px;color:var(--text-3);margin-top:6px;}
+.step.on .step-lb{color:var(--primary);font-weight:600;}
+
+/* KPI */
+.kpi-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px;}
+.kpi-c{background:var(--bg-1);border:1px solid var(--border-2);border-radius:var(--r);padding:16px;box-shadow:var(--shadow-sm);}
+.kpi-c.hl{border-left:4px solid var(--primary);}
+.kpi-l{font-size:11px;color:var(--text-3);font-weight:600;margin-bottom:4px;}
+.kpi-v{font-size:26px;font-weight:800;line-height:1;}
+.kpi-s{font-size:11px;color:var(--text-3);margin-top:4px;}
+
+/* Progress Ring */
+.pr{transform:rotate(-90deg);}
+.pr-bg{fill:none;stroke:var(--border-2);stroke-width:5;}
+.pr-fl{fill:none;stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset .8s;}
+.pr-t{font-size:13px;font-weight:800;fill:var(--text-1);text-anchor:middle;dominant-baseline:central;}
+
+/* Alignment Tree */
+.tree-ct{position:relative;padding:16px 0;}
+.tree-lv{display:flex;gap:14px;margin-bottom:20px;position:relative;padding-left:28px;}
+.tree-lv::before{content:'';position:absolute;left:14px;top:0;bottom:0;width:2px;background:var(--border-2);}
+.tree-lbl{position:absolute;left:0;top:0;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;z-index:1;}
+.tree-lbl.co{background:var(--primary);}.tree-lbl.de{background:var(--cyan);}.tree-lbl.te{background:var(--purple);}.tree-lbl.pe{background:var(--yellow);}
+.tree-cd{background:var(--bg-1);border:1px solid var(--border-2);border-radius:var(--r);padding:12px 14px;min-width:220px;max-width:300px;cursor:pointer;transition:all .2s;position:relative;}
+.tree-cd:hover{box-shadow:var(--shadow);border-color:var(--primary);}
+.tree-cd-title{font-size:13px;font-weight:600;margin-bottom:4px;line-height:1.4;}
+.tree-cd-meta{font-size:11px;color:var(--text-3);display:flex;align-items:center;gap:6px;}
+
+/* History Diff */
+.diff-del{background:#fef2f2;color:#dc2626;text-decoration:line-through;padding:2px 4px;border-radius:3px;}
+.diff-add{background:#f0fdf4;color:#16a34a;padding:2px 4px;border-radius:3px;}
+
+/* Alert */
+.alert{padding:12px 16px;border-radius:var(--r);margin-bottom:14px;font-size:13px;display:flex;align-items:flex-start;gap:8px;}
+.al-i{background:var(--primary-light);color:var(--primary);border:1px solid rgba(51,112,255,.12);}
+.al-w{background:var(--yellow-light);color:#92400e;border:1px solid rgba(245,166,35,.12);}
+.al-s{background:var(--green-light);color:var(--green-dark);border:1px solid rgba(52,199,89,.12);}
+.al-d{background:var(--red-light);color:var(--red);border:1px solid rgba(255,59,48,.12);}
+
+/* Misc */
+.dv{height:1px;background:var(--border-2);margin:14px 0;}
+.tm{color:var(--text-3);}.ts{font-size:12px;}.txs{font-size:11px;}.fb{font-weight:700;}
+.fx{display:flex;}.fc{flex-direction:column;}.ac{align-items:center;}.jb{justify-content:space-between;}.jc{justify-content:center;}
+.g2{gap:8px;}.g3{gap:12px;}.g4{gap:16px;}
+.mb2{margin-bottom:8px;}.mb3{margin-bottom:12px;}.mb4{margin-bottom:16px;}.mb6{margin-bottom:24px;}
+.mt2{margin-top:8px;}.mt4{margin-top:16px;}
+.wf{width:100%;}
+.gd2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.gd3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+.gd4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px;}
+
+/* Animations */
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.anim{animation:fadeIn .3s ease;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+.pulse{animation:pulse 2s infinite;}
+
+/* Toggle switch */
+.toggle{position:relative;width:36px;height:20px;background:var(--border-1);border-radius:10px;cursor:pointer;transition:all .2s;}
+.toggle.on{background:var(--primary);}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.15);}
+.toggle.on::after{left:18px;}
+
+/* Comment bubble */
+.comment-bubble{position:absolute;top:-8px;right:-8px;width:20px;height:20px;border-radius:50%;background:var(--primary);color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:700;cursor:pointer;}
+
+/* Tooltip */
+[data-tip]{position:relative;}
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#1a1d24;color:#e2e8f0;padding:4px 10px;border-radius:5px;font-size:11px;white-space:nowrap;z-index:100;pointer-events:none;}
+
+/* Iframe embedding overrides */
+html, body { margin: 0; padding: 0; width: 100%; overflow-x: hidden; }
+body { background: var(--bg-0); }
+.page-standalone { display: block; }
+
+</style>
+<script>
+// ===== OKR Bridge API Client =====
+var OKR_API={BASE_URL:'http://47.98.192.245:8200',
+async _post(p,d){var r=await fetch(this.BASE_URL+p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});if(!r.ok)throw new Error('API:'+r.status);return r.json();},
+async _get(p){var r=await fetch(this.BASE_URL+p);if(!r.ok)throw new Error('API:'+r.status);return r.json();},
+submitGoal(d){return this._post('/api/okr/goal',d);},
+updateProgress(id,prog,desc){return this._post('/api/okr/progress',{kr_data_id:id,current_progress:prog,progress_desc:desc});},
+listOKR(f){var p=new URLSearchParams(f||{});return this._get('/api/okr/list?'+p);},
+listStrategy(c){return this._get('/api/okr/strategy'+(c?'?cycle='+encodeURIComponent(c):''));},
+health(){return this._get('/health');}};
+function showToast(m,t,d){t=t||'success';d=d||3000;var c={success:'#34c759',error:'#ff3b30',warning:'#f5a623',info:'#3370ff'};var e=document.createElement('div');e.style.cssText='position:fixed;top:20px;right:20px;padding:12px 20px;background:'+(c[t]||c.info)+';color:#fff;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.15);z-index:10000;font-size:14px;font-weight:500;';e.textContent=m;document.body.appendChild(e);setTimeout(function(){e.remove();},d);}
+function showLoading(s){var e=document.getElementById('api-loader');if(s){if(!e){e=document.createElement('div');e.id='api-loader';e.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.8);display:flex;align-items:center;justify-content:center;z-index:9999;';e.innerHTML='<div style="text-align:center;"><div style="width:40px;height:40px;border:3px solid #e8eaed;border-top-color:#00b899;border-radius:50%;animation:okrspin .8s linear infinite;margin:0 auto 12px;"></div><div style="color:#646a73;font-size:14px;">正在提交...</div></div>';document.body.appendChild(e);}}else{if(e)e.remove();}}
+if(!document.getElementById('okr-anim-style')){var _s=document.createElement('style');_s.id='okr-anim-style';_s.textContent='@keyframes okrspin{to{transform:rotate(360deg)}}';document.head.appendChild(_s);}
+</script>
+</head>
+<body>
+<div class="app">
+<div class="main">
+<div class="content">
+<div class="page-standalone">
+  <div class="fx ac jb mb6">
+    <div><h2 style="font-size:20px;font-weight:800;margin-bottom:3px;"> 团队看板</h2><p class="tm ts">资金管理组 · 2026 Q2 · 全员 OKR 进度一览</p></div>
+    <select class="fs" style="width:160px;"><option>资金管理组</option><option>结算运营组</option><option>财务管理处（全部）</option></select>
+  </div>
+  <div class="kpi-g">
+    <div class="kpi-c hl"><div class="kpi-l">团队整体进度</div><div class="kpi-v" style="color:var(--primary);">61%</div><div class="kpi-s">预期 72% · <span style="color:var(--yellow);">滞后 11%</span></div></div>
+    <div class="kpi-c"><div class="kpi-l">成员</div><div class="kpi-v">5</div><div class="kpi-s">人 · 12 个 O</div></div>
+    <div class="kpi-c"><div class="kpi-l">本周更新率</div><div class="kpi-v" style="color:var(--green);">80%</div><div class="kpi-s">4/5 人已更新</div></div>
+    <div class="kpi-c"><div class="kpi-l"> 红灯 KR</div><div class="kpi-v" style="color:var(--red);">2</div><div class="kpi-s">个严重滞后</div></div>
+  </div>
+  <div class="card">
+    <div class="card-h"><div class="card-t">成员 OKR 进度</div><div class="fx g2"><button class="btn btn-sm btn-g">按进度排序</button><button class="btn btn-sm btn-g">催办未更新</button></div></div>
+    <div class="card-b" style="padding:0;">
+      <table>
+        <thead><tr><th>成员</th><th>O 数</th><th>KR 数</th><th>整体进度</th><th>状态分布</th><th>最近更新</th><th>操作</th></tr></thead>
+        <tbody>
+          <tr><td><div class="fx ac g2"><div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#60a5fa,#3370ff);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;">张</div><div><div class="fb">张明</div><div class="txs tm">组长</div></div></div></td><td>3</td><td>8</td><td><div class="fx ac g2"><div class="kr-bar" style="width:70px;"><div class="kr-fill g" style="width:68%"></div></div><span class="fb" style="color:var(--green-dark);">68%</span></div></td><td><span class="dot g"></span>5 <span class="dot y"></span>2 <span class="dot r"></span>1</td><td class="ts tm">2天前</td><td><button class="btn btn-sm btn-g">查看</button></td></tr>
+          <tr><td><div class="fx ac g2"><div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;">王</div><div><div class="fb">王丽</div><div class="txs tm">专员</div></div></div></td><td>2</td><td>5</td><td><div class="fx ac g2"><div class="kr-bar" style="width:70px;"><div class="kr-fill y" style="width:55%"></div></div><span class="fb" style="color:var(--yellow);">55%</span></div></td><td><span class="dot g"></span>2 <span class="dot y"></span>2 <span class="dot r"></span>1</td><td class="ts tm">1天前</td><td><button class="btn btn-sm btn-g">查看</button></td></tr>
+          <tr><td><div class="fx ac g2"><div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#34c759,#16a34a);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;">赵</div><div><div class="fb">赵岩</div><div class="txs tm">组长（结算）</div></div></div></td><td>3</td><td>7</td><td><div class="fx ac g2"><div class="kr-bar" style="width:70px;"><div class="kr-fill g" style="width:72%"></div></div><span class="fb" style="color:var(--green-dark);">72%</span></div></td><td><span class="dot g"></span>5 <span class="dot y"></span>2</td><td class="ts tm">今天</td><td><button class="btn btn-sm btn-g">查看</button></td></tr>
+          <tr><td><div class="fx ac g2"><div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#a78bfa,#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;">陈</div><div><div class="fb">陈敏</div><div class="txs tm">专员</div></div></div></td><td>2</td><td>4</td><td><div class="fx ac g2"><div class="kr-bar" style="width:70px;"><div class="kr-fill y" style="width:58%"></div></div><span class="fb" style="color:var(--yellow);">58%</span></div></td><td><span class="dot g"></span>2 <span class="dot y"></span>1 <span class="dot r"></span>1</td><td class="ts tm" style="color:var(--red);">⚠️ 未更新</td><td><button class="btn btn-sm btn-o">催办</button></td></tr>
+          <tr><td><div class="fx ac g2"><div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#f87171,#dc2626);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;">刘</div><div><div class="fb">刘强</div><div class="txs tm">专员</div></div></div></td><td>2</td><td>5</td><td><div class="fx ac g2"><div class="kr-bar" style="width:70px;"><div class="kr-fill g" style="width:65%"></div></div><span class="fb" style="color:var(--green-dark);">65%</span></div></td><td><span class="dot g"></span>4 <span class="dot y"></span>1</td><td class="ts tm">3天前</td><td><button class="btn btn-sm btn-g">查看</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== P: 数据看板 ===================== -->
+</div>
+</div>
+</div>
+</div>
+<script>
+
+// ===== Navigation =====
+const titles={'p-home':'我的 OKR','p-progress':'进度更新','p-review':'复盘打分','p-setting':'目标制定','p-align':'对齐视图','p-team':'团队看板','p-dashboard':'数据看板','p-collab':'协作关系','p-block':'OKR Block','p-confirm':'上级确认','p-history':'历史版本','p-perm':'权限设置'};
+function go(id,el){document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.querySelectorAll('.nav-i').forEach(n=>n.classList.remove('on'));const pg=document.getElementById(id);if(pg)pg.classList.add('on');if(el)el.classList.add('on');document.getElementById('tt').textContent=titles[id]||'';
+  if(id==='p-dashboard')initCharts();if(id==='p-progress')initTrend();}
+
+// ===== Modal =====
+function openMo(t,h,lg){document.getElementById('mo-t').textContent=t;document.getElementById('mo-b').innerHTML=h;document.getElementById('md').className=lg?'md lg':'md';document.getElementById('mo').classList.add('show');}
+function closeMo(){document.getElementById('mo').classList.remove('show');}
+document.getElementById('mo').addEventListener('click',function(e){if(e.target===this)closeMo();});
+
+// ===== Tabs =====
+function swTab(gid,tid){const g=document.getElementById(gid);g.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));g.querySelectorAll('.tc').forEach(c=>c.classList.remove('on'));event.target.classList.add('on');document.getElementById(tid).classList.add('on');
+  if(tid==='dash-follow'||tid==='dash-fill')initCharts();}
+
+// ===== Goal Setting Steps =====
+function goStep(n){document.querySelectorAll('.gs-panel').forEach(p=>p.style.display='none');const t=document.getElementById('gs-p-'+n);if(t)t.style.display='block';
+  document.querySelectorAll('#gs-steps .step').forEach((s,i)=>{s.classList.remove('on','dn');if(i+1<n){s.classList.add('dn');s.querySelector('.step-dot').textContent='✓';}else if(i+1===n){s.classList.add('on');s.querySelector('.step-dot').textContent=n;}else{s.querySelector('.step-dot').textContent=i+1;}});
+  document.querySelector('.content').scrollTop=0;}
+function selAlign(el){document.querySelectorAll('[onclick="selAlign(this)"]').forEach(c=>{c.style.border='1px solid var(--border-1)';c.style.background='var(--bg-1)';const d=c.querySelector('span[style*="font-size:16px"]');if(d){d.style.color='var(--border-1)';d.textContent='○';}});el.style.border='2px solid var(--primary)';el.style.background='var(--primary-50)';const d=el.querySelector('span[style*="font-size:16px"]');if(d){d.style.color='var(--primary)';d.textContent='●';}}
+function submitGoal(){const p=document.getElementById('gs-p-5');p.innerHTML='<div class="card"><div class="card-b" style="text-align:center;padding:48px 24px;"><div style="font-size:56px;margin-bottom:14px;"></div><h2 style="font-size:20px;font-weight:800;margin-bottom:8px;color:var(--green);">目标已提交确认！</h2><p class="tm" style="max-width:380px;margin:0 auto 20px;">王总监将在 1-3 个工作日内审批对齐关系和挑战度。审批通过后目标进入"进行中"状态。</p><div class="fx g2 jc"><button class="btn btn-o" onclick="go(\'p-home\',document.querySelector(\'[onclick*=home]\'))">查看我的 OKR</button><button class="btn btn-p" onclick="go(\'p-align\',document.querySelector(\'[onclick*=align]\'))">查看对齐视图</button></div></div></div>';
+  document.querySelectorAll('#gs-steps .step').forEach(s=>{s.classList.remove('on');s.classList.add('dn');s.querySelector('.step-dot').textContent='✓';});}
+
+// ===== Progress Mode =====
+function switchMode(m){document.getElementById('mode-simple-panel').style.display=m==='simple'?'block':'none';document.getElementById('mode-adv-panel').style.display=m==='advanced'?'block':'none';document.getElementById('mode-simple').className=m==='simple'?'btn btn-sm btn-p':'btn btn-sm';document.getElementById('mode-adv').className=m==='advanced'?'btn btn-sm btn-p':'btn btn-sm';}
+function calcAdv(){const c=parseFloat(document.getElementById('adv-cur').value)||0;const pct=Math.min(100,Math.max(0,Math.round((c-0)/(5-0)*100)));document.getElementById('adv-pct').textContent=pct+'%';}
+
+// ===== KR Selection =====
+function selectKR(el,id){document.querySelectorAll('.kr-row').forEach(k=>{k.style.background='';k.style.borderRadius='';});el.style.background='var(--primary-light)';el.style.borderRadius='var(--r-sm)';}
+
+// ===== O1 Score Calc =====
+function calcO1(){const rows=document.querySelectorAll('#p-review table tbody tr');let sum=0,w=[0.4,0.35,0.25];rows.forEach((r,i)=>{const sl=r.querySelector('input[type=range]');if(sl)sum+=sl.value/100*w[i];});document.getElementById('o1-score').textContent=sum.toFixed(2);document.getElementById('o1-calc').textContent=sum.toFixed(2);}
+
+// ===== Alignment View =====
+function toggleMinimap(){document.getElementById('minimap').classList.toggle('show');}
+function toggleKR(){const els=document.querySelectorAll('.tree-kr-detail');const btn=document.getElementById('kr-toggle');const show=els[0]&&els[0].style.display==='none';els.forEach(e=>e.style.display=show?'block':'none');btn.textContent=show?' 隐藏 KR':' 显示 KR';}
+
+// ===== Charts =====
+let trendC,lowQC,deptC,weekC,freqC;
+function initTrend(){if(trendC)trendC.destroy();const ctx=document.getElementById('trendChart');if(!ctx)return;trendC=new Chart(ctx,{type:'line',data:{labels:['W1','W2','W3','W4','W5','W6','W7','W8'],datasets:[{label:'进度',data:[0,20,35,45,55,65,72,80],borderColor:'#00b899',backgroundColor:'rgba(0,184,153,.1)',fill:true,tension:.3,pointRadius:3},{label:'预期',data:[0,12.5,25,37.5,50,62.5,75,87.5],borderColor:'#b4b8bf',borderDash:[5,5],fill:false,tension:0,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'bottom',labels:{font:{size:10},boxWidth:12}}},scales:{y:{beginAtZero:true,max:100,ticks:{font:{size:10}}},x:{ticks:{font:{size:10}}}}}});}
+function initCharts(){
+  if(lowQC)lowQC.destroy();const c1=document.getElementById('lowQChart');if(c1)lowQC=new Chart(c1,{type:'doughnut',data:{labels:['无KR','无对齐','纯任务型','其他'],datasets:[{data:[35,30,25,10],backgroundColor:['#ff3b30','#f5a623','#3370ff','#b4b8bf']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}}}});
+  if(deptC)deptC.destroy();const c2=document.getElementById('deptChart');if(c2)deptC=new Chart(c2,{type:'bar',data:{labels:['资金管理','结算运营','产品技术','交易运营','人力资源'],datasets:[{label:'填写率',data:[95,88,92,82,73],backgroundColor:['#34c759','#34c759','#34c759','#f5a623','#ff3b30']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,max:100,ticks:{font:{size:10}}},x:{ticks:{font:{size:10}}}}}});
+  if(weekC)weekC.destroy();const c3=document.getElementById('weekChart');if(c3)weekC=new Chart(c3,{type:'bar',data:{labels:['周一','周二','周三','周四','周五','周六','周日'],datasets:[{label:'更新人数',data:[45,62,78,55,40,12,8],backgroundColor:'#00b899'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{font:{size:10}}},x:{ticks:{font:{size:10}}}}}});
+  if(freqC)freqC.destroy();const c4=document.getElementById('freqChart');if(c4)freqC=new Chart(c4,{type:'bar',data:{labels:['0次','1次','2次','3次+'],datasets:[{label:'人数',data:[40,85,45,16],backgroundColor:['#ff3b30','#f5a623','#34c759','#3370ff']}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{font:{size:10}}},y:{ticks:{font:{size:10}}}}}});
+}
+
+// ===== Modal Content Generators =====
+function krUpdateMo(name,pct,s,c,t){return `<div style="padding:12px;background:var(--bg-2);border-radius:var(--r-sm);margin-bottom:14px;"><div class="ts fb">${name}</div><div class="txs tm mt2">起始 ${s} → 当前 ${c} → 目标 ${t} · 进度 ${pct}%</div></div><div class="fg"><label class="fl">更新后完成度</label><div class="slider-w"><input type="range" min="${pct}" max="100" value="${pct}" oninput="document.getElementById('uv').textContent=this.value+'%'"><div class="slider-v" id="uv">${pct}%</div></div><div class="fh">进度只增不减</div></div><div class="fg"><label class="fl">进展说明</label><textarea class="ft" placeholder="本周做了什么？"></textarea></div><div class="fg"><label class="fl">KR 打分 (0-1)</label><div class="slider-w"><input type="range" min="0" max="100" value="${pct}" oninput="document.getElementById('ks').textContent=(this.value/100).toFixed(2)"><div class="slider-v" id="ks" style="font-size:16px;">${(pct/100).toFixed(2)}</div></div></div>`;}
+function oDetailMo(){return `<div style="font-size:17px;font-weight:700;margin-bottom:8px;">O1：构建银行准入标准化流程体系</div><div class="fx g2 mb3"><span class="tag tg-g">进行中</span><span class="tag tg-b">Q2 2026</span><span class="tag tg-gray">战略目标</span><span class="tag tg-g">已确认 ✓</span></div><div class="ts tm mb4">通过标准化银行准入流程，提升资金管理效率，降低合规风险。</div><div class="dv"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;"><div><div class="txs tm">负责人</div><div class="ts fb">张明</div></div><div><div class="txs tm">对齐上级</div><div class="ts fb" style="color:var(--primary);">财务管理处 O</div></div><div><div class="txs tm">权重</div><div class="ts fb">40%</div></div><div><div class="txs tm">O 分值</div><div class="ts fb" style="color:var(--green-dark);">0.72</div></div></div><div class="dv"></div><div class="ts fb mb2">KR 进度总览</div><div style="padding:8px 10px;background:var(--bg-2);border-radius:var(--r-sm);margin-bottom:4px;"><div class="fx ac jb"><span class="ts">KR1：5 家银行准入 SOP</span><span class="fb" style="color:var(--green-dark);">80%</span></div><div class="kr-bar" style="height:4px;margin-top:4px;"><div class="kr-fill g" style="width:80%"></div></div></div><div style="padding:8px 10px;background:var(--bg-2);border-radius:var(--r-sm);margin-bottom:4px;"><div class="fx ac jb"><span class="ts">KR2：审批时效 15→7天</span><span class="fb" style="color:var(--yellow);">55%</span></div><div class="kr-bar" style="height:4px;margin-top:4px;"><div class="kr-fill y" style="width:55%"></div></div></div><div style="padding:8px 10px;background:var(--bg-2);border-radius:var(--r-sm);"><div class="fx ac jb"><span class="ts">KR3：线上化率 90%</span><span class="fb" style="color:var(--green-dark);">72%</span></div><div class="kr-bar" style="height:4px;margin-top:4px;"><div class="kr-fill g" style="width:72%"></div></div></div>`;}
+function histMo(){return `<div class="mb4"><div class="ts fb mb2">版本列表</div><div style="padding:8px;border:2px solid var(--primary);border-radius:var(--r-sm);background:var(--primary-light);margin-bottom:6px;cursor:pointer;"><div class="fx ac jb"><span class="ts fb">当前版本</span><span class="tag tg-b">当前</span></div><div class="txs tm">2026-06-28 · 修改 KR2 目标值</div></div><div style="padding:8px;border:1px solid var(--border-1);border-radius:var(--r-sm);margin-bottom:6px;cursor:pointer;"><div class="fx ac jb"><span class="ts fb">版本 2</span><span class="tag tg-gray">已读</span></div><div class="txs tm">2026-06-20 · 新增 O3</div></div><div style="padding:8px;border:1px solid var(--border-1);border-radius:var(--r-sm);cursor:pointer;"><div class="fx ac jb"><span class="ts fb">版本 1</span><span class="tag tg-gray">已读</span></div><div class="txs tm">2026-06-10 · 首次发布</div></div></div><div class="dv"></div><div class="ts fb mb2">对比：当前 vs 版本 2</div><div style="padding:10px;background:var(--bg-2);border-radius:var(--r-sm);"><div class="ts mb2"><span class="diff-del">KR2：覆盖率 60%→90%</span></div><div class="ts"><span class="diff-add">KR2：覆盖率 60%→95%</span></div></div>`;}
+function permMo(){return `<div class="fg"><label class="fl">此 O 的可见范围</label><select class="fs"><option>全员可见（默认）</option><option>仅上级和协作者</option><option>权限组：核心团队协作组</option><option>自定义</option></select></div><div class="fg"><label class="fl">保密设置</label><div class="fx ac jb" style="padding:10px;background:var(--bg-2);border-radius:var(--r-sm);"><div><div class="ts fb">设为保密 OKR</div><div class="txs tm">仅自己和上级可见</div></div><div class="toggle" onclick="this.classList.toggle('on')"></div></div></div><div class="fg"><label class="fl">@ 的人快速授权</label><div class="ts tm">在 OKR 中 @ 的人会自动获得查看权限</div></div>`;}
+function confirmMo(){return `<div class="alert al-i" style="padding:10px 14px;"><span></span><div class="ts">发起确认后，你的直线经理（王总监）将收到通知，需要在截止时间前完成确认或驳回。</div></div><div class="mb4"><div class="ts fb mb2">即将提交的 OKR：</div><div style="padding:10px;background:var(--bg-2);border-radius:var(--r-sm);"><div class="ts fb">O3：优化银企对账效率与准确率</div><div class="txs tm mt2">2 KR · 进度 80% · 对齐：财务管理处 O</div></div></div><div class="fg"><label class="fl">确认留言（可选）</label><textarea class="ft" placeholder="给上级的留言..."></textarea></div>`;}
+function diffMo(){return `<div class="mb4"><div class="ts fb mb2">王丽的 OKR 修改内容（对比上次确认版本）</div><div style="padding:10px;background:var(--bg-2);border-radius:var(--r-sm);margin-bottom:8px;"><div class="ts mb2"><span class="diff-del">O1：完善资金管理流程</span></div><div class="ts"><span class="diff-add">O1：构建智能化资金管理体系</span></div><div class="txs tm mt2">O 名称更具方向性和激励性</div></div><div style="padding:10px;background:var(--bg-2);border-radius:var(--r-sm);"><div class="ts mb2"><span class="diff-add">KR3：资金管理系统用户满意度 ≥ 4.5 分</span></div><div class="txs tm mt2">新增了一条 KR</div></div></div>`;}
+function rejectMo(){return `<div class="fg"><label class="fl">驳回原因 <span class="rq">*</span></label><textarea class="ft" placeholder="请说明需要调整的内容..."></textarea></div><div class="fg"><label class="fl">修改建议</label><div class="fx fc g2"><label style="padding:8px;border:1px solid var(--border-1);border-radius:var(--r-sm);cursor:pointer;"><input type="checkbox" checked> O 名称需要更有方向性</label><label style="padding:8px;border:1px solid var(--border-1);border-radius:var(--r-sm);cursor:pointer;"><input type="checkbox"> KR 不够量化</label><label style="padding:8px;border:1px solid var(--border-1);border-radius:var(--r-sm);cursor:pointer;"><input type="checkbox"> 对齐关系不合理</label><label style="padding:8px;border:1px solid var(--border-1);border-radius:var(--r-sm);cursor:pointer;"><input type="checkbox"> 权重分配需调整</label></div></div>`;}
+function batchPasteMo(){return `<div class="alert al-i" style="padding:10px 14px;margin-bottom:14px;"><span></span><div class="ts">从飞书文档、Word 或其他来源复制 OKR 内容，粘贴到下方，系统会自动解析为 O 和 KR。</div></div><div class="fg"><label class="fl">粘贴 OKR 内容</label><textarea class="ft" style="min-height:200px;font-family:monospace;font-size:13px;" placeholder="O: 构建智能资金监控体系&#10;KR1: 预警覆盖率从 72% 提升至 95%&#10;KR2: 响应时间从 45 分钟缩短至 15 分钟&#10;KR3: 监控大屏覆盖 5 家银行&#10;&#10;O: 优化银企对账效率&#10;KR1: 对账差错率 ≤ 0.3%&#10;KR2: 自动化率从 40% 提升至 85%">O: 构建智能资金监控体系
+KR1: 预警覆盖率从 72% 提升至 95%
+KR2: 响应时间从 45 分钟缩短至 15 分钟
+KR3: 监控大屏覆盖 5 家银行</textarea></div><div style="padding:10px;background:var(--green-light);border-radius:var(--r-sm);border:1px solid #bbf7d0;"><div class="ts fb" style="color:var(--green-dark);"> 已解析：1 个 O · 3 个 KR</div><div class="txs tm mt2">O: 构建智能资金监控体系 → KR1, KR2, KR3</div></div>`;}
+function importMo(){return `<div class="fg"><label class="fl">选择源周期</label><select class="fs"><option>2026 Q1</option><option>2025 Q4</option><option>2025 年度</option></select></div><div class="fg"><label class="fl">选择导入内容</label><div style="padding:10px;border:1px solid var(--border-1);border-radius:var(--r-sm);margin-bottom:6px;"><label class="fx ac g2" style="cursor:pointer;"><input type="checkbox" checked><div><div class="ts fb">O1：构建银行准入标准化流程体系</div><div class="txs tm">3 KR · 进度 68%</div></div></label></div><div style="padding:10px;border:1px solid var(--border-1);border-radius:var(--r-sm);margin-bottom:6px;"><label class="fx ac g2" style="cursor:pointer;"><input type="checkbox" checked><div><div class="ts fb">O2：建立资金监管预警体系</div><div class="txs tm">3 KR · 进度 50%</div></div></label></div><div style="padding:10px;border:1px solid var(--border-1);border-radius:var(--r-sm);"><label class="fx ac g2" style="cursor:pointer;"><input type="checkbox"><div><div class="ts fb">O3：优化银企对账效率与准确率</div><div class="txs tm">2 KR · 进度 80%</div></div></label></div></div><div class="fh">支持导入 OKR 内容和截止日期，不支持导入权限和权重</div>`;}
+function videoMo(){return `<div style="text-align:center;padding:20px;"><div style="width:80px;height:80px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:36px;"></div><div class="ts fb mb2">录制 OKR 讲解视频</div><div class="ts tm mb4" style="max-width:360px;margin:0 auto;">为你的 OKR 录制一段讲解视频，方便团队成员理解目标背景和期望成果。录制时可使用激光笔引导重点。</div><button class="btn btn-p btn-lg" onclick="alert(' 开始录制...\\n录制时可使用激光笔功能引导观众查看重点内容。')"> 开始录制</button></div>`;}
+function shareMo(){return `<div class="fg"><label class="fl">分享方式</label><div class="fx g2"><button class="btn btn-p wf"> 复制链接</button><button class="btn btn-o wf"> 发送到对话</button></div></div><div class="fg"><label class="fl">分享范围</label><select class="fs"><option>本周期全部 OKR</option><option>仅 O1：银行准入标准化</option><option>仅 O2：资金监管预警</option><option>仅 O3：银企对账优化</option></select></div><div class="fg"><label class="fl">快速选择接收人</label><div class="fx g2" style="flex-wrap:wrap;"><span class="tag tg-b" style="cursor:pointer;"> 直属下级 (3人)</span><span class="tag tg-b" style="cursor:pointer;">@ 本周期 @ 的人 (2人)</span><span class="tag tg-gray" style="cursor:pointer;"> 搜索人员</span></div></div><div class="fg"><label class="fl">留言</label><textarea class="ft" style="min-height:60px;" placeholder="给接收者的留言..."></textarea></div>`;}
+function collabMo(){return `<div class="alert al-i" style="padding:10px 14px;margin-bottom:14px;"><span></span><div class="ts">协作关系是平等的关系登记，不是审批流程。双方沟通一致后，任一方均可登记。</div></div><div class="fg"><label class="fl">我的 KR <span class="rq">*</span></label><select class="fs"><option>KR1：5 家银行准入 SOP</option><option>KR2：审批时效 15→7天</option><option>KR3：线上化率 90%</option></select></div><div class="fg"><label class="fl">协作方 KR <span class="rq">*</span></label><input class="fi" placeholder="搜索对方的 KR..."><div class="fh">输入关键词搜索其他团队的 KR</div></div><div class="fg"><label class="fl">协作类型 <span class="rq">*</span></label><div class="fx g2"><label style="flex:1;padding:10px;border:2px solid var(--primary);border-radius:var(--r-sm);cursor:pointer;text-align:center;background:var(--primary-light);"><input type="radio" name="ct" checked style="display:none;"><div class="ts fb" style="color:var(--primary);"> 互锁型</div><div class="txs tm">双向依赖</div></label><label style="flex:1;padding:10px;border:2px solid var(--border-1);border-radius:var(--r-sm);cursor:pointer;text-align:center;"><input type="radio" name="ct" style="display:none;"><div class="ts fb"> 依赖型</div><div class="txs tm">单向依赖</div></label><label style="flex:1;padding:10px;border:2px solid var(--border-1);border-radius:var(--r-sm);cursor:pointer;text-align:center;"><input type="radio" name="ct" style="display:none;"><div class="ts fb"> 共享交付</div><div class="txs tm">共同产出</div></label></div></div><div class="fg"><label class="fl">协作说明 <span class="rq">*</span></label><textarea class="ft" placeholder="描述两个 KR 之间的协作关系"></textarea></div>`;}
+function cycleMo(){return `<div class="fc g2"><div style="padding:12px;border:2px solid var(--primary);border-radius:var(--r-sm);background:var(--primary-light);cursor:pointer;"><div class="fx ac jb"><div><div class="fb">2026 Q2</div><div class="txs tm">当前周期 · 4月-6月</div></div><span class="tag tg-b">当前</span></div></div><div style="padding:12px;border:1px solid var(--border-1);border-radius:var(--r-sm);cursor:pointer;"><div><div class="fb">2026 Q3</div><div class="txs tm">下一周期 · 7月-9月 · 制定中</div></div></div><div style="padding:12px;border:1px solid var(--border-1);border-radius:var(--r-sm);cursor:pointer;"><div><div class="fb">2026 Q1</div><div class="txs tm">已结束 · 1月-3月</div></div></div><div style="padding:12px;border:1px solid var(--border-1);border-radius:var(--r-sm);cursor:pointer;"><div><div class="fb">2025 年度</div><div class="txs tm">已结束 · 年度汇总</div></div></div></div>`;}
+function notifMo(){return `<div class="fc g3"><div style="padding:10px;border-left:3px solid var(--red);background:var(--red-light);border-radius:0 var(--r-sm) var(--r-sm) 0;"><div class="ts fb"> KR 进度落后</div><div class="txs tm mt2">KR「覆盖率 60%→95%」进度 35%，严重落后。</div><div class="txs tm">2小时前</div></div><div style="padding:10px;border-left:3px solid var(--primary);background:var(--primary-light);border-radius:0 var(--r-sm) var(--r-sm) 0;"><div class="ts fb"> 新协作请求</div><div class="txs tm mt2">IT处李工登记了与你的 KR 的互锁型协作。</div><div class="txs tm">1天前</div></div><div style="padding:10px;border-left:3px solid var(--yellow);background:var(--yellow-light);border-radius:0 var(--r-sm) var(--r-sm) 0;"><div class="ts fb"> 更新提醒</div><div class="txs tm mt2">3 个 KR 本周尚未更新。</div><div class="txs tm">今天 09:00</div></div><div style="padding:10px;border-left:3px solid var(--green);background:var(--green-light);border-radius:0 var(--r-sm) var(--r-sm) 0;"><div class="ts fb"> 上级已确认</div><div class="txs tm mt2">王总监已确认你的 O1 和 O2。</div><div class="txs tm">3天前</div></div><div style="padding:10px;border-left:3px solid var(--cyan);background:var(--cyan-light);border-radius:0 var(--r-sm) var(--r-sm) 0;"><div class="ts fb"> OKR 有修改</div><div class="txs tm mt2">王丽修改了 O1 的 KR2 目标值，待你确认。</div><div class="txs tm">5天前</div></div></div>`;}
+function opLogMo(){return `<div class="fc g2" style="max-height:400px;overflow-y:auto;"><div style="padding:8px 0;border-bottom:1px solid var(--border-3);"><div class="fx ac jb"><span class="ts fb">发布了 OKR</span><span class="txs tm">06-10 14:00</span></div><div class="txs tm">首次发布 3 个 O · 8 个 KR</div></div><div style="padding:8px 0;border-bottom:1px solid var(--border-3);"><div class="fx ac jb"><span class="ts fb">发起上级确认</span><span class="txs tm">06-10 14:05</span></div><div class="txs tm">向王总监发起确认</div></div><div style="padding:8px 0;border-bottom:1px solid var(--border-3);"><div class="fx ac jb"><span class="ts fb">上级已确认</span><span class="txs tm">06-11 10:30</span></div><div class="txs tm">王总监确认了 O1 和 O2</div></div><div style="padding:8px 0;border-bottom:1px solid var(--border-3);"><div class="fx ac jb"><span class="ts fb">修改了 OKR</span><span class="txs tm">06-20 09:00</span></div><div class="txs tm">新增 O3：银企对账效率优化</div></div><div style="padding:8px 0;border-bottom:1px solid var(--border-3);"><div class="fx ac jb"><span class="ts fb">更新了进度</span><span class="txs tm">06-28 15:30</span></div><div class="txs tm">O1 KR1 进度 70% → 80%</div></div><div style="padding:8px 0;"><div class="fx ac jb"><span class="ts fb">修改了 OKR</span><span class="txs tm">06-28 15:30</span></div><div class="txs tm">O2 KR2 目标值 90% → 95%</div></div></div>`;}
+
+// ===== Keyboard =====
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeMo();});
+
+// Auto-initialize page-specific logic
+document.addEventListener('DOMContentLoaded', function() {
+  // Trigger any inline scripts that were in the page
+  var scripts = document.querySelectorAll('.page-standalone script');
+  scripts.forEach(function(s) {
+    if (s.textContent) eval(s.textContent);
+  });
+});
+</script>
+</body>
+</html>

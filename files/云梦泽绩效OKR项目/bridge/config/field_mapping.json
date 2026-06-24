@@ -1,0 +1,130 @@
+{
+  "app_id": "6a2829aa42f13fb09f975991",
+  "forms": {
+    "goal_setting": {
+      "name": "目标制定",
+      "entry_id": "6a11148b53d55e801b934191",
+      "fields": {
+        "sn": {"widget": "_widget_1778418029462", "type": "sn", "readonly": true},
+        "dept": {"widget": "_widget_1778393571473", "type": "dept", "label": "所属组织"},
+        "owner": {"widget": "_widget_1687852504644", "type": "user", "alias": "submitor", "label": "目标责任人"},
+        "goal_type": {"widget": "_widget_1778321965043", "type": "combo", "alias": "cate", "label": "目标类型"},
+        "cycle": {"widget": "_widget_1778393571477", "type": "combo", "label": "目标周期"},
+        "year": {"widget": "_widget_1687852504646", "type": "text", "alias": "year", "label": "年份"},
+        "fill_time": {"widget": "_widget_1687852504651", "type": "datetime", "label": "填写时间"},
+        "start_date": {"widget": "_widget_1688022155570", "type": "datetime", "label": "开始时间"},
+        "end_date": {"widget": "_widget_1688022155571", "type": "datetime", "label": "结束时间"}
+      }
+    },
+    "goal_tree": {
+      "name": "目标树",
+      "entry_id": "6a0021768032acf3d1f2ca30",
+      "fields": {
+        "sn": {"widget": "_widget_1778418029462", "type": "sn", "readonly": true},
+        "dept": {"widget": "_widget_1778393571473", "type": "dept", "label": "所属组织"},
+        "owner": {"widget": "_widget_1687852504644", "type": "user", "alias": "submitor", "label": "目标责任人"},
+        "goal_type": {"widget": "_widget_1778321965043", "type": "combo", "alias": "cate", "label": "目标类型"},
+        "cycle": {"widget": "_widget_1778393571477", "type": "combo", "label": "目标周期"},
+        "year": {"widget": "_widget_1687852504646", "type": "text", "alias": "year", "label": "年份"},
+        "fill_time": {"widget": "_widget_1687852504651", "type": "datetime", "label": "填写时间"},
+        "start_date": {"widget": "_widget_1688022155570", "type": "datetime", "label": "开始时间"},
+        "end_date": {"widget": "_widget_1688022155571", "type": "datetime", "label": "结束时间"},
+        "status": {"widget": "_widget_1778393738999", "type": "radiogroup", "label": "目标状态"},
+        "objective_name": {"widget": "_widget_1778342107843", "type": "text", "alias": "name", "label": "当前目标"},
+        "weight": {"widget": "_widget_1779502600094", "type": "number", "label": "目标权重"},
+        "progress": {"widget": "_widget_1780649802079", "type": "number", "label": "目标进度"},
+        "objective_desc": {"widget": "_widget_1778342107844", "type": "textarea", "alias": "desc", "label": "当前目标说明"},
+        "parent_goal_ref": {"widget": "_widget_1778342107846", "type": "lookup", "label": "上级目标(关联)"},
+        "parent_goal_name": {"widget": "_widget_1778342107848", "type": "text", "label": "上级目标(文本)"},
+        "parent_goal_desc": {"widget": "_widget_1778342107849", "type": "textarea", "label": "上级目标说明"},
+        "strategy_ref": {"widget": "_widget_1779454389520", "type": "lookup", "label": "关联战略"},
+        "strategy_no": {"widget": "_widget_1779454389521", "type": "text", "label": "战略编号"},
+        "strategy_title": {"widget": "_widget_1779454389522", "type": "text", "label": "战略标题"},
+        "okr_id": {"widget": "_widget_1778381622756", "type": "text", "alias": "id", "label": "F-OKR编号"},
+        "parent_okr_id": {"widget": "_widget_1778381782751", "type": "text", "alias": "id_parent", "label": "F-OKR编号(上级)"}
+      }
+    },
+    "kr_setting": {
+      "name": "KR设定",
+      "entry_id": "6a00812ab6299729fbe8672c",
+      "fields": {
+        "sn": {"widget": "_widget_1778417962296", "type": "sn", "readonly": true},
+        "goal_ref": {"widget": "_widget_1778417962277", "type": "lookup", "label": "关联目标"},
+        "dept": {"widget": "_widget_1778417962278", "type": "dept", "label": "所属组织"},
+        "owner": {"widget": "_widget_1778417962279", "type": "user", "label": "目标责任人"},
+        "goal_type": {"widget": "_widget_1778417962280", "type": "combo", "label": "目标类型"},
+        "cycle": {"widget": "_widget_1778417962282", "type": "text", "label": "目标周期"},
+        "year": {"widget": "_widget_1778417962284", "type": "text", "label": "年份"},
+        "start_date": {"widget": "_widget_1778417962285", "type": "datetime", "label": "开始时间"},
+        "end_date": {"widget": "_widget_1778417962286", "type": "datetime", "label": "结束时间"},
+        "weight_sum": {"widget": "_widget_1779523739325", "type": "aggregation", "readonly": true, "label": "权重汇总"}
+      }
+    },
+    "kr_list": {
+      "name": "KR列表",
+      "entry_id": "6a008c543a9e5537040237de",
+      "fields": {
+        "sn": {"widget": "_widget_1778420820817", "type": "sn", "readonly": true},
+        "status": {"widget": "_widget_1779772785343", "type": "radiogroup", "label": "KR状态"},
+        "cycle": {"widget": "_widget_1779720494053", "type": "text", "label": "KR周期"},
+        "year": {"widget": "_widget_1779720494054", "type": "text", "label": "年份"},
+        "start_date": {"widget": "_widget_1779720494055", "type": "datetime", "label": "KR开始时间"},
+        "end_date": {"widget": "_widget_1779720494056", "type": "datetime", "label": "KR结束时间"},
+        "kr_setting_ref": {"widget": "_widget_1778417962321", "type": "lookup", "label": "关联KR设定"},
+        "goal_ref": {"widget": "_widget_1779711624595", "type": "lookup", "label": "关联目标"},
+        "dept": {"widget": "_widget_1779772097599", "type": "dept", "label": "所属组织"},
+        "owner": {"widget": "_widget_1778420820819", "type": "user", "label": "目标责任人"},
+        "objective_name": {"widget": "_widget_1778420820820", "type": "text", "label": "当前目标"},
+        "goal_type": {"widget": "_widget_1779724399008", "type": "text", "label": "目标类型"},
+        "objective_desc": {"widget": "_widget_1778420820821", "type": "textarea", "label": "当前目标说明"},
+        "kr_name": {"widget": "_widget_1778420820822", "type": "text", "label": "KR名称"},
+        "kr_detail": {"widget": "_widget_1778420820825", "type": "textarea", "label": "KR详情"},
+        "start_value": {"widget": "_widget_1779707806167", "type": "text", "label": "起始值"},
+        "target_value": {"widget": "_widget_1779707806166", "type": "text", "label": "目标值"},
+        "weight": {"widget": "_widget_1778423297961", "type": "number", "label": "权重"},
+        "current_progress": {"widget": "_widget_1780474043464", "type": "aggregation", "readonly": true, "label": "当前进度"},
+        "expected_progress": {"widget": "_widget_1780544598681", "type": "number", "label": "预期进度"},
+        "progress_status": {"widget": "_widget_1780478301391", "type": "aggregationtext", "readonly": true, "label": "进度状态"},
+        "collab_kr_id": {"widget": "_widget_1780927862384", "type": "text", "label": "协作KRID"},
+        "collab_kr_name": {"widget": "_widget_1780927862386", "type": "text", "label": "协作KRID名称"},
+        "collab_subform": {"widget": "_widget_1780930759521", "type": "subform", "label": "协作子表单"},
+        "parent_kr_ref": {"widget": "_widget_1779724244511", "type": "lookup", "label": "关联上级KR"},
+        "parent_kr_name": {"widget": "_widget_1779724244513", "type": "text", "label": "上级KR名称"},
+        "parent_obj_name": {"widget": "_widget_1779724758120", "type": "text", "label": "F-上级目标名称"},
+        "calc_date": {"widget": "_widget_1780545251576", "type": "datetime", "label": "F-计算日期"},
+        "obj_progress": {"widget": "_widget_1780641894868", "type": "aggregation", "readonly": true, "label": "F-该KR对应O的进度"}
+      }
+    },
+    "kr_feedback": {
+      "name": "KR过程反馈",
+      "entry_id": "6a042676d3de57c41216fd1b",
+      "fields": {
+        "sn": {"widget": "_widget_1778420820817", "type": "sn", "readonly": true},
+        "kr_ref": {"widget": "_widget_1778656964739", "type": "lookup", "label": "关联KR"},
+        "owner": {"widget": "_widget_1778656964740", "type": "user", "label": "目标责任人"},
+        "objective_name": {"widget": "_widget_1778656964741", "type": "text", "label": "当前目标"},
+        "kr_name": {"widget": "_widget_1778656964742", "type": "text", "label": "KR名称"},
+        "fill_time": {"widget": "_widget_1779720108327", "type": "datetime", "label": "填写时间"},
+        "progress_desc": {"widget": "_widget_1778420820821", "type": "textarea", "label": "当前KR进展说明"},
+        "current_progress": {"widget": "_widget_1780474000349", "type": "number", "label": "当期进度情况"},
+        "parent_kr": {"widget": "_widget_1779798973437", "type": "text", "label": "F-上级KR"}
+      }
+    },
+    "strategy": {
+      "name": "战略解码",
+      "entry_id": "6a096414dada5bef9edc2e11",
+      "fields": {
+        "sn": {"widget": "_widget_1779445346264", "type": "sn", "readonly": true},
+        "cycle": {"widget": "_widget_1779445346267", "type": "combo", "label": "所属周期"},
+        "title": {"widget": "_widget_1779445346265", "type": "text", "label": "标题"},
+        "content": {"widget": "_widget_1779445346266", "type": "textarea", "label": "内容说明"},
+        "level": {"widget": "_widget_1779445346271", "type": "radiogroup", "label": "战略层级"},
+        "weight": {"widget": "_widget_1779445346275", "type": "number", "label": "权重"},
+        "dept": {"widget": "_widget_1779689679286", "type": "dept", "label": "责任部门"},
+        "owner": {"widget": "_widget_1779445346276", "type": "user", "label": "责任人"},
+        "parent_ref": {"widget": "_widget_1779445346281", "type": "lookup", "label": "关联上级战略"},
+        "weight_sum": {"widget": "_widget_1779452589422", "type": "aggregation", "readonly": true, "label": "权重求和"}
+      }
+    }
+  }
+}

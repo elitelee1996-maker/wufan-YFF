@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>基线对比视图 — 项目计划原型</title>
+<style>
+:root {
+  --primary: #4f46e5; --primary-light: #eef2ff; --primary-hover: #4338ca;
+  --green: #059669; --green-light: #d1fae5; --green-bg: #ecfdf5;
+  --amber: #d97706; --amber-light: #fef3c7; --amber-bg: #fffbeb;
+  --red: #dc2626; --red-light: #fee2e2; --red-bg: #fef2f2;
+  --blue: #2563eb; --blue-light: #dbeafe;
+  --slate-50: #f8fafc; --slate-100: #f1f5f9; --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1; --slate-400: #94a3b8; --slate-500: #64748b;
+  --slate-600: #475569; --slate-700: #334155; --slate-800: #1e293b; --slate-900: #0f172a;
+  --radius: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; background: var(--slate-100); color: var(--slate-800); font-size: 14px; line-height: 1.5; }
+
+.header { background: #fff; border-bottom: 1px solid var(--slate-200); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
+.header-left { display: flex; align-items: center; gap: 16px; }
+.header-left h1 { font-size: 17px; font-weight: 700; color: var(--slate-900); }
+.project-badge { background: var(--primary-light); color: var(--primary); padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+.header-actions { display: flex; gap: 8px; }
+
+.btn { padding: 7px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid var(--slate-200); background: #fff; color: var(--slate-700); transition: all 0.15s; display: inline-flex; align-items: center; gap: 5px; }
+.btn:hover { background: var(--slate-50); border-color: var(--slate-300); }
+.btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.btn-ghost { border: none; background: transparent; color: var(--slate-500); }
+.btn-ghost:hover { background: var(--slate-100); color: var(--slate-700); }
+
+.main-content { padding: 16px 24px; display: flex; flex-direction: column; gap: 16px; height: calc(100vh - 53px); overflow-y: auto; }
+
+/* Summary */
+.summary-bar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+.summary-card { background: #fff; border-radius: var(--radius); border: 1px solid var(--slate-200); padding: 14px 16px; box-shadow: var(--shadow); }
+.summary-card .label { font-size: 11px; color: var(--slate-400); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.summary-card .value { font-size: 22px; font-weight: 700; }
+.summary-card .sub { font-size: 11px; color: var(--slate-400); margin-top: 2px; }
+.summary-card.delay .value { color: var(--red); }
+.summary-card.ahead .value { color: var(--green); }
+.summary-card.on-track .value { color: var(--blue); }
+
+/* Version Selector */
+.version-bar { background: #fff; border-radius: var(--radius); border: 1px solid var(--slate-200); padding: 12px 16px; display: flex; align-items: center; gap: 16px; box-shadow: var(--shadow); }
+.version-bar label { font-size: 12px; font-weight: 600; color: var(--slate-600); }
+.version-bar select { padding: 6px 10px; border: 1px solid var(--slate-200); border-radius: 6px; font-size: 13px; }
+.version-tag { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 500; }
+.version-tag.baseline { background: var(--slate-200); color: var(--slate-600); }
+.version-tag.current { background: var(--primary-light); color: var(--primary); }
+.version-vs { font-size: 18px; font-weight: 700; color: var(--slate-300); }
+
+/* Dual Gantt */
+.gantt-container { background: #fff; border-radius: var(--radius); border: 1px solid var(--slate-200); box-shadow: var(--shadow); flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+.gantt-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid var(--slate-200); }
+.gantt-header h3 { font-size: 14px; font-weight: 600; }
+.gantt-legend { display: flex; gap: 12px; align-items: center; }
+.gantt-legend span { font-size: 11px; display: flex; align-items: center; gap: 4px; }
+.gantt-legend .dot { width: 12px; height: 8px; border-radius: 2px; display: inline-block; }
+
+.gantt-body { flex: 1; overflow: auto; }
+.gantt-row { display: grid; grid-template-columns: 200px 1fr; border-bottom: 1px solid var(--slate-100); min-height: 48px; }
+.gantt-row:hover { background: var(--slate-50); }
+.gantt-label { padding: 8px 12px; display: flex; align-items: center; gap: 8px; border-right: 1px solid var(--slate-200); }
+.gantt-label .wbs { font-size: 11px; color: var(--slate-400); font-family: monospace; min-width: 32px; }
+.gantt-label .name { font-size: 13px; font-weight: 500; }
+.gantt-label .indent-1 { padding-left: 0; }
+.gantt-label .indent-2 { padding-left: 16px; }
+.gantt-label .indent-3 { padding-left: 32px; }
+
+.gantt-bars { position: relative; padding: 6px 0; min-height: 48px; }
+.bar { position: absolute; height: 14px; border-radius: 3px; display: flex; align-items: center; padding: 0 4px; font-size: 9px; font-weight: 500; transition: all 0.2s; }
+.bar:hover { filter: brightness(0.85); z-index: 10; }
+.bar.baseline { background: var(--slate-300); color: var(--slate-600); top: 4px; opacity: 0.7; }
+.bar.current { top: 22px; }
+.bar.current.on-track { background: var(--blue); color: #fff; }
+.bar.current.delayed { background: var(--red); color: #fff; }
+.bar.current.ahead { background: var(--green); color: #fff; }
+.bar.current.critical { background: var(--amber); color: #fff; }
+
+.deviation-badge { position: absolute; right: -8px; top: 20px; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #fff; }
+.deviation-badge.delay { background: var(--red); }
+.deviation-badge.ahead { background: var(--green); }
+
+/* Time axis */
+.time-axis { display: grid; grid-template-columns: 200px 1fr; border-bottom: 2px solid var(--slate-200); }
+.time-axis-labels { display: flex; border-right: 1px solid var(--slate-200); }
+.time-axis-labels div { padding: 4px 8px; font-size: 10px; color: var(--slate-400); }
+.time-axis-dates { display: flex; }
+.time-axis-dates div { flex: 1; text-align: center; padding: 4px 2px; font-size: 10px; color: var(--slate-500); border-right: 1px solid var(--slate-100); }
+.time-axis-dates div.weekend { background: var(--slate-50); color: var(--red); }
+
+/* Deviation Table */
+.deviation-table { background: #fff; border-radius: var(--radius); border: 1px solid var(--slate-200); box-shadow: var(--shadow); overflow: hidden; }
+.deviation-table-header { padding: 12px 16px; border-bottom: 1px solid var(--slate-200); display: flex; align-items: center; justify-content: space-between; }
+.deviation-table-header h3 { font-size: 14px; font-weight: 600; }
+.dev-table { width: 100%; border-collapse: collapse; }
+.dev-table th { background: var(--slate-50); padding: 8px 12px; text-align: left; font-size: 11px; font-weight: 600; color: var(--slate-500); text-transform: uppercase; border-bottom: 1px solid var(--slate-200); }
+.dev-table td { padding: 8px 12px; font-size: 13px; border-bottom: 1px solid var(--slate-100); }
+.dev-table tr:hover { background: var(--slate-50); }
+.dev-table .dev-delay { color: var(--red); font-weight: 600; }
+.dev-table .dev-ahead { color: var(--green); font-weight: 600; }
+.dev-table .dev-on { color: var(--slate-400); }
+.status-pill { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500; }
+.status-pill.delayed { background: var(--red-light); color: var(--red); }
+.status-pill.ahead { background: var(--green-light); color: var(--green); }
+.status-pill.on-track { background: var(--blue-light); color: var(--blue); }
+</style>
+<link rel="stylesheet" href="paradigm-f-enhance.css">
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>📊 基线对比视图</h1>
+    <span class="project-badge">华东大件运输项目</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn" onclick="saveBaseline()">💾 保存新基线</button>
+    <button class="btn btn-primary" onclick="exportReport()">📥 导出偏差报告</button>
+  </div>
+</div>
+
+<div class="main-content">
+  <!-- Summary -->
+  <div class="summary-bar">
+    <div class="summary-card">
+      <div class="label">总任务数</div>
+      <div class="value">24</div>
+      <div class="sub">对比范围内</div>
+    </div>
+    <div class="summary-card on-track">
+      <div class="label">按计划</div>
+      <div class="value" id="on-track-count">16</div>
+      <div class="sub">偏差 = 0天</div>
+    </div>
+    <div class="summary-card delay">
+      <div class="label">延期任务</div>
+      <div class="value" id="delay-count">5</div>
+      <div class="sub">最大延期 +4天</div>
+    </div>
+    <div class="summary-card ahead">
+      <div class="label">提前任务</div>
+      <div class="value" id="ahead-count">2</div>
+      <div class="sub">最大提前 -2天</div>
+    </div>
+    <div class="summary-card">
+      <div class="label">项目工期偏差</div>
+      <div class="value" style="color:var(--red)">+3天</div>
+      <div class="sub">基线45天 → 当前48天</div>
+    </div>
+  </div>
+
+  <!-- Version Selector -->
+  <div class="version-bar">
+    <label>基线版本</label>
+    <select id="baseline-version" onchange="changeVersion()">
+      <option value="v1">V1.0 (2026-05-20 初始基线)</option>
+      <option value="v2">V1.1 (2026-06-01 第一次修订)</option>
+    </select>
+    <span class="version-tag baseline">基线</span>
+    <span class="version-vs">VS</span>
+    <label>当前版本</label>
+    <select id="current-version">
+      <option value="current">当前推算 (2026-06-14)</option>
+    </select>
+    <span class="version-tag current">当前</span>
+    <div style="flex:1"></div>
+    <button class="btn btn-sm" onclick="toggleDeviationFilter()">🔍 仅显示偏差</button>
+  </div>
+
+  <!-- Dual Gantt -->
+  <div class="gantt-container">
+    <div class="gantt-header">
+      <h3>双版本甘特图对比</h3>
+      <div class="gantt-legend">
+        <span><span class="dot" style="background:var(--slate-300);opacity:0.7"></span>基线计划</span>
+        <span><span class="dot" style="background:var(--blue)"></span>当前推算</span>
+        <span><span class="dot" style="background:var(--red)"></span>延期</span>
+        <span><span class="dot" style="background:var(--green)"></span>提前</span>
+        <span><span class="dot" style="background:var(--amber)"></span>关键路径</span>
+      </div>
+    </div>
+    <div class="gantt-body" id="gantt-body">
+      <!-- Time Axis -->
+      <div class="time-axis">
+        <div class="time-axis-labels"><div style="width:200px">任务</div></div>
+        <div class="time-axis-dates" id="time-axis-dates"></div>
+      </div>
+      <!-- Task Rows -->
+      <div id="gantt-rows"></div>
+    </div>
+  </div>
+
+  <!-- Deviation Table -->
+  <div class="deviation-table">
+    <div class="deviation-table-header">
+      <h3>📋 偏差明细表</h3>
+      <span style="font-size:12px;color:var(--slate-400)">共 <span id="dev-total">7</span> 项偏差</span>
+    </div>
+    <table class="dev-table">
+      <thead>
+        <tr>
+          <th>WBS</th>
+          <th>任务名称</th>
+          <th>基线ES</th>
+          <th>基线EF</th>
+          <th>当前ES</th>
+          <th>当前EF</th>
+          <th>ES偏差</th>
+          <th>EF偏差</th>
+          <th>状态</th>
+          <th>影响</th>
+        </tr>
+      </thead>
+      <tbody id="dev-table-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const totalDays = 50;
+const dayWidth = 20;
+
+const tasks = [
+  { id: 'T01', wbs: '1', name: '项目启动', level: 1, baseline: [0, 3], current: [0, 3], status: 'on-track' },
+  { id: 'T02', wbs: '1.1', name: '启动会', level: 2, baseline: [0, 1], current: [0, 1], status: 'on-track' },
+  { id: 'T03', wbs: '1.2', name: '需求确认', level: 2, baseline: [1, 3], current: [1, 3], status: 'on-track' },
+  { id: 'T04', wbs: '2', name: '计划编制', level: 1, baseline: [3, 10], current: [3, 12], status: 'delayed', deviation: 2 },
+  { id: 'T05', wbs: '2.1', name: '模板选择', level: 2, baseline: [3, 4], current: [3, 4], status: 'on-track' },
+  { id: 'T06', wbs: '2.2', name: 'WBS分解', level: 2, baseline: [4, 7], current: [4, 8], status: 'delayed', deviation: 1 },
+  { id: 'T07', wbs: '2.3', name: '依赖定义', level: 2, baseline: [7, 9], current: [8, 11], status: 'delayed', deviation: 2 },
+  { id: 'T08', wbs: '2.4', name: 'CPM计算', level: 2, baseline: [9, 10], current: [11, 12], status: 'delayed', deviation: 2 },
+  { id: 'T09', wbs: '3', name: '资源调度', level: 1, baseline: [10, 18], current: [12, 22], status: 'delayed', deviation: 4 },
+  { id: 'T10', wbs: '3.1', name: '资源分配', level: 2, baseline: [10, 13], current: [12, 16], status: 'delayed', deviation: 3 },
+  { id: 'T11', wbs: '3.2', name: '冲突检测', level: 2, baseline: [13, 15], current: [16, 18], status: 'delayed', deviation: 3 },
+  { id: 'T12', wbs: '3.3', name: '冲突决策', level: 2, baseline: [15, 18], current: [18, 22], status: 'delayed', deviation: 4 },
+  { id: 'T13', wbs: '4', name: '执行监控', level: 1, baseline: [18, 35], current: [22, 38], status: 'delayed', deviation: 3 },
+  { id: 'T14', wbs: '4.1', name: '进度跟踪', level: 2, baseline: [18, 28], current: [22, 30], status: 'delayed', deviation: 2 },
+  { id: 'T15', wbs: '4.2', name: '预警处理', level: 2, baseline: [20, 30], current: [24, 33], status: 'delayed', deviation: 3 },
+  { id: 'T16', wbs: '4.3', name: '行动项跟踪', level: 2, baseline: [22, 35], current: [25, 38], status: 'delayed', deviation: 3 },
+  { id: 'T17', wbs: '5', name: '安全审查', level: 1, baseline: [25, 30], current: [23, 28], status: 'ahead', deviation: -2 },
+  { id: 'T18', wbs: '5.1', name: '安全方案', level: 2, baseline: [25, 28], current: [23, 26], status: 'ahead', deviation: -2 },
+  { id: 'T19', wbs: '5.2', name: '路线确认', level: 2, baseline: [28, 30], current: [26, 28], status: 'ahead', deviation: -2 },
+  { id: 'T20', wbs: '6', name: '运输执行', level: 1, baseline: [30, 40], current: [33, 43], status: 'delayed', deviation: 3 },
+  { id: 'T21', wbs: '6.1', name: '装车', level: 2, baseline: [30, 32], current: [33, 35], status: 'delayed', deviation: 3 },
+  { id: 'T22', wbs: '6.2', name: '运输', level: 2, baseline: [32, 38], current: [35, 41], status: 'delayed', deviation: 3 },
+  { id: 'T23', wbs: '6.3', name: '卸货验收', level: 2, baseline: [38, 40], current: [41, 43], status: 'delayed', deviation: 3 },
+  { id: 'T24', wbs: '7', name: '项目收尾', level: 1, baseline: [40, 45], current: [43, 48], status: 'delayed', deviation: 3 },
+];
+
+function renderTimeAxis() {
+  const dates = document.getElementById('time-axis-dates');
+  let html = '';
+  for (let d = 0; d < totalDays; d++) {
+    const isWeekend = d % 7 >= 5;
+    const label = d % 5 === 0 ? `D${d}` : '';
+    html += `<div class="${isWeekend ? 'weekend' : ''}" style="min-width:${dayWidth}px">${label}</div>`;
+  }
+  dates.innerHTML = html;
+}
+
+function renderGanttRows() {
+  const rows = document.getElementById('gantt-rows');
+  let html = '';
+
+  tasks.forEach(t => {
+    const indent = `indent-${t.level}`;
+    const [bStart, bEnd] = t.baseline;
+    const [cStart, cEnd] = t.current;
+    const bLeft = bStart * dayWidth;
+    const bWidth = (bEnd - bStart) * dayWidth;
+    const cLeft = cStart * dayWidth;
+    const cWidth = (cEnd - cStart) * dayWidth;
+
+    let currentClass = 'on-track';
+    if (t.status === 'delayed') currentClass = 'delayed';
+    else if (t.status === 'ahead') currentClass = 'ahead';
+
+    let devBadge = '';
+    if (t.deviation && t.deviation > 0) {
+      devBadge = `<div class="deviation-badge delay" style="left:${cLeft + cWidth + 2}px">+${t.deviation}</div>`;
+    } else if (t.deviation && t.deviation < 0) {
+      devBadge = `<div class="deviation-badge ahead" style="left:${cLeft + cWidth + 2}px">${t.deviation}</div>`;
+    }
+
+    html += `<div class="gantt-row">
+      <div class="gantt-label">
+        <span class="wbs">${t.wbs}</span>
+        <span class="name ${indent}">${t.name}</span><a class="jdy-link" href="javascript:void(0)" onclick="simulateLoopback('${t.name}')" title="在简道云中打开" style="margin-left:4px;">详情</a>
+      </div>
+      <div class="gantt-bars" style="width:${totalDays * dayWidth}px">
+        <div class="bar baseline" style="left:${bLeft}px;width:${bWidth}px" title="基线: D${bStart}-D${bEnd}">D${bStart}-D${bEnd}</div>
+        <div class="bar current ${currentClass}" style="left:${cLeft}px;width:${cWidth}px" title="当前: D${cStart}-D${cEnd}">D${cStart}-D${cEnd}</div>
+        ${devBadge}
+      </div>
+    </div>`;
+  });
+
+  rows.innerHTML = html;
+}
+
+function renderDeviationTable() {
+  const tbody = document.getElementById('dev-table-body');
+  const devTasks = tasks.filter(t => t.deviation && t.deviation !== 0);
+  document.getElementById('dev-total').textContent = devTasks.length;
+
+  tbody.innerHTML = devTasks.map(t => {
+    const devClass = t.deviation > 0 ? 'dev-delay' : 'dev-ahead';
+    const devSign = t.deviation > 0 ? '+' : '';
+    const statusClass = t.status === 'delayed' ? 'delayed' : (t.status === 'ahead' ? 'ahead' : 'on-track');
+    const statusText = t.status === 'delayed' ? '延期' : (t.status === 'ahead' ? '提前' : '正常');
+    const impact = t.deviation > 0 ? `影响下游${Math.abs(t.deviation)}天` : `节省${Math.abs(t.deviation)}天`;
+
+    return `<tr>
+      <td style="font-family:monospace;color:var(--slate-400)">${t.wbs}</td>
+      <td style="font-weight:500">${t.name} <a class="jdy-link" href="javascript:void(0)" onclick="simulateLoopback('${t.name}')">详情</a></td>
+      <td>D${t.baseline[0]}</td>
+      <td>D${t.baseline[1]}</td>
+      <td>D${t.current[0]}</td>
+      <td>D${t.current[1]}</td>
+      <td class="${devClass}">${devSign}${t.deviation}天</td>
+      <td class="${devClass}">${devSign}${t.deviation}天</td>
+      <td><span class="status-pill ${statusClass}">${statusText}</span></td>
+      <td style="font-size:12px;color:var(--slate-500)">${impact}</td>
+    </tr>`;
+  }).join('');
+}
+
+function changeVersion() {
+  alert('切换基线版本\n（生产环境将重新计算偏差）');
+}
+
+function toggleDeviationFilter() {
+  const rows = document.querySelectorAll('.gantt-row');
+  rows.forEach((row, i) => {
+    const task = tasks[i];
+    if (!task.deviation || task.deviation === 0) {
+      row.style.display = row.style.display === 'none' ? '' : 'none';
+    }
+  });
+}
+
+function saveBaseline() {
+  if (confirm('保存当前推算结果为新基线？\n这将覆盖当前基线版本。')) {
+    alert('✅ 基线已保存: V1.2 (2026-06-14)');
+  }
+}
+
+function exportReport() {
+  alert('导出偏差报告\n（生产环境将生成PDF/Excel报告）');
+}
+
+// Init
+renderTimeAxis();
+renderGanttRows();
+renderDeviationTable();
+</script>
+<script src="paradigm-f-enhance.js"></script>
+<script>
+// 范式F增强 - 初始化
+document.addEventListener('DOMContentLoaded', function() {
+  renderParadigmFBar(
+    '基线对比',
+    '双版本叠加 + 偏差表 + 偏差徽章',
+    '简道云原生详情页',
+    '基线保存→Bridge快照'
+  );
+});
+</script>
+</body>
+</html>

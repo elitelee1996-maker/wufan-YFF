@@ -1,0 +1,42 @@
+{
+  "name": "jdy_batch_delete_data",
+  "display_name": "批量删除数据",
+  "description_zh": "批量删除表单中多条记录（最多100条/次）",
+  "description": "Batch delete up to 100 data records by their _ids. Returns {success_count}. Rate limit: 30/s.",
+  "params": {
+    "app_id": {
+      "type": "string",
+      "description": "应用ID"
+    },
+    "entry_id": {
+      "type": "string",
+      "description": "表单ID"
+    },
+    "data_ids": {
+      "type": "array",
+      "description": "要删除的记录ID列表，最多100条"
+    },
+    "is_start_trigger": {
+      "type": "boolean",
+      "description": "是否触发智能助手（默认false）",
+      "default": false
+    }
+  },
+  "api": {
+    "url": "https://api.jiandaoyun.com/api/v5/app/entry/data/batch_delete",
+    "method": "POST",
+    "headers": {
+      "Authorization": "Bearer ${conn:jiandaoyun.api_key}",
+      "Content-Type": "application/json"
+    }
+  },
+  "requires_connections": [
+    {
+      "category": "jiandaoyun",
+      "fields": [
+        "api_key"
+      ],
+      "required": true
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "name": "jdy_withdraw_flow_task",
+  "display_name": "流程待办撤回",
+  "description_zh": "撤回已提交的流程待办任务",
+  "description": "Withdraw a submitted workflow task. Requires username and instance_id. Optional: task_id, comment. Rate limit: 20/s.",
+  "params": {
+    "instance_id": {
+      "type": "string",
+      "description": "流程实例ID，即数据的_id（必填）"
+    },
+    "task_id": {
+      "type": "string",
+      "description": "需要撤回的待办实例ID（选填，不传默认撤回发起节点）",
+      "default": ""
+    },
+    "username": {
+      "type": "string",
+      "description": "处理待办对应的用户名（必填）"
+    },
+    "comment": {
+      "type": "string",
+      "description": "撤回理由（选填）",
+      "default": ""
+    }
+  },
+  "api": {
+    "url": "https://api.jiandaoyun.com/api/v2/workflow/task/revoke",
+    "method": "POST",
+    "headers": {
+      "Authorization": "Bearer ${conn:jiandaoyun.api_key}",
+      "Content-Type": "application/json"
+    }
+  },
+  "requires_connections": [
+    {
+      "category": "jiandaoyun",
+      "fields": [
+        "api_key"
+      ],
+      "required": true
+    }
+  ]
+}

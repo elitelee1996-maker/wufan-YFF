@@ -1,0 +1,146 @@
+{
+  "template": {
+    "entry_id": "PLACEHOLDER_TEMPLATE_ENTRY_ID",
+    "fields": {
+      "name": "_widget_1",
+      "project_type": "_widget_2",
+      "version": "_widget_3",
+      "status": "_widget_4",
+      "description": "_widget_5"
+    }
+  },
+  "std_task": {
+    "entry_id": "PLACEHOLDER_STD_TASK_ENTRY_ID",
+    "fields": {
+      "template_id": "_widget_1",
+      "name": "_widget_2",
+      "level": "_widget_3",
+      "node_type": "_widget_4",
+      "duration": "_widget_5",
+      "optimistic": "_widget_6",
+      "pessimistic": "_widget_7",
+      "most_likely": "_widget_8",
+      "constraint_type": "_widget_9",
+      "constraint_date": "_widget_10",
+      "parent_id": "_widget_11",
+      "sort_order": "_widget_12"
+    }
+  },
+  "template_dep": {
+    "entry_id": "PLACEHOLDER_TEMPLATE_DEP_ENTRY_ID",
+    "fields": {
+      "template_id": "_widget_1",
+      "from_id": "_widget_2",
+      "to_id": "_widget_3",
+      "dep_type": "_widget_4",
+      "lag": "_widget_5"
+    }
+  },
+  "project": {
+    "entry_id": "PLACEHOLDER_PROJECT_ENTRY_ID",
+    "fields": {
+      "name": "_widget_1",
+      "manager": "_widget_2",
+      "start_date": "_widget_3",
+      "status": "_widget_4",
+      "description": "_widget_5"
+    }
+  },
+  "wbs_node": {
+    "entry_id": "PLACEHOLDER_WBS_NODE_ENTRY_ID",
+    "fields": {
+      "project_id": "_widget_1",
+      "name": "_widget_2",
+      "wbs_code": "_widget_3",
+      "level": "_widget_4",
+      "node_type": "_widget_5",
+      "duration": "_widget_6",
+      "constraint_type": "_widget_7",
+      "constraint_date": "_widget_8",
+      "parent_id": "_widget_9",
+      "sort_order": "_widget_10",
+      "es": "_widget_11",
+      "ef": "_widget_12",
+      "ls": "_widget_13",
+      "lf": "_widget_14",
+      "tf": "_widget_15",
+      "ff": "_widget_16",
+      "is_critical": "_widget_17",
+      "has_conflict": "_widget_18",
+      "actual_start": "_widget_19",
+      "actual_end": "_widget_20",
+      "progress": "_widget_21"
+    }
+  },
+  "dependency": {
+    "entry_id": "PLACEHOLDER_DEPENDENCY_ENTRY_ID",
+    "fields": {
+      "project_id": "_widget_1",
+      "from_id": "_widget_2",
+      "to_id": "_widget_3",
+      "dep_type": "_widget_4",
+      "lag": "_widget_5"
+    }
+  },
+  "resource": {
+    "entry_id": "PLACEHOLDER_RESOURCE_ENTRY_ID",
+    "fields": {
+      "name": "_widget_1",
+      "type": "_widget_2",
+      "availability": "_widget_3"
+    }
+  },
+  "resource_occupy": {
+    "entry_id": "PLACEHOLDER_RESOURCE_OCCUPY_ENTRY_ID",
+    "fields": {
+      "resource_id": "_widget_1",
+      "task_id": "_widget_2",
+      "project_id": "_widget_3",
+      "start_date": "_widget_4",
+      "end_date": "_widget_5"
+    }
+  },
+  "resource_conflict": {
+    "entry_id": "PLACEHOLDER_RESOURCE_CONFLICT_ENTRY_ID",
+    "fields": {
+      "resource_id": "_widget_1",
+      "task_a": "_widget_2",
+      "task_b": "_widget_3",
+      "overlap_start": "_widget_4",
+      "overlap_end": "_widget_5",
+      "resolution": "_widget_6"
+    }
+  },
+  "warning": {
+    "entry_id": "PLACEHOLDER_WARNING_ENTRY_ID",
+    "fields": {
+      "project_id": "_widget_1",
+      "task_id": "_widget_2",
+      "type": "_widget_3",
+      "level": "_widget_4",
+      "message": "_widget_5",
+      "status": "_widget_6",
+      "created_at": "_widget_7"
+    }
+  },
+  "action_item": {
+    "entry_id": "PLACEHOLDER_ACTION_ITEM_ENTRY_ID",
+    "fields": {
+      "project_id": "_widget_1",
+      "title": "_widget_2",
+      "assignee": "_widget_3",
+      "due_date": "_widget_4",
+      "status": "_widget_5",
+      "description": "_widget_6"
+    }
+  },
+  "version_snapshot": {
+    "entry_id": "PLACEHOLDER_VERSION_SNAPSHOT_ENTRY_ID",
+    "fields": {
+      "project_id": "_widget_1",
+      "version": "_widget_2",
+      "snapshot_data": "_widget_3",
+      "created_at": "_widget_4"
+    }
+  }
+}

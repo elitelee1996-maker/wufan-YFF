@@ -1,0 +1,33 @@
+{
+  "name": "jdy_activate_flow_instance",
+  "display_name": "激活流程实例",
+  "description_zh": "激活已终止的流程实例。Only works on instances that were previously ended.",
+  "description": "Activate a closed/terminated workflow instance. Only works on instances that were previously ended. Requires instance_id and flow_id (the node ID to activate). Rate limit: 20/s.",
+  "params": {
+    "instance_id": {
+      "type": "string",
+      "description": "流程实例ID，即数据的_id（必填）"
+    },
+    "flow_id": {
+      "type": "number",
+      "description": "激活的节点ID（必填）"
+    }
+  },
+  "api": {
+    "url": "https://api.jiandaoyun.com/api/v1/workflow/instance/activate",
+    "method": "POST",
+    "headers": {
+      "Authorization": "Bearer ${conn:jiandaoyun.api_key}",
+      "Content-Type": "application/json"
+    }
+  },
+  "requires_connections": [
+    {
+      "category": "jiandaoyun",
+      "fields": [
+        "api_key"
+      ],
+      "required": true
+    }
+  ]
+}

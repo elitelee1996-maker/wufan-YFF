@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>资源日历 — 项目计划原型</title>
+<style>
+:root {
+  --primary: #4f46e5; --primary-light: #eef2ff; --primary-hover: #4338ca;
+  --green: #059669; --green-light: #d1fae5; --green-bg: #ecfdf5;
+  --amber: #d97706; --amber-light: #fef3c7; --amber-bg: #fffbeb;
+  --red: #dc2626; --red-light: #fee2e2; --red-bg: #fef2f2;
+  --blue: #2563eb; --blue-light: #dbeafe;
+  --slate-50: #f8fafc; --slate-100: #f1f5f9; --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1; --slate-400: #94a3b8; --slate-500: #64748b;
+  --slate-600: #475569; --slate-700: #334155; --slate-800: #1e293b; --slate-900: #0f172a;
+  --radius: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; background: var(--slate-100); color: var(--slate-800); font-size: 14px; line-height: 1.5; }
+
+.header { background: #fff; border-bottom: 1px solid var(--slate-200); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
+.header-left { display: flex; align-items: center; gap: 16px; }
+.header-left h1 { font-size: 17px; font-weight: 700; color: var(--slate-900); }
+.project-badge { background: var(--primary-light); color: var(--primary); padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+.header-actions { display: flex; gap: 8px; }
+
+.btn { padding: 7px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid var(--slate-200); background: #fff; color: var(--slate-700); transition: all 0.15s; display: inline-flex; align-items: center; gap: 5px; }
+.btn:hover { background: var(--slate-50); border-color: var(--slate-300); }
+.btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.btn-ghost { border: none; background: transparent; color: var(--slate-500); }
+.btn-ghost:hover { background: var(--slate-100); color: var(--slate-700); }
+
+.main-content { padding: 16px 24px; display: flex; flex-direction: column; gap: 16px; height: calc(100vh - 53px); overflow-y: auto; }
+
+/* Summary */
+.summary-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.summary-card { background: #fff; border-radius: var(--radius); border: 1px solid var(--slate-200); padding: 14px 16px; box-shadow: var(--shadow); }
+.summary-card .label { font-size: 11px; color: var(--slate-400); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.summary-card .value { font-size: 22px; font-weight: 700; }
+.summary-card .sub { font-size: 11px; color: var(--slate-400); margin-top: 2px; }
+.summary-card.conflict .value { color: var(--red); }
+.summary-card.ok .value { color: var(--green); }
+
+/* Filter Bar */
+.filter-bar { background: #fff; border-radius: var(--radius); border: 1px solid var(--slate-200); padding: 12px 16px; display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow); }
+.filter-bar label { font-size: 12px; font-weight: 500; color: var(--slate-600); white-space: nowrap; }
+.filter-bar select, .filter-bar input { padding: 6px 10px; border: 1px solid var(--slate-200); border-radius: 6px; font-size: 13px; background: #fff; }
+.filter-bar select:focus, .filter-bar input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-light); }
+
+/* Calendar */
+.calendar-container { background: #fff; border-radius: var(--radius); border: 1px solid var(--slate-200); box-shadow: var(--shadow); flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+.calendar-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--slate-200); }
+.calendar-header h2 { font-size: 15px; font-weight: 600; }
+.calendar-nav { display: flex; gap: 4px; }
+.calendar-nav button { width: 32px; height: 32px; border-radius: 6px; border: 1px solid var(--slate-200); background: #fff; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+.calendar-nav button:hover { background: var(--slate-50); }
+
+.calendar-grid { display: grid; grid-template-columns: 120px repeat(7, 1fr); flex: 1; overflow-y: auto; }
+.calendar-grid .day-header { background: var(--slate-50); padding: 8px 4px; text-align: center; font-size: 12px; font-weight: 600; color: var(--slate-600); border-bottom: 1px solid var(--slate-200); border-right: 1px solid var(--slate-200); }
+.calendar-grid .day-header .date { font-size: 18px; font-weight: 700; color: var(--slate-800); }
+.calendar-grid .day-header.weekend { background: var(--red-bg); }
+.calendar-grid .day-header.today { background: var(--primary-light); }
+.calendar-grid .day-header.today .date { color: var(--primary); }
+
+.resource-label { padding: 10px 12px; border-bottom: 1px solid var(--slate-200); border-right: 1px solid var(--slate-200); display: flex; align-items: center; gap: 8px; background: #fff; }
+.resource-avatar { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; }
+.resource-name { font-size: 12px; font-weight: 500; }
+.resource-type { font-size: 10px; color: var(--slate-400); }
+
+.day-cell { border-bottom: 1px solid var(--slate-200); border-right: 1px solid var(--slate-200); padding: 4px; min-height: 52px; position: relative; }
+.day-cell.weekend { background: var(--slate-50); }
+.day-cell.today { background: var(--primary-light); }
+
+.occupation-bar { border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: 500; margin-bottom: 2px; cursor: pointer; transition: all 0.15s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.occupation-bar:hover { filter: brightness(0.9); transform: scale(1.02); }
+.occupation-bar.normal { background: var(--blue-light); color: var(--blue); border: 1px solid #93c5fd; }
+.occupation-bar.conflict { background: var(--red-light); color: var(--red); border: 1px solid #fca5a5; animation: pulse 2s infinite; }
+.occupation-bar.critical { background: var(--amber-light); color: var(--amber); border: 1px solid #fcd34d; }
+
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+
+/* Conflict Detail Panel */
+.conflict-panel { background: #fff; border-radius: var(--radius); border: 1px solid var(--red); box-shadow: var(--shadow-md); }
+.conflict-panel-header { padding: 12px 16px; background: var(--red-bg); border-bottom: 1px solid var(--red-light); display: flex; align-items: center; justify-content: space-between; }
+.conflict-panel-header h3 { font-size: 14px; font-weight: 600; color: var(--red); display: flex; align-items: center; gap: 6px; }
+.conflict-list { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; }
+.conflict-item { display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: var(--slate-50); border-radius: 6px; border-left: 3px solid var(--red); }
+.conflict-item .resource { font-weight: 600; font-size: 13px; min-width: 80px; }
+.conflict-item .tasks { font-size: 12px; color: var(--slate-600); flex: 1; }
+.conflict-item .overlap { font-size: 11px; color: var(--red); font-weight: 500; }
+.conflict-item .actions { display: flex; gap: 4px; }
+
+/* Tooltip */
+.tooltip { position: fixed; background: var(--slate-800); color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 12px; z-index: 1000; pointer-events: none; display: none; max-width: 250px; box-shadow: var(--shadow-lg); }
+.tooltip .tt-title { font-weight: 600; margin-bottom: 4px; }
+.tooltip .tt-row { display: flex; justify-content: space-between; gap: 12px; }
+.tooltip .tt-label { color: var(--slate-400); }
+</style>
+<link rel="stylesheet" href="paradigm-f-enhance.css">
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>📅 资源日历</h1>
+    <span class="project-badge">华东大件运输项目</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn" onclick="toggleView()">📊 切换视图</button>
+    <button class="btn btn-primary" onclick="exportCalendar()">📥 导出</button>
+  </div>
+</div>
+
+<div class="main-content">
+  <!-- Summary -->
+  <div class="summary-bar">
+    <div class="summary-card">
+      <div class="label">资源总数</div>
+      <div class="value" id="total-resources">8</div>
+      <div class="sub">含人员+设备</div>
+    </div>
+    <div class="summary-card ok">
+      <div class="label">可用资源</div>
+      <div class="value" id="available-resources">5</div>
+      <div class="sub">当前无占用</div>
+    </div>
+    <div class="summary-card" style="">
+      <div class="label">已占用</div>
+      <div class="value" id="occupied-resources">2</div>
+      <div class="sub">正常排程中</div>
+    </div>
+    <div class="summary-card conflict">
+      <div class="label">冲突资源</div>
+      <div class="value" id="conflict-resources">1</div>
+      <div class="sub">时间重叠需处理</div>
+    </div>
+  </div>
+
+  <!-- Filter -->
+  <div class="filter-bar">
+    <label>资源类型</label>
+    <select id="filter-type" onchange="filterCalendar()">
+      <option value="all">全部</option>
+      <option value="person">人员</option>
+      <option value="equipment">设备</option>
+    </select>
+    <label>项目</label>
+    <select id="filter-project" onchange="filterCalendar()">
+      <option value="all">全部项目</option>
+      <option value="p1">华东大件运输</option>
+      <option value="p2">华南冷链项目</option>
+    </select>
+    <label>状态</label>
+    <select id="filter-status" onchange="filterCalendar()">
+      <option value="all">全部</option>
+      <option value="conflict">仅冲突</option>
+      <option value="available">仅可用</option>
+    </select>
+    <div style="flex:1"></div>
+    <button class="btn btn-sm" onclick="goToday()">📍 今天</button>
+  </div>
+
+  <!-- Calendar Grid -->
+  <div class="calendar-container">
+    <div class="calendar-header">
+      <div class="calendar-nav">
+        <button onclick="changeWeek(-1)">‹</button>
+        <button onclick="changeWeek(1)">›</button>
+      </div>
+      <h2 id="week-title">2026年6月 第3周 (6/15 - 6/21)</h2>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span style="font-size:11px;display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;border-radius:2px;background:var(--blue-light);border:1px solid #93c5fd;display:inline-block;"></span>正常</span>
+        <span style="font-size:11px;display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;border-radius:2px;background:var(--amber-light);border:1px solid #fcd34d;display:inline-block;"></span>关键路径</span>
+        <span style="font-size:11px;display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;border-radius:2px;background:var(--red-light);border:1px solid #fca5a5;display:inline-block;"></span>冲突</span>
+      </div>
+    </div>
+    <div class="calendar-grid" id="calendar-grid">
+      <!-- Rendered by JS -->
+    </div>
+  </div>
+
+  <!-- Conflict Panel -->
+  <div class="conflict-panel" id="conflict-panel">
+    <div class="conflict-panel-header">
+      <h3>⚠️ 资源冲突 (<span id="conflict-count">2</span>项)</h3>
+      <button class="btn btn-sm" onclick="resolveAllConflicts()">批量处理</button>
+    </div>
+    <div class="conflict-list" id="conflict-list">
+      <!-- Rendered by JS -->
+    </div>
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+// Mock Data
+const resources = [
+  { id: 'R01', name: '张工', type: 'person', avatar: '张', color: '#4f46e5', dept: '安全工程师' },
+  { id: 'R02', name: '李工', type: 'person', avatar: '李', color: '#059669', dept: '项目经理' },
+  { id: 'R03', name: '王师傅', type: 'person', avatar: '王', color: '#d97706', dept: '运输调度员' },
+  { id: 'R04', name: '赵工', type: 'person', avatar: '赵', color: '#2563eb', dept: '质量检验员' },
+  { id: 'R05', name: '吊车A', type: 'equipment', avatar: '吊', color: '#7c3aed', dept: '50吨' },
+  { id: 'R06', name: '平板车B', type: 'equipment', avatar: '平', color: '#0891b2', dept: '重型' },
+  { id: 'R07', name: '叉车C', type: 'equipment', avatar: '叉', color: '#be185d', dept: '3吨' },
+  { id: 'R08', name: '刘工', type: 'person', avatar: '刘', color: '#ea580c', dept: '安全工程师' },
+];
+
+const weekStart = new Date(2026, 5, 15); // June 15, 2026
+const dayNames = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+
+const occupations = [
+  { resource_id: 'R01', task_id: 'T03', task_name: '安全方案评审', project: '华东大件运输', start: 0, end: 2, status: 'critical' },
+  { resource_id: 'R01', task_id: 'T07', task_name: '路线安全确认', project: '华东大件运输', start: 1, end: 3, status: 'conflict' },
+  { resource_id: 'R02', task_id: 'T01', task_name: '项目启动会', project: '华东大件运输', start: 0, end: 0, status: 'normal' },
+  { resource_id: 'R02', task_id: 'T05', task_name: '计划审批', project: '华东大件运输', start: 3, end: 4, status: 'normal' },
+  { resource_id: 'R03', task_id: 'T04', task_name: '车辆调度安排', project: '华东大件运输', start: 2, end: 4, status: 'critical' },
+  { resource_id: 'R05', task_id: 'T06', task_name: '设备吊装', project: '华东大件运输', start: 1, end: 3, status: 'critical' },
+  { resource_id: 'R05', task_id: 'T09', task_name: '二次吊装', project: '华南冷链', start: 2, end: 4, status: 'conflict' },
+  { resource_id: 'R06', task_id: 'T08', task_name: '长途运输', project: '华东大件运输', start: 3, end: 6, status: 'normal' },
+  { resource_id: 'R07', task_id: 'T10', task_name: '仓库装卸', project: '华东大件运输', start: 0, end: 1, status: 'normal' },
+];
+
+const conflicts = [
+  { id: 'C01', resource_id: 'R01', resource_name: '张工', task_a: '安全方案评审', task_b: '路线安全确认', overlap: '6/16-6/17', overlap_days: 2 },
+  { id: 'C02', resource_id: 'R05', resource_name: '吊车A', task_a: '设备吊装', task_b: '二次吊装', overlap: '6/17-6/18', overlap_days: 2 },
+];
+
+let currentWeekOffset = 0;
+let filterType = 'all';
+let filterProject = 'all';
+let filterStatus = 'all';
+
+function renderCalendar() {
+  const grid = document.getElementById('calendar-grid');
+  grid.innerHTML = '';
+
+  // Header row
+  grid.innerHTML += '<div class="day-header" style="background:var(--slate-100);font-weight:600;">资源</div>';
+  for (let d = 0; d < 7; d++) {
+    const date = new Date(weekStart);
+    date.setDate(date.getDate() + d + currentWeekOffset * 7);
+    const isWeekend = d >= 5;
+    const isToday = date.toDateString() === new Date().toDateString();
+    const cls = isToday ? 'today' : (isWeekend ? 'weekend' : '');
+    grid.innerHTML += `<div class="day-header ${cls}">
+      <div>${dayNames[d]}</div>
+      <div class="date">${date.getDate()}</div>
+    </div>`;
+  }
+
+  // Resource rows
+  const filtered = resources.filter(r => {
+    if (filterType !== 'all' && r.type !== filterType) return false;
+    return true;
+  });
+
+  filtered.forEach(r => {
+    grid.innerHTML += `<div class="resource-label">
+      <div class="resource-avatar" style="background:${r.color}">${r.avatar}</div>
+      <div>
+        <div class="resource-name">${r.name} <a class="jdy-link" href="javascript:void(0)" onclick="simulateLoopback('${r.name}')" title="在简道云中打开资源详情">详情</a></div>
+        <div class="resource-type">${r.dept}</div>
+      </div>
+    </div>`;
+
+    for (let d = 0; d < 7; d++) {
+      const isWeekend = d >= 5;
+      const date = new Date(weekStart);
+      date.setDate(date.getDate() + d + currentWeekOffset * 7);
+      const isToday = date.toDateString() === new Date().toDateString();
+      const cls = isToday ? 'today' : (isWeekend ? 'weekend' : '');
+
+      const dayOccs = occupations.filter(o =>
+        o.resource_id === r.id && d >= o.start && d <= o.end
+      );
+
+      let bars = '';
+      dayOccs.forEach(o => {
+        if (filterStatus === 'conflict' && o.status !== 'conflict') return;
+        if (filterStatus === 'available') return;
+        if (filterProject !== 'all' && !o.project.includes(filterProject === 'p1' ? '华东' : '华南')) return;
+        bars += `<div class="occupation-bar ${o.status}"
+          onmouseenter="showTooltip(event, '${o.task_name}', '${o.project}', '${o.status}')"
+          onmouseleave="hideTooltip()"
+          onclick="showOccupationDetail('${o.task_id}')">${o.task_name}</div>`;
+      });
+
+      grid.innerHTML += `<div class="day-cell ${cls}">${bars}</div>`;
+    }
+  });
+}
+
+function renderConflicts() {
+  const list = document.getElementById('conflict-list');
+  document.getElementById('conflict-count').textContent = conflicts.length;
+
+  list.innerHTML = conflicts.map(c => `
+    <div class="conflict-item">
+      <div class="resource">${c.resource_name}</div>
+      <div class="tasks">${c.task_a} ↔ ${c.task_b}</div>
+      <div class="overlap">重叠${c.overlap_days}天 (${c.overlap})</div>
+      <div class="actions">
+        <button class="btn btn-sm" onclick="resolveConflict('${c.id}', 'adjust')">调整时间</button>
+        <button class="btn btn-sm" onclick="resolveConflict('${c.id}', 'replace')">替换资源</button>
+        <button class="btn btn-sm btn-ghost" onclick="resolveConflict('${c.id}', 'ignore')">忽略</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function showTooltip(e, taskName, project, status) {
+  const tt = document.getElementById('tooltip');
+  const statusMap = { normal: '正常排程', critical: '关键路径任务', conflict: '⚠️ 资源冲突' };
+  tt.innerHTML = `<div class="tt-title">${taskName}</div>
+    <div class="tt-row"><span class="tt-label">项目</span><span>${project}</span></div>
+    <div class="tt-row"><span class="tt-label">状态</span><span>${statusMap[status]}</span></div>`;
+  tt.style.display = 'block';
+  tt.style.left = (e.clientX + 12) + 'px';
+  tt.style.top = (e.clientY - 10) + 'px';
+}
+
+function hideTooltip() {
+  document.getElementById('tooltip').style.display = 'none';
+}
+
+function changeWeek(dir) {
+  currentWeekOffset += dir;
+  const start = new Date(weekStart);
+  start.setDate(start.getDate() + currentWeekOffset * 7);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 6);
+  document.getElementById('week-title').textContent =
+    `${start.getFullYear()}年${start.getMonth()+1}月 (${start.getDate()}/${start.getMonth()+1} - ${end.getDate()}/${end.getMonth()+1})`;
+  renderCalendar();
+}
+
+function goToday() {
+  currentWeekOffset = 0;
+  renderCalendar();
+}
+
+function filterCalendar() {
+  filterType = document.getElementById('filter-type').value;
+  filterProject = document.getElementById('filter-project').value;
+  filterStatus = document.getElementById('filter-status').value;
+  renderCalendar();
+}
+
+function resolveConflict(id, action) {
+  const actionMap = { adjust: '调整时间', replace: '替换资源', ignore: '忽略' };
+  const item = document.querySelector(`[onclick*="${id}"]`)?.closest('.conflict-item');
+  if (item) {
+    item.style.opacity = '0.5';
+    item.style.textDecoration = 'line-through';
+    setTimeout(() => {
+      item.innerHTML = `<div style="color:var(--green);font-weight:500;">✅ 已处理: ${actionMap[action]}</div>`;
+      item.style.borderLeftColor = 'var(--green)';
+      item.style.opacity = '1';
+      item.style.textDecoration = 'none';
+    }, 500);
+  }
+}
+
+function resolveAllConflicts() {
+  conflicts.forEach(c => resolveConflict(c.id, 'adjust'));
+}
+
+function showOccupationDetail(taskId) {
+  alert(`任务详情: ${taskId}\n（生产环境将弹出侧边抽屉）`);
+}
+
+function toggleView() {
+  alert('切换视图: 周视图 ↔ 月视图\n（生产环境将切换日历粒度）');
+}
+
+function exportCalendar() {
+  alert('导出日历数据为ICS格式\n（生产环境将下载.ics文件）');
+}
+
+// Init
+renderCalendar();
+renderConflicts();
+</script>
+<script src="paradigm-f-enhance.js"></script>
+<script>
+// 范式F增强 - 初始化
+document.addEventListener('DOMContentLoaded', function() {
+  renderParadigmFBar(
+    '资源日历',
+    '周视图 + 冲突标注 + 决策操作',
+    '简道云原生详情页',
+    '资源分配变更→智能助手→Bridge冲突重检'
+  );
+});
+</script>
+</body>
+</html>

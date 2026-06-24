@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>约束调度与冲突检测 — 项目计划原型</title>
+<style>
+:root {
+  --primary: #4f46e5;
+  --primary-light: #eef2ff;
+  --primary-hover: #4338ca;
+  --green: #059669;
+  --green-light: #d1fae5;
+  --green-bg: #ecfdf5;
+  --amber: #d97706;
+  --amber-light: #fef3c7;
+  --amber-bg: #fffbeb;
+  --red: #dc2626;
+  --red-light: #fee2e2;
+  --red-bg: #fef2f2;
+  --blue: #2563eb;
+  --blue-light: #dbeafe;
+  --slate-50: #f8fafc;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1;
+  --slate-400: #94a3b8;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+  --slate-700: #334155;
+  --slate-800: #1e293b;
+  --slate-900: #0f172a;
+  --radius: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+  --shadow-lg: 0 10px 25px rgba(0,0,0,0.1);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; background: var(--slate-100); color: var(--slate-800); font-size: 14px; line-height: 1.5; }
+
+/* Header */
+.header { background: #fff; border-bottom: 1px solid var(--slate-200); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
+.header-left { display: flex; align-items: center; gap: 16px; }
+.header-left h1 { font-size: 17px; font-weight: 700; color: var(--slate-900); }
+.project-badge { background: var(--primary-light); color: var(--primary); padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+.header-actions { display: flex; gap: 8px; }
+
+/* Buttons */
+.btn { padding: 7px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid var(--slate-200); background: #fff; color: var(--slate-700); transition: all 0.15s; display: inline-flex; align-items: center; gap: 5px; }
+.btn:hover { background: var(--slate-50); border-color: var(--slate-300); }
+.btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.btn-danger { background: var(--red); color: #fff; border-color: var(--red); }
+.btn-danger:hover { background: #b91c1c; }
+.btn-success { background: var(--green); color: #fff; border-color: var(--green); }
+.btn-ghost { border: none; background: transparent; color: var(--slate-500); }
+.btn-ghost:hover { background: var(--slate-100); color: var(--slate-700); }
+
+/* Layout */
+.main-content { padding: 16px 24px; display: flex; flex-direction: column; gap: 16px; height: calc(100vh - 53px); overflow-y: auto; }
+
+/* Summary Bar */
+.summary-bar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+.summary-card { background: #fff; border-radius: var(--radius); border: 1px solid var(--slate-200); padding: 14px 16px; box-shadow: var(--shadow); }
+.summary-card .label { font-size: 11px; color: var(--slate-400); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.summary-card .value { font-size: 22px; font-weight: 700; }
+.summary-card .sub { font-size: 11px; color: var(--slate-400); margin-top: 2px; }
+.summary-card.conflict .value { color: var(--red); }
+.summary-card.ok .value { color: var(--green); }
+.summary-card.warning .value { color: var(--amber); }
+
+/* Simulation Panel */
+.sim-panel { background: #fff; border-radius: var(--radius); border: 1px solid var(--slate-200); padding: 16px 20px; box-shadow: var(--shadow); }
+.sim-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.sim-controls { display: flex; flex-wrap: wrap; gap: 16px; align-items: end; }
+.sim-control { display: flex; flex-direction: column; gap: 4px; min-width: 200px; }
+.sim-control label { font-size: 12px; font-weight: 500; color: var(--slate-600); }
+.sim-slider-row { display: flex; align-items: center; gap: 8px; }
+.sim-slider { flex: 1; -webkit-appearance: none; height: 6px; border-radius: 3px; background: var(--slate-200); outline: none; }
+.sim-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--primary); cursor: pointer; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.sim-slider-val { font-size: 13px; font-weight: 700; color: var(--primary); min-width: 40px; text-align: center; }
+.sim-btn-row { display: flex; gap: 8px; margin-top: 8px; }
+
+/* Table */
+.table-section { background: #fff; border-radius: var(--radius); border: 1px solid var(--slate-200); box-shadow: var(--shadow); overflow: hidden; }
+.section-header { padding: 12px 20px; border-bottom: 1px solid var(--slate-200); display: flex; align-items: center; justify-content: space-between; }
+.section-title { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 1100px; }
+th { background: var(--slate-50); padding: 9px 12px; text-align: left; font-size: 11px; font-weight: 600; color: var(--slate-500); text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid var(--slate-200); white-space: nowrap; position: sticky; top: 0; z-index: 5; }
+td { padding: 9px 12px; border-bottom: 1px solid var(--slate-100); font-size: 13px; vertical-align: middle; }
+tr.row-ok { }
+tr.row-conflict { background: var(--red-bg); }
+tr.row-conflict td { border-bottom-color: #fecaca; }
+tr.row-warning { background: var(--amber-bg); }
+tr.row-warning td { border-bottom-color: #fde68a; }
+
+/* Cell styles */
+.act-id { font-family: 'SF Mono', monospace; font-size: 11px; color: var(--primary); font-weight: 600; background: var(--primary-light); padding: 2px 7px; border-radius: 3px; }
+.constraint-badge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.constraint-badge.asap { background: var(--slate-100); color: var(--slate-400); }
+.constraint-badge.mso { background: var(--blue-light); color: var(--blue); }
+.constraint-badge.mfo { background: #fce7f3; color: #be185d; }
+.constraint-badge.snet { background: var(--green-light); color: var(--green); }
+.constraint-badge.snlt { background: var(--amber-light); color: var(--amber); }
+
+.float-value { font-weight: 700; font-size: 13px; padding: 2px 8px; border-radius: 4px; }
+.float-positive { color: var(--green); background: var(--green-light); }
+.float-zero { color: var(--slate-500); background: var(--slate-100); }
+.float-negative { color: var(--red); background: var(--red-light); animation: pulse-red 2s infinite; }
+@keyframes pulse-red { 0%,100% { opacity: 1; } 50% { opacity: 0.7; } }
+
+.status-dot { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500; }
+.status-dot::before { content: ''; width: 8px; height: 8px; border-radius: 50%; }
+.status-dot.ok::before { background: var(--green); }
+.status-dot.ok { color: var(--green); }
+.status-dot.warning::before { background: var(--amber); }
+.status-dot.warning { color: var(--amber); }
+.status-dot.conflict::before { background: var(--red); }
+.status-dot.conflict { color: var(--red); }
+
+.date-calc { font-family: 'SF Mono', monospace; font-size: 12px; }
+.date-calc.delayed { color: var(--red); text-decoration: line-through; text-decoration-color: var(--red-light); }
+.date-calc.normal { color: var(--slate-600); }
+.date-original { font-size: 10px; color: var(--slate-400); display: block; }
+
+.dep-tags { display: flex; flex-wrap: wrap; gap: 3px; }
+.dep-tag { font-size: 10px; padding: 1px 6px; border-radius: 3px; font-weight: 500; background: var(--slate-100); color: var(--slate-600); }
+
+/* Gantt Section */
+.gantt-section { background: #fff; border-radius: var(--radius); border: 1px solid var(--slate-200); box-shadow: var(--shadow); overflow: hidden; }
+.gantt-container { overflow-x: auto; padding: 12px 0; }
+.gantt-svg { display: block; }
+
+/* Conflict Detail Panel */
+.conflict-panel { background: var(--red-bg); border: 1px solid #fecaca; border-radius: var(--radius); padding: 16px 20px; display: none; }
+.conflict-panel.show { display: block; }
+.conflict-panel-title { font-size: 14px; font-weight: 600; color: var(--red); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.conflict-item { background: #fff; border: 1px solid #fecaca; border-radius: 6px; padding: 12px 16px; margin-bottom: 8px; }
+.conflict-item-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.conflict-item-title { font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+.conflict-detail { font-size: 12px; color: var(--slate-600); line-height: 1.8; }
+.conflict-detail strong { color: var(--red); }
+.conflict-detail .green { color: var(--green); font-weight: 600; }
+.resolution-options { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--slate-200); }
+.resolution-title { font-size: 12px; font-weight: 600; color: var(--slate-600); margin-bottom: 6px; }
+.resolution-list { display: flex; flex-direction: column; gap: 4px; }
+.resolution-item { font-size: 12px; color: var(--slate-600); padding: 4px 8px; background: var(--slate-50); border-radius: 4px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 6px; }
+.resolution-item:hover { background: var(--primary-light); color: var(--primary); }
+.resolution-item .tag { font-size: 10px; padding: 1px 5px; border-radius: 3px; font-weight: 600; }
+.resolution-item .tag.crash { background: var(--red-light); color: var(--red); }
+.resolution-item .tag.fast-track { background: var(--amber-light); color: var(--amber); }
+.resolution-item .tag.relax { background: var(--blue-light); color: var(--blue); }
+.resolution-item .tag.scope { background: #e0e7ff; color: #4338ca; }
+
+/* Modal */
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15,23,42,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(2px); }
+.modal-overlay.show { display: flex; }
+.modal { background: #fff; border-radius: 12px; width: 480px; max-height: 80vh; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.25); display: flex; flex-direction: column; }
+.modal-header { padding: 16px 20px; border-bottom: 1px solid var(--slate-200); display: flex; align-items: center; justify-content: space-between; }
+.modal-header h3 { font-size: 15px; font-weight: 600; }
+.modal-close { cursor: pointer; font-size: 20px; color: var(--slate-400); width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 6px; border: none; background: transparent; }
+.modal-close:hover { background: var(--slate-100); }
+.modal-body { padding: 16px 20px; flex: 1; overflow-y: auto; }
+.modal-footer { padding: 12px 20px; border-top: 1px solid var(--slate-200); display: flex; justify-content: flex-end; gap: 8px; }
+
+/* Form */
+.form-group { margin-bottom: 12px; }
+.form-label { font-size: 12px; font-weight: 500; color: var(--slate-600); margin-bottom: 4px; display: block; }
+.form-select, .form-input { width: 100%; padding: 7px 10px; border: 1px solid var(--slate-200); border-radius: 6px; font-size: 13px; }
+.form-select:focus, .form-input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+.form-hint { font-size: 11px; color: var(--slate-400); margin-top: 3px; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--slate-300); border-radius: 3px; }
+</style>
+<link rel="stylesheet" href="paradigm-f-enhance.css">
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>约束调度与冲突检测</h1>
+    <span class="project-badge">半导体洁净室扩建项目</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-sm" onclick="resetAll()">重置基准</button>
+    <button class="btn btn-sm btn-primary" onclick="runSchedule()">重新推算</button>
+  </div>
+</div>
+
+<div class="main-content">
+
+  <!-- Summary Bar -->
+  <div class="summary-bar">
+    <div class="summary-card">
+      <div class="label">总活动数</div>
+      <div class="value" id="sum-total">10</div>
+      <div class="sub">WBS 5个阶段</div>
+    </div>
+    <div class="summary-card ok">
+      <div class="label">正常活动</div>
+      <div class="value" id="sum-ok">8</div>
+      <div class="sub">浮动时间 ≥ 0</div>
+    </div>
+    <div class="summary-card warning">
+      <div class="label">预警活动</div>
+      <div class="value" id="sum-warning">1</div>
+      <div class="sub">浮动时间 ≤ 2天</div>
+    </div>
+    <div class="summary-card conflict">
+      <div class="label">冲突活动</div>
+      <div class="value" id="sum-conflict">1</div>
+      <div class="sub">浮动时间 &lt; 0</div>
+    </div>
+    <div class="summary-card">
+      <div class="label">项目总工期</div>
+      <div class="value" id="sum-duration">90天</div>
+      <div class="sub" id="sum-end-date">至 2026-10-29</div>
+    </div>
+  </div>
+
+  <!-- Simulation Panel -->
+  <div class="sim-panel">
+    <div class="sim-title">
+      <span>🎛</span> 延期模拟器
+      <span style="font-size:12px;color:var(--slate-400);font-weight:400">拖动滑块模拟活动延期，实时观察级联影响与冲突</span>
+    </div>
+    <div class="sim-controls" id="sim-controls">
+      <!-- Rendered by JS -->
+    </div>
+    <div class="sim-btn-row">
+      <button class="btn btn-sm" onclick="resetAll()">全部重置</button>
+      <button class="btn btn-sm" onclick="applyPreset('mild')">预设：轻微延期</button>
+      <button class="btn btn-sm" onclick="applyPreset('severe')">预设：严重延期</button>
+      <button class="btn btn-sm" onclick="applyPreset('cascade')">预设：级联冲突</button>
+    </div>
+  </div>
+
+  <!-- Conflict Panel -->
+  <div class="conflict-panel" id="conflict-panel">
+    <div class="conflict-panel-title">
+      <span>🚨</span> 冲突检测结果
+      <span id="conflict-count" style="font-size:12px;font-weight:400;margin-left:4px"></span>
+    </div>
+    <div id="conflict-items"></div>
+  </div>
+
+  <!-- Schedule Table -->
+  <div class="table-section">
+    <div class="section-header">
+      <div class="section-title">
+        <span>📋</span> 调度计算结果
+        <span style="font-size:12px;color:var(--slate-400);font-weight:400;margin-left:4px">正向推算(Forward Pass) · 约束检测 · 浮动时间</span>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm btn-ghost" onclick="toggleConstraintEdit()" id="btn-edit-constraint">编辑约束</button>
+      </div>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:60px">编号</th>
+            <th style="width:160px">活动名称</th>
+            <th style="width:50px">工期</th>
+            <th style="width:70px">实际延期</th>
+            <th style="width:110px">约束条件</th>
+            <th style="width:85px">约束日期</th>
+            <th style="width:85px">推算开始</th>
+            <th style="width:85px">推算结束</th>
+            <th style="width:70px">浮动天数</th>
+            <th style="width:70px">状态</th>
+            <th>紧前活动</th>
+          </tr>
+        </thead>
+        <tbody id="schedule-table-body">
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Gantt Chart -->
+  <div class="gantt-section">
+    <div class="section-header">
+      <div class="section-title">
+        <span>📊</span> 甘特图 — 基准 vs 推算
+        <span style="font-size:12px;color:var(--slate-400);font-weight:400;margin-left:4px">灰色=基准计划 · 彩色=推算结果 · 红色虚线=约束日期</span>
+      </div>
+    </div>
+    <div class="gantt-container">
+      <svg id="gantt-svg" class="gantt-svg"></svg>
+    </div>
+  </div>
+
+</div>
+
+<!-- Constraint Edit Modal -->
+<div class="modal-overlay" id="constraint-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="constraint-modal-title">编辑约束条件</h3>
+      <button class="modal-close" onclick="closeConstraintModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:var(--slate-50);border-radius:6px;padding:10px 14px;margin-bottom:14px">
+        <span class="act-id" id="cm-act-id"></span>
+        <span style="font-weight:600;margin-left:8px" id="cm-act-name"></span>
+      </div>
+      <div class="form-group">
+        <label class="form-label">约束类型</label>
+        <select class="form-select" id="cm-constraint-type" onchange="onConstraintTypeChange()">
+          <option value="ASAP">ASAP — 尽快（无刚性约束）</option>
+          <option value="MSO">MSO — 必须开始于（刚性）</option>
+          <option value="MFO">MFO — 必须完成于（刚性）</option>
+          <option value="SNET">SNET — 不早于开始（弹性）</option>
+          <option value="SNLT">SNLT — 不晚于开始（弹性）</option>
+        </select>
+        <div class="form-hint">MSO/MFO 为刚性约束，违反即冲突；SNET/SNLT 为弹性约束，违反产生预警</div>
+      </div>
+      <div class="form-group" id="cm-date-group">
+        <label class="form-label">约束日期</label>
+        <input type="date" class="form-input" id="cm-constraint-date">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeConstraintModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveConstraint()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== Date Utilities =====
+const BASE_DATE = new Date(2026, 6, 1); // July 1, 2026
+
+function addDays(date, days) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
+function daysBetween(d1, d2) {
+  return Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
+}
+
+function formatDate(date) {
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${m}-${d}`;
+}
+
+function formatDateFull(date) {
+  return `2026-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+}
+
+function parseDate(str) {
+  const [y, m, d] = str.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+// ===== Activity Data =====
+const activities = [
+  { id: 'A01', name: '项目立项审批', wbs: '1.1', duration: 5, constraint: 'ASAP', constraintDate: null, delay: 0, predecessors: [] },
+  { id: 'A02', name: '需求调研与方案确认', wbs: '1.2', duration: 10, constraint: 'ASAP', constraintDate: null, delay: 0, predecessors: ['A01'] },
+  { id: 'A03', name: '洁净室土建设计', wbs: '2.1', duration: 15, constraint: 'MFO', constraintDate: addDays(BASE_DATE, 49), delay: 0, predecessors: ['A02'] },
+  { id: 'A04', name: '设备选型与长周期采购', wbs: '2.2', duration: 20, constraint: 'ASAP', constraintDate: null, delay: 0, predecessors: ['A02'] },
+  { id: 'A05', name: '土建施工', wbs: '3.1', duration: 25, constraint: 'ASAP', constraintDate: null, delay: 0, predecessors: ['A03'] },
+  { id: 'A06', name: '机电安装', wbs: '3.2', duration: 20, constraint: 'SNLT', constraintDate: addDays(BASE_DATE, 59), delay: 0, predecessors: ['A03', 'A04'] },
+  { id: 'A07', name: '设备进场与安装', wbs: '3.3', duration: 15, constraint: 'ASAP', constraintDate: null, delay: 0, predecessors: ['A05', 'A04'] },
+  { id: 'A08', name: '系统联调测试', wbs: '4.1', duration: 10, constraint: 'MFO', constraintDate: addDays(BASE_DATE, 84), delay: 0, predecessors: ['A06', 'A07'] },
+  { id: 'A09', name: '洁净度验证', wbs: '4.2', duration: 5, constraint: 'MSO', constraintDate: addDays(BASE_DATE, 84), delay: 0, predecessors: ['A08'] },
+  { id: 'A10', name: '竣工验收交付', wbs: '5.1', duration: 5, constraint: 'MFO', constraintDate: addDays(BASE_DATE, 89), delay: 0, predecessors: ['A08', 'A09'] },
+];
+
+// Computed fields
+let schedule = [];
+
+// ===== Forward Pass Scheduling =====
+function runSchedule() {
+  schedule = [];
+  const computed = {};
+
+  // Topological sort
+  const sorted = topologicalSort();
+
+  // Forward pass
+  sorted.forEach(actId => {
+    const act = activities.find(a => a.id === actId);
+    const effectiveDuration = act.duration + act.delay;
+
+    let ES;
+    if (act.predecessors.length === 0) {
+      ES = 0; // Day 0 from project start
+    } else {
+      ES = Math.max(...act.predecessors.map(pid => computed[pid].EF));
+    }
+
+    // Apply constraint: MSO (Must Start On) or SNET (Start No Earlier Than)
+    if (act.constraint === 'MSO' && act.constraintDate) {
+      const msoDay = daysBetween(BASE_DATE, act.constraintDate);
+      // MSO is rigid - we calculate what would happen, then check conflict
+    }
+    if (act.constraint === 'SNET' && act.constraintDate) {
+      const snetDay = daysBetween(BASE_DATE, act.constraintDate);
+      if (ES < snetDay) ES = snetDay;
+    }
+
+    const EF = ES + effectiveDuration;
+
+    // Calculate float based on constraint
+    let float = null;
+    let status = 'ok';
+
+    if (act.constraint === 'MFO' && act.constraintDate) {
+      const mfoDay = daysBetween(BASE_DATE, act.constraintDate);
+      float = mfoDay - EF;
+      if (float < 0) status = 'conflict';
+      else if (float <= 2) status = 'warning';
+    } else if (act.constraint === 'MSO' && act.constraintDate) {
+      const msoDay = daysBetween(BASE_DATE, act.constraintDate);
+      float = msoDay - ES;
+      if (float < 0) status = 'conflict';
+      else if (float <= 2) status = 'warning';
+    } else if (act.constraint === 'SNLT' && act.constraintDate) {
+      const snltDay = daysBetween(BASE_DATE, act.constraintDate);
+      float = snltDay - ES;
+      if (float < 0) status = 'conflict';
+      else if (float <= 2) status = 'warning';
+    }
+
+    computed[actId] = {
+      ES, EF,
+      earlyStart: addDays(BASE_DATE, ES),
+      earlyFinish: addDays(BASE_DATE, EF),
+      float,
+      status,
+      effectiveDuration,
+    };
+  });
+
+  // Build schedule array
+  activities.forEach(act => {
+    const c = computed[act.id];
+    schedule.push({
+      ...act,
+      ...c,
+      // Baseline (no delay)
+      baselineStart: addDays(BASE_DATE, computeBaselineES(act.id)),
+      baselineFinish: addDays(BASE_DATE, computeBaselineES(act.id) + act.duration),
+    });
+  });
+
+  renderAll();
+}
+
+function topologicalSort() {
+  const visited = new Set();
+  const result = [];
+  const adjList = {};
+  activities.forEach(a => { adjList[a.id] = []; });
+  activities.forEach(a => {
+    a.predecessors.forEach(pid => {
+      if (adjList[pid]) adjList[pid].push(a.id);
+    });
+  });
+
+  function dfs(id) {
+    if (visited.has(id)) return;
+    visited.add(id);
+    (adjList[id] || []).forEach(next => dfs(next));
+    result.unshift(id);
+  }
+
+  activities.forEach(a => dfs(a.id));
+  return result;
+}
+
+function computeBaselineES(actId) {
+  const act = activities.find(a => a.id === actId);
+  if (act.predecessors.length === 0) return 0;
+  return Math.max(...act.predecessors.map(pid => computeBaselineES(pid) + activities.find(a => a.id === pid).duration));
+}
+
+// ===== Render All =====
+function renderAll() {
+  renderSummary();
+  renderTable();
+  renderGantt();
+  renderConflictPanel();
+}
+
+// ===== Summary =====
+function renderSummary() {
+  let ok = 0, warn = 0, conflict = 0;
+  let maxEF = 0;
+  schedule.forEach(s => {
+    if (s.status === 'ok') ok++;
+    else if (s.status === 'warning') warn++;
+    else if (s.status === 'conflict') conflict++;
+    if (s.EF > maxEF) maxEF = s.EF;
+  });
+
+  document.getElementById('sum-ok').textContent = ok;
+  document.getElementById('sum-warning').textContent = warn;
+  document.getElementById('sum-conflict').textContent = conflict;
+  document.getElementById('sum-duration').textContent = maxEF + '天';
+  document.getElementById('sum-end-date').textContent = '至 ' + formatDateFull(addDays(BASE_DATE, maxEF));
+
+  // Update card classes
+  document.querySelectorAll('.summary-card')[1].className = 'summary-card ok';
+  document.querySelectorAll('.summary-card')[2].className = 'summary-card' + (warn > 0 ? ' warning' : '');
+  document.querySelectorAll('.summary-card')[3].className = 'summary-card' + (conflict > 0 ? ' conflict' : '');
+}
+
+// ===== Table =====
+function renderTable() {
+  const tbody = document.getElementById('schedule-table-body');
+  tbody.innerHTML = '';
+
+  schedule.forEach(s => {
+    const tr = document.createElement('tr');
+    tr.className = 'row-' + s.status;
+
+    // Constraint badge
+    const constraintLabels = { ASAP: '尽快', MSO: '必须开始于', MFO: '必须完成于', SNET: '不早于开始', SNLT: '不晚于开始' };
+    const constraintClass = s.constraint.toLowerCase();
+    const constraintBadge = `<span class="constraint-badge ${constraintClass}">${s.constraint}</span>`;
+    const constraintDateStr = s.constraintDate ? formatDate(s.constraintDate) : '—';
+
+    // Float display
+    let floatHtml = '—';
+    if (s.float !== null) {
+      const floatClass = s.float < 0 ? 'float-negative' : (s.float === 0 ? 'float-zero' : 'float-positive');
+      floatHtml = `<span class="float-value ${floatClass}">${s.float > 0 ? '+' : ''}${s.float}天</span>`;
+    }
+
+    // Status
+    const statusLabels = { ok: '正常', warning: '预警', conflict: '冲突' };
+    const statusHtml = `<span class="status-dot ${s.status}">${statusLabels[s.status]}</span>`;
+
+    // Delay display
+    const delayHtml = s.delay > 0
+      ? `<span style="color:var(--red);font-weight:700">+${s.delay}天</span>`
+      : `<span style="color:var(--slate-300)">—</span>`;
+
+    // Predecessors
+    const predHtml = s.predecessors.length > 0
+      ? `<div class="dep-tags">${s.predecessors.map(p => `<span class="dep-tag">${p}</span>`).join('')}</div>`
+      : '<span style="color:var(--slate-300);font-size:12px">起始</span>';
+
+    // Date comparison
+    const baseStartStr = formatDate(s.baselineStart);
+    const calcStartStr = formatDate(s.earlyStart);
+    const baseFinishStr = formatDate(s.baselineFinish);
+    const calcFinishStr = formatDate(s.earlyFinish);
+    const startDelayed = daysBetween(s.baselineStart, s.earlyStart) > 0;
+    const finishDelayed = daysBetween(s.baselineFinish, s.earlyFinish) > 0;
+
+    tr.innerHTML = `
+      <td><span class="act-id">${s.id}</span></td>
+      <td style="font-weight:500">${s.name} <a class="jdy-link" href="javascript:void(0)" onclick="simulateLoopback('${s.name}')" title="在简道云中打开">详情</a></td>
+      <td>${s.effectiveDuration}天</td>
+      <td>${delayHtml}</td>
+      <td>${constraintBadge}</td>
+      <td style="font-size:12px;color:var(--slate-500)">${constraintDateStr}</td>
+      <td>
+        <span class="date-calc ${startDelayed ? 'delayed' : 'normal'}">${calcStartStr}</span>
+        ${startDelayed ? `<span class="date-original">基准 ${baseStartStr}</span>` : ''}
+      </td>
+      <td>
+        <span class="date-calc ${finishDelayed ? 'delayed' : 'normal'}">${calcFinishStr}</span>
+        ${finishDelayed ? `<span class="date-original">基准 ${baseFinishStr}</span>` : ''}
+      </td>
+      <td>${floatHtml}</td>
+      <td>${statusHtml}</td>
+      <td>${predHtml}</td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+}
+
+// ===== Conflict Panel =====
+function renderConflictPanel() {
+  const panel = document.getElementById('conflict-panel');
+  const conflicts = schedule.filter(s => s.status === 'conflict');
+  const warnings = schedule.filter(s => s.status === 'warning');
+  const all = [...conflicts, ...warnings];
+
+  if (all.length === 0) {
+    panel.classList.remove('show');
+    return;
+  }
+
+  panel.classList.add('show');
+  document.getElementById('conflict-count').textContent = `(${conflicts.length}个冲突, ${warnings.length}个预警)`;
+
+  const container = document.getElementById('conflict-items');
+  container.innerHTML = all.map(s => {
+    const constraintLabels = { MSO: '必须开始于', MFO: '必须完成于', SNLT: '不晚于开始', SNET: '不早于开始' };
+    const isConflict = s.status === 'conflict';
+    const icon = isConflict ? '🔴' : '🟡';
+    const absFloat = Math.abs(s.float);
+
+    let detailHtml = '';
+    if (s.constraint === 'MFO') {
+      detailHtml = `推算结束日 <strong>${formatDate(s.earlyFinish)}</strong> 超出约束日期 <strong>${formatDate(s.constraintDate)}</strong>，超出 <strong>${absFloat}天</strong>`;
+    } else if (s.constraint === 'MSO') {
+      detailHtml = `推算开始日 <strong>${formatDate(s.earlyStart)}</strong> 晚于约束日期 <strong>${formatDate(s.constraintDate)}</strong>，晚 <strong>${absFloat}天</strong>`;
+    } else if (s.constraint === 'SNLT') {
+      detailHtml = `推算开始日 <strong>${formatDate(s.earlyStart)}</strong> 晚于约束日期 <strong>${formatDate(s.constraintDate)}</strong>，晚 <strong>${absFloat}天</strong>`;
+    }
+
+    // Find which predecessor delays caused this
+    const causes = [];
+    s.predecessors.forEach(pid => {
+      const pred = schedule.find(x => x.id === pid);
+      if (pred && pred.delay > 0) {
+        causes.push(`${pid}(${pred.name})延期+${pred.delay}天`);
+      }
+      // Also check transitive
+      if (pred && daysBetween(pred.baselineFinish, pred.earlyFinish) > 0) {
+        if (!causes.find(c => c.includes(pid))) {
+          causes.push(`${pid}(${pred.name})被级联推迟${daysBetween(pred.baselineFinish, pred.earlyFinish)}天`);
+        }
+      }
+    });
+    const causeHtml = causes.length > 0
+      ? `<div style="margin-top:6px;font-size:12px;color:var(--slate-500)">根因：${causes.join('；')}</div>`
+      : '';
+
+    // Resolution suggestions
+    let resolutions = [];
+    if (isConflict) {
+      resolutions.push({ tag: 'crash', label: '赶工', desc: `压缩${s.id}工期（加人/加班），需缩减${absFloat}天` });
+      resolutions.push({ tag: 'fast-track', label: '快速跟进', desc: `将${s.id}与紧前活动部分并行执行` });
+
+      s.predecessors.forEach(pid => {
+        const pred = schedule.find(x => x.id === pid);
+        if (pred && pred.delay > 0) {
+          resolutions.push({ tag: 'crash', label: '赶工', desc: `压缩${pid}的延期（当前+${pred.delay}天），恢复${pred.id}原始工期` });
+        }
+      });
+
+      resolutions.push({ tag: 'relax', label: '放宽约束', desc: `将${constraintLabels[s.constraint]} ${formatDate(s.constraintDate)} 推迟${absFloat}天至 ${formatDate(addDays(s.constraintDate, absFloat))}` });
+      resolutions.push({ tag: 'scope', label: '缩减范围', desc: `减少${s.id}的工作内容以缩短工期` });
+    } else {
+      resolutions.push({ tag: 'fast-track', label: '关注', desc: `浮动仅${s.float}天，需密切监控${s.id}的执行进度` });
+    }
+
+    const resolutionHtml = resolutions.length > 0 ? `
+      <div class="resolution-options">
+        <div class="resolution-title">建议处置方案（点击可标记采纳）：</div>
+        <div class="resolution-list">
+          ${resolutions.map(r => `<div class="resolution-item" onclick="this.style.background='var(--green-light)';this.style.color='var(--green)'"><span class="tag ${r.tag}">${r.label}</span> ${r.desc}</div>`).join('')}
+        </div>
+      </div>
+    ` : '';
+
+    return `<div class="conflict-item">
+      <div class="conflict-item-header">
+        <div class="conflict-item-title">${icon} <span class="act-id">${s.id}</span> ${s.name} — ${isConflict ? '约束冲突' : '进度预警'} <a class="jdy-link" href="javascript:void(0)" onclick="simulateLoopback('${s.name}')">处理</a></div>
+        <span class="float-value float-negative" style="font-size:12px">浮动 ${s.float}天</span>
+      </div>
+      <div class="conflict-detail">
+        <div>约束条件：<span class="constraint-badge ${s.constraint.toLowerCase()}">${s.constraint} ${constraintLabels[s.constraint] || ''}</span> ${formatDate(s.constraintDate)}</div>
+        <div>${detailHtml}</div>
+        ${causeHtml}
+      </div>
+      ${resolutionHtml}
+    </div>`;
+  }).join('');
+}
+
+// ===== Gantt Chart =====
+function renderGantt() {
+  const svg = document.getElementById('gantt-svg');
+  const rowH = 32;
+  const headerH = 30;
+  const labelW = 160;
+  const dayW = 8;
+  const totalDays = Math.max(...schedule.map(s => Math.max(s.EF, daysBetween(BASE_DATE, s.constraintDate || BASE_DATE) + 5))) + 5;
+  const svgW = labelW + totalDays * dayW + 40;
+  const svgH = headerH + schedule.length * rowH + 20;
+
+  svg.setAttribute('width', svgW);
+  svg.setAttribute('height', svgH);
+  svg.setAttribute('viewBox', `0 0 ${svgW} ${svgH}`);
+
+  let html = '';
+
+  // Background grid
+  for (let d = 0; d <= totalDays; d += 7) {
+    const x = labelW + d * dayW;
+    html += `<line x1="${x}" y1="${headerH}" x2="${x}" y2="${svgH}" stroke="#f1f5f9" stroke-width="1"/>`;
+    const date = addDays(BASE_DATE, d);
+    html += `<text x="${x}" y="${headerH - 8}" font-size="9" fill="#94a3b8" text-anchor="middle">${formatDate(date)}</text>`;
+  }
+
+  // Today line (day 0)
+  html += `<line x1="${labelW}" y1="${headerH}" x2="${labelW}" y2="${svgH}" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4 2"/>`;
+
+  schedule.forEach((s, i) => {
+    const y = headerH + i * rowH;
+    const barY = y + 6;
+    const barH = 20;
+
+    // Row background
+    if (s.status === 'conflict') {
+      html += `<rect x="0" y="${y}" width="${svgW}" height="${rowH}" fill="#fef2f2" opacity="0.5"/>`;
+    } else if (s.status === 'warning') {
+      html += `<rect x="0" y="${y}" width="${svgW}" height="${rowH}" fill="#fffbeb" opacity="0.5"/>`;
+    }
+
+    // Label
+    html += `<text x="8" y="${barY + 14}" font-size="11" fill="#334155" font-weight="500">${s.id} ${s.name.length > 10 ? s.name.substring(0,10)+'…' : s.name}</text>`;
+
+    // Baseline bar (gray)
+    const baseStartX = labelW + computeBaselineES(s.id) * dayW;
+    const baseWidth = s.duration * dayW;
+    html += `<rect x="${baseStartX}" y="${barY + 2}" width="${baseWidth}" height="${barH - 4}" rx="3" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="0.5"/>`;
+
+    // Calculated bar (colored)
+    const calcStartX = labelW + s.ES * dayW;
+    const calcWidth = s.effectiveDuration * dayW;
+    let barColor = '#4f46e5';
+    let barOpacity = '0.8';
+    if (s.status === 'conflict') { barColor = '#dc2626'; barOpacity = '0.9'; }
+    else if (s.status === 'warning') { barColor = '#d97706'; barOpacity = '0.85'; }
+    else if (s.delay > 0) { barColor = '#7c3aed'; }
+
+    html += `<rect x="${calcStartX}" y="${barY}" width="${calcWidth}" height="${barH}" rx="4" fill="${barColor}" opacity="${barOpacity}"/>`;
+    html += `<text x="${calcStartX + calcWidth/2}" y="${barY + 14}" font-size="9" fill="#fff" text-anchor="middle" font-weight="600">${s.effectiveDuration}d</text>`;
+
+    // Constraint line (red dashed)
+    if (s.constraintDate && s.constraint !== 'ASAP') {
+      const constraintDay = daysBetween(BASE_DATE, s.constraintDate);
+      const cx = labelW + constraintDay * dayW;
+      html += `<line x1="${cx}" y1="${barY - 2}" x2="${cx}" y2="${barY + barH + 2}" stroke="#dc2626" stroke-width="2" stroke-dasharray="3 2"/>`;
+      html += `<text x="${cx}" y="${barY - 5}" font-size="8" fill="#dc2626" text-anchor="middle" font-weight="600">${s.constraint}</text>`;
+    }
+  });
+
+  svg.innerHTML = html;
+}
+
+// ===== Simulation Controls =====
+function renderSimControls() {
+  const container = document.getElementById('sim-controls');
+  // Only show activities that can be delayed (have successors or constraints)
+  const delayable = activities.filter(a => a.predecessors.length > 0 || true); // All can be delayed
+
+  container.innerHTML = delayable.slice(0, 6).map(a => `
+    <div class="sim-control">
+      <label><span class="act-id" style="font-size:10px">${a.id}</span> ${a.name.length > 8 ? a.name.substring(0,8)+'…' : a.name}</label>
+      <div class="sim-slider-row">
+        <input type="range" class="sim-slider" min="0" max="15" value="${a.delay}" 
+               oninput="onDelayChange('${a.id}', this.value)" id="slider-${a.id}">
+        <span class="sim-slider-val" id="slider-val-${a.id}">+${a.delay}天</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function onDelayChange(actId, value) {
+  const act = activities.find(a => a.id === actId);
+  act.delay = parseInt(value);
+  document.getElementById(`slider-val-${actId}`).textContent = `+${value}天`;
+  runSchedule();
+}
+
+function resetAll() {
+  activities.forEach(a => a.delay = 0);
+  renderSimControls();
+  runSchedule();
+}
+
+function applyPreset(type) {
+  resetAll();
+  if (type === 'mild') {
+    activities.find(a => a.id === 'A03').delay = 3;
+    document.getElementById('slider-A03').value = 3;
+    document.getElementById('slider-val-A03').textContent = '+3天';
+  } else if (type === 'severe') {
+    activities.find(a => a.id === 'A03').delay = 8;
+    document.getElementById('slider-A03').value = 8;
+    document.getElementById('slider-val-A03').textContent = '+8天';
+    activities.find(a => a.id === 'A04').delay = 5;
+    document.getElementById('slider-A04').value = 5;
+    document.getElementById('slider-val-A04').textContent = '+5天';
+  } else if (type === 'cascade') {
+    activities.find(a => a.id === 'A02').delay = 5;
+    document.getElementById('slider-A02').value = 5;
+    document.getElementById('slider-val-A02').textContent = '+5天';
+    activities.find(a => a.id === 'A04').delay = 3;
+    document.getElementById('slider-A04').value = 3;
+    document.getElementById('slider-val-A04').textContent = '+3天';
+  }
+  runSchedule();
+}
+
+// ===== Constraint Edit Modal =====
+let editingActId = null;
+let constraintEditMode = false;
+
+function toggleConstraintEdit() {
+  constraintEditMode = !constraintEditMode;
+  const btn = document.getElementById('btn-edit-constraint');
+  btn.textContent = constraintEditMode ? '完成编辑' : '编辑约束';
+  btn.className = constraintEditMode ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-ghost';
+  renderTable();
+}
+
+// Override table render to add edit buttons when in edit mode
+const originalRenderTable = renderTable;
+
+document.getElementById('schedule-table-body').addEventListener('click', function(e) {
+  if (!constraintEditMode) return;
+  const row = e.target.closest('tr');
+  if (!row) return;
+  const actId = row.querySelector('.act-id')?.textContent;
+  if (actId) openConstraintModal(actId);
+});
+
+function openConstraintModal(actId) {
+  editingActId = actId;
+  const act = activities.find(a => a.id === actId);
+  document.getElementById('constraint-modal-title').textContent = '编辑约束条件';
+  document.getElementById('cm-act-id').textContent = act.id;
+  document.getElementById('cm-act-name').textContent = act.name;
+  document.getElementById('cm-constraint-type').value = act.constraint;
+  document.getElementById('cm-constraint-date').value = act.constraintDate ? formatDateFull(act.constraintDate) : '';
+  onConstraintTypeChange();
+  document.getElementById('constraint-modal').classList.add('show');
+}
+
+function closeConstraintModal() {
+  document.getElementById('constraint-modal').classList.remove('show');
+  editingActId = null;
+}
+
+function onConstraintTypeChange() {
+  const type = document.getElementById('cm-constraint-type').value;
+  document.getElementById('cm-date-group').style.display = type === 'ASAP' ? 'none' : 'block';
+}
+
+function saveConstraint() {
+  if (!editingActId) return;
+  const act = activities.find(a => a.id === editingActId);
+  const type = document.getElementById('cm-constraint-type').value;
+  const dateStr = document.getElementById('cm-constraint-date').value;
+
+  act.constraint = type;
+  act.constraintDate = type === 'ASAP' ? null : (dateStr ? parseDate(dateStr) : null);
+
+  closeConstraintModal();
+  runSchedule();
+}
+
+// ===== Keyboard =====
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeConstraintModal();
+  }
+});
+
+// ===== Init =====
+renderSimControls();
+runSchedule();
+</script>
+<script src="paradigm-f-enhance.js"></script>
+<script>
+// 范式F增强 - 初始化
+document.addEventListener('DOMContentLoaded', function() {
+  renderParadigmFBar(
+    '约束调度',
+    'CPM计算 + 冲突面板 + 延期模拟',
+    '简道云原生详情页',
+    '约束日期修改→智能助手→Bridge重算'
+  );
+});
+</script>
+</body>
+</html>

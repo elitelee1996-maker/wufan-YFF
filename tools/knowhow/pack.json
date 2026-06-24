@@ -1,0 +1,8 @@
+{
+  "name": "knowhow",
+  "display_name": "KnowHow 知识库",
+  "description": "帆软 KnowHow 知识平台，用于搜索和读取项目案例、专家资料、合同文档等知识内容",
+  "requires_connections": [
+    { "category": "knowhow", "fields": ["api_key"], "required": true }
+  ]
+}

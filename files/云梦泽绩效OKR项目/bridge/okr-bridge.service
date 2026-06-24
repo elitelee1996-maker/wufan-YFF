@@ -1,0 +1,15 @@
+[Unit]
+Description=OKR Bridge API Service
+After=network.target
+
+[Service]
+Type=simple
+User=deploy
+WorkingDirectory=/home/deploy/apps/okr-bridge
+Environment="JDY_API_KEY=YOUR_JDY_API_KEY_HERE"
+ExecStart=/home/deploy/apps/okr-bridge/venv/bin/gunicorn -w 2 -b 0.0.0.0:8200 app:app
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

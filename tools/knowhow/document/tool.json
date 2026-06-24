@@ -1,0 +1,22 @@
+{
+  "name": "knowhow_document",
+  "display_name": "获取文档详情",
+  "description_zh": "根据文档 ID 获取 KnowHow 知识库中文档的完整内容。",
+  "description": "Get the full content of a document from the KnowHow knowledge base by its document ID. Use this after knowhow_search to read the complete content of a specific document.",
+  "params": {
+    "document_id": {
+      "type": "string",
+      "description": "The document ID returned by knowhow_search results, e.g. 'abc123-def456'."
+    }
+  },
+  "api": {
+    "url": "https://digitchat.fanruan.com/dataset/api/v1/datasets/documents/{document_id}",
+    "method": "GET",
+    "headers": {
+      "Authorization": "Bearer {conn:knowhow.api_key}"
+    }
+  },
+  "requires_connections": [
+    { "category": "knowhow", "fields": ["api_key"], "required": true }
+  ]
+}

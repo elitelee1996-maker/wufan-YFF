@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自定义详情页 - 弹窗按钮示例</title>
+    <style>
+        /* ============================================================
+         * 样式部分
+         * ============================================================ */
+        
+        /* 页面基础样式 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        /* 详情页容器 */
+        .detail-container {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        /* 标题样式 */
+        .detail-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #333;
+        }
+        
+        /* 信息展示区域 */
+        .detail-info {
+            margin-bottom: 24px;
+            padding: 16px;
+            background: #fafafa;
+            border-radius: 4px;
+        }
+        
+        .info-item {
+            display: flex;
+            margin-bottom: 8px;
+        }
+        
+        .info-label {
+            width: 100px;
+            color: #666;
+            flex-shrink: 0;
+        }
+        
+        .info-value {
+            color: #333;
+            flex: 1;
+        }
+        
+        /* ============================================================
+         * 按钮样式
+         * ============================================================ */
+        
+        /* 操作按钮区域 */
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        /* 按钮基础样式 */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        /* 主要按钮（蓝色） */
+        .btn-primary {
+            background: #1890ff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #40a9ff;
+        }
+        
+        /* 次要按钮（灰色） */
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        /* ============================================================
+         * 弹窗样式
+         * ============================================================ */
+        
+        /* 弹窗遮罩层 */
+        .modal-overlay {
+            display: none;  /* 默认隐藏 */
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* 弹窗显示状态 */
+        .modal-overlay.active {
+            display: flex;
+        }
+        
+        /* 弹窗容器 */
+        .modal-container {
+            background: white;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 1200px;
+            height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        
+        /* 弹窗头部 */
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid #e8e8e8;
+        }
+        
+        .modal-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        /* 关闭按钮 */
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            font-size: 20px;
+            cursor: pointer;
+            color: #999;
+            border-radius: 4px;
+        }
+        
+        .modal-close:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        /* 弹窗内容区域（iframe） */
+        .modal-body {
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .modal-body iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ============================================================
+         详情页内容区域
+         ============================================================ -->
+    <div class="detail-container">
+        <div class="detail-title">项目详情</div>
+        
+        <!-- 数据信息展示（这里放你的表单字段） -->
+        <div class="detail-info">
+            <div class="info-item">
+                <span class="info-label">项目名称：</span>
+                <span class="info-value" id="projectName">示例项目</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">项目编号：</span>
+                <span class="info-value" id="projectCode">PRJ-2024-001</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">负责人：</span>
+                <span class="info-value" id="projectManager">张三</span>
+            </div>
+        </div>
+        
+        <!-- ============================================================
+             操作按钮区域
+             在这里添加你的自定义按钮
+             ============================================================ -->
+        <div class="action-buttons">
+            <!-- 按钮1：打开计划编制页面（弹窗方式） -->
+            <button class="btn btn-primary" onclick="openPlanModal()">
+                📋 计划编制
+            </button>
+            
+            <!-- 按钮2：其他操作（示例） -->
+            <button class="btn btn-secondary" onclick="openOtherPage()">
+                📄 查看文档
+            </button>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         弹窗组件（默认隐藏，点击按钮后显示）
+         ============================================================ -->
+    <div class="modal-overlay" id="planModal">
+        <div class="modal-container">
+            <!-- 弹窗头部 -->
+            <div class="modal-header">
+                <span class="modal-title">计划编制</span>
+                <button class="modal-close" onclick="closePlanModal()">✕</button>
+            </div>
+            <!-- 弹窗内容（iframe 加载目标页面） -->
+            <div class="modal-body">
+                <iframe id="planIframe" src=""></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         JavaScript 逻辑
+         ============================================================ -->
+    <script>
+        /**
+         * ============================================================
+         * 配置区域
+         * 在这里修改你的页面 URL 和其他配置
+         * ============================================================
+         */
+        const CONFIG = {
+            // 计划编制页面的 URL
+            // 修改为你实际的简道云表单链接
+            planPageUrl: 'https://www.jiandaoyun.com/o/your-plan-form-id',
+            
+            // 文档页面的 URL（示例）
+            docPageUrl: 'https://www.jiandaoyun.com/o/your-doc-form-id'
+        };
+
+        /**
+         * ============================================================
+         * 打开计划编制弹窗
+         * ============================================================
+         * 功能：显示弹窗，并在 iframe 中加载计划编制页面
+         * 触发：点击"计划编制"按钮
+         */
+        function openPlanModal() {
+            // 获取弹窗元素
+            const modal = document.getElementById('planModal');
+            const iframe = document.getElementById('planIframe');
+            
+            // 设置 iframe 的 src（加载目标页面）
+            iframe.src = CONFIG.planPageUrl;
+            
+            // 显示弹窗（添加 active 类）
+            modal.classList.add('active');
+            
+            console.log('弹窗已打开，加载页面:', CONFIG.planPageUrl);
+        }
+
+        /**
+         * ============================================================
+         * 关闭计划编制弹窗
+         * ============================================================
+         * 功能：隐藏弹窗，并清空 iframe 内容
+         * 触发：点击关闭按钮或点击遮罩层
+         */
+        function closePlanModal() {
+            // 获取弹窗元素
+            const modal = document.getElementById('planModal');
+            const iframe = document.getElementById('planIframe');
+            
+            // 隐藏弹窗（移除 active 类）
+            modal.classList.remove('active');
+            
+            // 清空 iframe（释放资源）
+            iframe.src = '';
+            
+            console.log('弹窗已关闭');
+        }
+
+        /**
+         * ============================================================
+         * 点击遮罩层关闭弹窗
+         * ============================================================
+         * 功能：用户点击弹窗外的遮罩区域时关闭弹窗
+         */
+        document.getElementById('planModal').addEventListener('click', function(e) {
+            // 如果点击的是遮罩层本身（不是弹窗内容），则关闭
+            if (e.target === this) {
+                closePlanModal();
+            }
+        });
+
+        /**
+         * ============================================================
+         * 其他操作示例：在新标签页打开文档
+         * ============================================================
+         */
+        function openOtherPage() {
+            window.open(CONFIG.docPageUrl, '_blank');
+        }
+
+        /**
+         * ============================================================
+         * 页面加载完成后初始化
+         * ============================================================
+         * 这里可以添加从简道云获取数据的逻辑
+         */
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('自定义详情页已加载');
+            
+            // 示例：从简道云 API 获取当前记录的数据
+            // 实际使用时需要替换为你的数据获取逻辑
+            /*
+            fetch('/api/data/xxx')
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('projectName').textContent = data.name;
+                    document.getElementById('projectCode').textContent = data.code;
+                    document.getElementById('projectManager').textContent = data.manager;
+                });
+            */
+        });
+    </script>
+
+</body>
+</html>

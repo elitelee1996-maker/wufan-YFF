@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>平安快运 PMS · 用户旅程完整演绎</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0e1a; --bg2: #111827; --bg3: #1a2332;
+  --border: #1e293b; --border2: #334155;
+  --text: #e2e8f0; --dim: #64748b; --muted: #475569;
+  --blue: #3b82f6; --purple: #8b5cf6; --amber: #f59e0b;
+  --green: #10b981; --red: #ef4444; --cyan: #06b6d4;
+  --pink: #ec4899;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Noto Sans SC',sans-serif; background:var(--bg); color:var(--text); line-height:1.7; }
+body::before { content:''; position:fixed; inset:0; background-image:linear-gradient(rgba(59,130,246,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,0.02) 1px,transparent 1px); background-size:40px 40px; pointer-events:none; }
+
+.container { max-width:1200px; margin:0 auto; padding:40px; position:relative; z-index:1; }
+
+/* Header */
+.header { text-align:center; margin-bottom:48px; }
+.header .tag { display:inline-block; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--cyan); background:rgba(6,182,212,0.1); border:1px solid rgba(6,182,212,0.25); padding:3px 14px; border-radius:20px; margin-bottom:12px; letter-spacing:1px; }
+.header h1 { font-size:36px; font-weight:900; background:linear-gradient(135deg,#e2e8f0,#94a3b8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:8px; }
+.header p { font-size:14px; color:var(--dim); max-width:640px; margin:0 auto; }
+.header .scenario { margin-top:16px; padding:12px 20px; background:var(--bg2); border:1px solid var(--border); border-radius:10px; display:inline-block; text-align:left; }
+.header .scenario-title { font-size:13px; font-weight:700; color:var(--amber); margin-bottom:4px; }
+.header .scenario-desc { font-size:12px; color:var(--dim); }
+
+/* Timeline */
+.timeline { position:relative; padding-left:60px; }
+.timeline::before { content:''; position:absolute; left:28px; top:0; bottom:0; width:2px; background:linear-gradient(180deg, var(--blue), var(--purple), var(--amber), var(--green)); }
+
+/* Step */
+.step { position:relative; margin-bottom:40px; }
+.step-num { position:absolute; left:-60px; top:0; width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:18px; font-weight:700; z-index:2; }
+.step-num.s1 { background:rgba(59,130,246,0.15); border:2px solid rgba(59,130,246,0.4); color:var(--blue); }
+.step-num.s2 { background:rgba(139,92,246,0.15); border:2px solid rgba(139,92,246,0.4); color:var(--purple); }
+.step-num.s3 { background:rgba(245,158,11,0.15); border:2px solid rgba(245,158,11,0.4); color:var(--amber); }
+.step-num.s4 { background:rgba(16,185,129,0.15); border:2px solid rgba(16,185,129,0.4); color:var(--green); }
+.step-num.s5 { background:rgba(239,68,68,0.15); border:2px solid rgba(239,68,68,0.4); color:var(--red); }
+.step-num.s6 { background:rgba(6,182,212,0.15); border:2px solid rgba(6,182,212,0.4); color:var(--cyan); }
+.step-num.s7 { background:rgba(236,72,153,0.15); border:2px solid rgba(236,72,153,0.4); color:var(--pink); }
+.step-num.s8 { background:rgba(16,185,129,0.15); border:2px solid rgba(16,185,129,0.4); color:var(--green); }
+.step-num.s9 { background:rgba(59,130,246,0.15); border:2px solid rgba(59,130,246,0.4); color:var(--blue); }
+
+.step-card { background:var(--bg2); border:1px solid var(--border); border-radius:14px; overflow:hidden; transition:all 0.3s; }
+.step-card:hover { border-color:var(--border2); box-shadow:0 4px 20px rgba(0,0,0,0.2); }
+
+.step-header { padding:16px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); }
+.step-header .left { display:flex; align-items:center; gap:12px; }
+.step-header .page-badge { font-family:'JetBrains Mono',monospace; font-size:10px; padding:3px 10px; border-radius:6px; font-weight:600; letter-spacing:0.5px; }
+.step-header .page-badge.mode-a { background:rgba(139,92,246,0.15); color:#a78bfa; border:1px solid rgba(139,92,246,0.3); }
+.step-header .page-badge.mode-b { background:rgba(59,130,246,0.15); color:#60a5fa; border:1px solid rgba(59,130,246,0.3); }
+.step-header .page-badge.jdy { background:rgba(59,130,246,0.15); color:#60a5fa; border:1px solid rgba(59,130,246,0.3); }
+.step-header .page-badge.bridge { background:rgba(245,158,11,0.15); color:#fbbf24; border:1px solid rgba(245,158,11,0.3); }
+.step-header h3 { font-size:16px; font-weight:700; }
+.step-header .time { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); }
+
+.step-body { padding:20px; }
+.step-body .narration { font-size:13px; color:var(--dim); margin-bottom:16px; font-style:italic; border-left:3px solid var(--border2); padding-left:12px; }
+.step-body .action { font-size:13px; margin-bottom:12px; }
+.step-body .action strong { color:var(--text); }
+
+/* Mini UI Mockup */
+.mini-ui { background:#0d1117; border:1px solid var(--border); border-radius:8px; padding:12px; margin:12px 0; font-family:'JetBrains Mono',monospace; font-size:11px; overflow-x:auto; }
+.mini-ui .ui-title { font-size:10px; color:var(--muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:1px; }
+
+/* Table mockup */
+.mini-table { width:100%; border-collapse:collapse; }
+.mini-table th { text-align:left; padding:4px 8px; font-size:10px; color:var(--muted); border-bottom:1px solid var(--border); font-weight:500; }
+.mini-table td { padding:4px 8px; font-size:11px; border-bottom:1px solid rgba(255,255,255,0.03); }
+.mini-table .highlight { background:rgba(245,158,11,0.08); }
+.mini-table .conflict { background:rgba(239,68,68,0.08); color:#fca5a5; }
+.mini-table .critical { color:#fca5a5; font-weight:600; }
+.mini-table .safe { color:#6ee7b7; }
+.mini-table .warn { color:#fcd34d; }
+
+/* Gantt mockup */
+.mini-gantt { display:flex; flex-direction:column; gap:4px; }
+.gantt-row { display:flex; align-items:center; gap:8px; height:24px; }
+.gantt-label { width:100px; font-size:10px; color:var(--dim); text-align:right; flex-shrink:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.gantt-track { flex:1; height:16px; position:relative; background:rgba(255,255,255,0.02); border-radius:2px; }
+.gantt-bar { position:absolute; height:100%; border-radius:3px; display:flex; align-items:center; justify-content:center; font-size:8px; color:#fff; font-weight:600; }
+.gantt-bar.base { background:rgba(100,116,139,0.4); }
+.gantt-bar.current { background:var(--blue); }
+.gantt-bar.critical { background:var(--red); }
+.gantt-bar.conflict { background:var(--red); animation:pulse-bar 1s ease-in-out infinite; }
+.gantt-bar .slack { position:absolute; right:-100%; width:100%; height:100%; background:rgba(59,130,246,0.15); border-radius:0 3px 3px 0; }
+@keyframes pulse-bar { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+/* Calendar mockup */
+.mini-cal { display:grid; grid-template-columns:80px repeat(5,1fr); gap:1px; font-size:10px; }
+.mini-cal .cal-header { padding:4px; text-align:center; color:var(--muted); font-weight:500; }
+.mini-cal .cal-label { padding:4px 6px; color:var(--dim); display:flex; align-items:center; }
+.mini-cal .cal-cell { padding:4px; min-height:28px; position:relative; }
+.mini-cal .cal-occupy { padding:2px 4px; border-radius:3px; font-size:9px; margin-bottom:2px; }
+.mini-cal .cal-occupy.normal { background:rgba(59,130,246,0.15); color:#93c5fd; }
+.mini-cal .cal-occupy.conflict { background:rgba(239,68,68,0.15); color:#fca5a5; border:1px solid rgba(239,68,68,0.3); }
+
+/* Data flow arrow */
+.data-flow { display:flex; align-items:center; gap:8px; padding:8px 12px; background:rgba(245,158,11,0.05); border:1px dashed rgba(245,158,11,0.2); border-radius:8px; margin:12px 0; font-size:11px; color:var(--amber); }
+.data-flow .flow-icon { font-size:16px; }
+
+/* Loopback */
+.loopback { display:flex; align-items:center; gap:8px; padding:8px 12px; background:rgba(16,185,129,0.05); border:1px dashed rgba(16,185,129,0.2); border-radius:8px; margin:12px 0; font-size:11px; color:var(--green); }
+.loopback .loop-icon { font-size:16px; }
+
+/* Warning cards */
+.warn-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:12px 0; }
+.warn-card { padding:10px; border-radius:8px; border:1px solid; }
+.warn-card.p0 { background:rgba(239,68,68,0.08); border-color:rgba(239,68,68,0.25); }
+.warn-card.p1 { background:rgba(245,158,11,0.08); border-color:rgba(245,158,11,0.25); }
+.warn-card.p2 { background:rgba(59,130,246,0.08); border-color:rgba(59,130,246,0.25); }
+.warn-card .wc-level { font-size:10px; font-weight:700; margin-bottom:2px; }
+.warn-card .wc-title { font-size:12px; font-weight:600; margin-bottom:2px; }
+.warn-card .wc-desc { font-size:10px; color:var(--dim); }
+
+/* Summary */
+.summary { background:var(--bg2); border:1px solid var(--border); border-radius:14px; padding:24px; margin-top:40px; }
+.summary h2 { font-size:20px; font-weight:900; margin-bottom:16px; }
+.summary-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.summary-card { padding:16px; border-radius:10px; border:1px solid var(--border); background:rgba(255,255,255,0.02); }
+.summary-card .sc-num { font-family:'JetBrains Mono',monospace; font-size:28px; font-weight:700; }
+.summary-card .sc-label { font-size:12px; color:var(--dim); margin-top:4px; }
+
+.footer { text-align:center; padding:40px 0 20px; color:var(--muted); font-size:11px; font-family:'JetBrains Mono',monospace; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="header">
+  <div class="tag">USER JOURNEY WALKTHROUGH</div>
+  <h1>平安快运 PMS · 用户旅程完整演绎</h1>
+  <p>一个项目经理从创建项目到发现冲突、处理冲突、保存基线的9步全流程</p>
+  <div class="scenario">
+    <div class="scenario-title">🎬 演绎场景</div>
+    <div class="scenario-desc">项目经理张工接到一个"南京化工园区超限设备运输"项目，需要从模板创建计划、编排依赖、计算排程、发现并解决资源冲突，最终保存基线。</div>
+  </div>
+</div>
+
+<div class="timeline">
+
+<!-- Step 1 -->
+<div class="step">
+  <div class="step-num s1">1</div>
+  <div class="step-card">
+    <div class="step-header">
+      <div class="left">
+        <span class="page-badge jdy">简道云原生</span>
+        <h3>📋 创建项目</h3>
+      </div>
+      <div class="time">周一 09:00</div>
+    </div>
+    <div class="step-body">
+      <div class="narration">张工登录简道云工作台，在项目表中点击"新建"，填写项目基础信息。</div>
+      <div class="action"><strong>操作</strong>：填写项目名称、客户、项目经理、计划开始日期</div>
+      <div class="mini-ui">
+        <div class="ui-title">简道云 · 项目表（原生表单）</div>
+        <table class="mini-table">
+          <tr><td style="color:var(--dim)">项目名称</td><td><strong>南京化工园区超限设备运输</strong></td></tr>
+          <tr><td style="color:var(--dim)">项目编号</td><td>PRJ-2026-0042</td></tr>
+          <tr><td style="color:var(--dim)">客户</td><td>南京化工园区管委会</td></tr>
+          <tr><td style="color:var(--dim)">项目经理</td><td>张工</td></tr>
+          <tr><td style="color:var(--dim)">计划开始</td><td>2026-06-16</td></tr>
+          <tr><td style="color:var(--dim)">状态</td><td style="color:var(--amber)">📝 计划编制中</td></tr>
+        </table>
+      </div>
+      <div class="action">保存后，项目表出现一个<strong style="color:var(--blue)">链接字段</strong>——"编制计划"，点击后跳转到二开页面。</div>
+      <div class="data-flow">
+        <span class="flow-icon">🔗</span>
+        <span>项目表链接字段 → <code>https://pms.pingan.com/plan?project_id=PRJ-2026-0042</code></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Step 2 -->
+<div class="step">
+  <div class="step-num s1">2</div>
+  <div class="step-card">
+    <div class="step-header">
+      <div class="left">
+        <span class="page-badge mode-a">模式A · 数据汇聚页</span>
+        <h3>📐 04-计划编制：从模板导入WBS</h3>
+      </div>
+      <div class="time">周一 09:15</div>
+    </div>
+    <div class="step-body">
+      <div class="narration">张工点击"编制计划"链接，打开计划编制页面。选择"超限设备运输标准模板"，一键导入24个标准任务。</div>
+      <div class="action"><strong>操作</strong>：选择模板 → 点击"导入" → 系统批量创建WBS节点并自动计算编码</div>
+      <div class="mini-ui">
+        <div class="ui-title">04-计划编制 · WBS树视图</div>
+        <div style="font-size:11px; line-height:2;">
+          <div>📁 <strong>PRJ-0042 南京化工园区超限设备运输</strong></div>
+          <div style="padding-left:20px;">📁 1. 前期准备</div>
+          <div style="padding-left:40px;">📄 1.1 路线勘察 <span style="color:var(--dim)">3天</span> <a style="color:var(--blue);font-size:10px;">📄详情</a></div>
+          <div style="padding-left:40px;">📄 1.2 通行证办理 <span style="color:var(--dim)">5天</span> <a style="color:var(--blue);font-size:10px;">📄详情</a></div>
+          <div style="padding-left:40px;">📄 1.3 安全方案编制 <span style="color:var(--dim)">4天</span> <a style="color:var(--blue);font-size:10px;">📄详情</a></div>
+          <div style="padding-left:20px;">📁 2. 设备装载</div>
+          <div style="padding-left:40px;">📄 2.1 设备检查 <span style="color:var(--dim)">2天</span> <a style="color:var(--blue);font-size:10px;">📄详情</a></div>
+          <div style="padding-left:40px;">📄 2.2 装载方案确认 <span style="color:var(--dim)">1天</span> <a style="color:var(--blue);font-size:10px;">📄详情</a></div>
+          <div style="padding-left:40px;">📄 2.3 装载作业 <span style="color:var(--dim)">2天</span> <a style="color:var(--blue);font-size:10px;">📄详情</a></div>
+          <div style="padding-left:20px; color:var(--dim);">... 共24个任务节点</div>
+        </div>
+      </div>
+      <div class="action">张工发现"安全方案编制"的工期应该是3天而不是4天，点击旁边的 <a style="color:var(--blue)">📄详情</a> 链接。</div>
+      <div class="loopback">
+        <span class="loop-icon">🔄</span>
+        <span><strong>范式F闭环</strong>：跳转到简道云原生详情页 → 修改工期为3天 → 智能助手检测变更 → Webhook回调Bridge → CPM重算 → 写回简道云</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Step 3 -->
+<div class="step">
+  <div class="step-num s2">3</div>
+  <div class="step-card">
+    <div class="step-header">
+      <div class="left">
+        <span class="page-badge mode-a">模式A · 数据汇聚页</span>
+        <h3>🔗 01-依赖编辑：编排任务依赖</h3>
+      </div>
+      <div class="time">周一 10:00</div>
+    </div>
+    <div class="step-body">
+      <div class="narration">WBS导入完成，模板自带了标准依赖关系。张工打开依赖编辑器，检查并补充几条遗漏的依赖。</div>
+      <div class="action"><strong>操作</strong>：在依赖编辑器中添加 1.3安全方案编制 → 2.1设备检查 的FS依赖</div>
+      <div class="mini-ui">
+        <div class="ui-title">01-依赖编辑 · 依赖关系表</div>
+        <table class="mini-table">
+          <tr><th>紧前任务</th><th>紧后任务</th><th>类型</th><th>滞后</th><th>状态</th><th></th></tr>
+          <tr><td>1.1 路线勘察</td><td>1.2 通行证办理</td><td>FS</td><td>0天</td><td class="safe">✅</td><td><a style="color:var(--blue);font-size:10px;">📄</a></td></tr>
+          <tr><td>1.2 通行证办理</td><td>3.1 出发准备</td><td>FS</td><td>0天</td><td class="safe">✅</td><td><a style="color:var(--blue);font-size:10px;">📄</a></td></tr>
+          <tr class="highlight"><td>1.3 安全方案编制</td><td>2.1 设备检查</td><td>FS</td><td>0天</td><td style="color:var(--amber)">🆕 新增</td><td><a style="color:var(--blue);font-size:10px;">📄</a></td></tr>
+          <tr><td>2.2 装载方案确认</td><td>2.3 装载作业</td><td>FS</td><td>0天</td><td class="safe">✅</td><td><a style="color:var(--blue);font-size:10px;">📄</a></td></tr>
+        </table>
+      </div>
+      <div class="action">系统自动执行 <strong style="color:var(--red)">DFS循环检测</strong>——新增的依赖没有形成环路，通过校验。</div>
+      <div class="action">张工尝试添加 2.3装载作业 → 1.1路线勘察 的依赖，系统立即弹出 <strong style="color:var(--red)">⚠️ 循环依赖警告</strong>：2.3→1.1→1.2→3.1→...→2.3 形成环路，阻止添加。</div>
+    </div>
+  </div>
+</div>
+
+<!-- Step 4 -->
+<div class="step">
+  <div class="step-num s3">4</div>
+  <div class="step-card">
+    <div class="step-header">
+      <div class="left">
+        <span class="page-badge mode-a">模式A · 数据汇聚页</span>
+        <h3>⚙️ 02-约束调度：执行CPM计算</h3>
+      </div>
+      <div class="time">周一 11:00</div>
+    </div>
+    <div class="step-body">
+      <div class="narration">依赖关系编排完成，张工点击"执行CPM计算"，系统对24个任务执行前推法和后推法。</div>
+      <div class="action"><strong>操作</strong>：点击"计算排程" → Bridge层执行 Forward Pass + Backward Pass → 结果写回简道云</div>
+      <div class="mini-ui">
+        <div class="ui-title">02-约束调度 · CPM计算结果</div>
+        <table class="mini-table">
+          <tr><th>任务</th><th>工期</th><th>ES</th><th>EF</th><th>LS</th><th>LF</th><th>TF</th><th>状态</th><th></th></tr>
+          <tr><td>1.1 路线勘察</td><td>3天</td><td>6/16</td><td>6/18</td><td>6/16</td><td>6/18</td><td class="critical">0</td><td class="critical">🔴 关键</td><td><a style="color:var(--blue);font-size:10px;">📄</a></td></tr>
+          <tr><td>1.2 通行证办理</td><td>5天</td><td>6/19</td><td>6/23</td><td>6/19</td><td>6/23</td><td class="critical">0</td><td class="critical">🔴 关键</td><td><a style="color:var(--blue);font-size:10px;">📄</a></td></tr>
+          <tr><td>1.3 安全方案编制</td><td>3天</td><td>6/16</td><td>6/18</td><td>6/17</td><td>6/19</td><td class="safe">1</td><td class="safe">🟢 安全</td><td><a style="color:var(--blue);font-size:10px;">📄</a></td></tr>
+          <tr><td>2.1 设备检查</td><td>2天</td><td>6/19</td><td>6/20</td><td>6/24</td><td>6/25</td><td class="safe">5</td><td class="safe">🟢 安全</td><td><a style="color:var(--blue);font-size:10px;">📄</a></td></tr>
+          <tr><td>2.3 装载作业</td><td>2天</td><td>6/24</td><td>6/25</td><td>6/24</td><td>6/25</td><td class="critical">0</td><td class="critical">🔴 关键</td><td><a style="color:var(--blue);font-size:10px;">📄</a></td></tr>
+          <tr class="conflict"><td>4.2 二次吊装</td><td>1天</td><td>7/02</td><td>7/02</td><td>6/30</td><td>6/30</td><td class="critical">-2</td><td class="critical">⚠️ 冲突!</td><td><a style="color:var(--blue);font-size:10px;">📄</a></td></tr>
+        </table>
+      </div>
+      <div class="action" style="margin-top:12px;"><strong style="color:var(--red)">⚠️ 发现冲突！</strong> 任务"4.2 二次吊装"的 TF = -2天，说明它有"必须在6月30日前完成"的硬约束，但前推法算出来最早7月2日才能开始。</div>
+      <div class="mini-ui" style="border-color:rgba(239,68,68,0.3);">
+        <div class="ui-title" style="color:var(--red);">冲突面板</div>
+        <div style="padding:8px; font-size:11px;">
+          <div style="color:#fca5a5; font-weight:600; margin-bottom:4px;">⚠️ 4.2 二次吊装 — 约束冲突</div>
+          <div style="color:var(--dim);">约束类型：MFO（必须在此日期前完成）= 6月30日</div>
+          <div style="color:var(--dim);">推算最早完成：7月2日（超出约束2天）</div>
+          <div style="color:var(--dim); margin-top:4px;">原因：紧前任务"4.1 桥梁检测"在关键路径上，工期无法压缩</div>
+          <div style="margin-top:8px; color:var(--amber);">💡 建议：① 压缩4.1工期 ② 调整MFO约束 ③ 增加资源并行作业</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Step 5 -->
+<div class="step">
+  <div class="step-num s4">5</div>
+  <div class="step-card">
+    <div class="step-header">
+      <div class="left">
+        <span class="page-badge mode-a">模式A · 数据汇聚页</span>
+        <h3>📊 03-甘特图：全局可视化确认</h3>
+      </div>
+      <div class="time">周一 11:30</div>
+    </div>
+    <div class="step-body">
+      <div class="narration">张工切换到甘特图视图，直观确认排程。红色任务条是关键路径，闪烁的是冲突任务。</div>
+      <div class="mini-ui">
+        <div class="ui-title">03-甘特图 · 约束调度视图</div>
+        <div style="display:flex; gap:4px; margin-bottom:8px; font-size:9px; color:var(--muted);">
+          <span style="width:100px"></span>
+          <span style="flex:1; text-align:center;">6/16</span>
+          <span style="flex:1; text-align:center;">6/23</span>
+          <span style="flex:1; text-align:center;">6/30</span>
+          <span style="flex:1; text-align:center;">7/7</span>
+          <span style="flex:1; text-align:center;">7/14</span>
+        </div>
+        <div class="mini-gantt">
+          <div class="gantt-row">
+            <div class="gantt-label">1.1 路线勘察</div>
+            <div class="gantt-track"><div class="gantt-bar critical" style="left:0%;width:12%;">3天</div></div>
+          </div>
+          <div class="gantt-row">
+            <div class="gantt-label">1.2 通行证办理</div>
+            <div class="gantt-track"><div class="gantt-bar critical" style="left:12%;width:20%;">5天</div></div>
+          </div>
+          <div class="gantt-row">
+            <div class="gantt-label">1.3 安全方案</div>
+            <div class="gantt-track"><div class="gantt-bar current" style="left:0%;width:12%;">3天<div class="slack" style="width:33%;"></div></div></div>
+          </div>
+          <div class="gantt-row">
+            <div class="gantt-label">2.1 设备检查</div>
+            <div class="gantt-track"><div class="gantt-bar current" style="left:12%;width:8%;">2天<div class="slack" style="width:200%;"></div></div></div>
+          </div>
+          <div class="gantt-row">
+            <div class="gantt-label">2.3 装载作业</div>
+            <div class="gantt-track"><div class="gantt-bar critical" style="left:32%;width:8%;">2天</div></div>
+          </div>
+          <div class="gantt-row">
+            <div class="gantt-label" style="color:#fca5a5;">⚠️ 4.2 二次吊装</div>
+            <div class="gantt-track"><div class="gantt-bar conflict" style="left:64%;width:4%;">!</div></div>
+          </div>
+        </div>
+        <div style="display:flex; gap:16px; margin-top:10px; font-size:9px; color:var(--dim);">
+          <span>🔴 关键路径(TF=0)</span>
+          <span>🔵 普通任务</span>
+          <span style="color:#fca5a5;">⚠️ 约束冲突(TF&lt;0)</span>
+          <span>░ 浮动时间</span>
+        </div>
+      </div>
+      <div class="action">张工<strong>右键点击</strong>"4.2 二次吊装"的任务条，选择"在简道云中打开详情"，准备处理冲突。</div>
+      <div class="loopback">
+        <span class="loop-icon">🔄</span>
+        <span><strong>范式F闭环</strong>：右键菜单 → 跳转简道云任务详情页 → 查看完整属性 → 准备修改约束日期</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Step 6 -->
+<div class="step">
+  <div class="step-num s5">6</div>
+  <div class="step-card">
+    <div class="step-header">
+      <div class="left">
+        <span class="page-badge mode-b">模式B · 简道云原生</span>
+        <h3>📝 简道云任务详情页：处理冲突</h3>
+      </div>
+      <div class="time">周一 13:30</div>
+    </div>
+    <div class="step-body">
+      <div class="narration">张工在简道云原生详情页中查看"4.2 二次吊装"的完整信息，决定将MFO约束从6月30日放宽到7月4日。</div>
+      <div class="mini-ui">
+        <div class="ui-title">简道云 · WBS节点自定义详情页（模式B）</div>
+        <table class="mini-table">
+          <tr><td style="color:var(--dim)">任务名称</td><td><strong>4.2 二次吊装</strong></td></tr>
+          <tr><td style="color:var(--dim)">WBS编码</td><td>4.2</td></tr>
+          <tr><td style="color:var(--dim)">工期</td><td>1天</td></tr>
+          <tr><td style="color:var(--dim)">约束类型</td><td>MFO（必须在此日期前完成）</td></tr>
+          <tr class="highlight"><td style="color:var(--dim)">约束日期</td><td><s style="color:var(--red)">6月30日</s> → <strong style="color:var(--green)">7月4日</strong> ✏️ 已修改</td></tr>
+          <tr><td style="color:var(--dim)">负责人</td><td>李调度</td></tr>
+          <tr><td style="color:var(--dim)">分配资源</td><td>吊车A、叉车C</td></tr>
+        </table>
+        <div style="margin-top:8px; padding:8px; background:rgba(59,130,246,0.05); border-radius:6px; font-size:10px; color:var(--dim);">
+          <strong style="color:var(--blue);">📋 关联信息（自定义详情页聚合展示）</strong><br>
+          · 紧前任务：4.1 桥梁检测（FS，0天滞后）<br>
+          · 紧后任务：4.3 绑扎加固（FS，0天滞后）<br>
+          · CPM结果：ES=7/2, EF=7/2, LS=6/30, LF=6/30, TF=-2天<br>
+          · 资源占用：吊车A 7/2全天
+        </div>
+      </div>
+      <div class="loopback">
+        <span class="loop-icon">🔄</span>
+        <span><strong>范式F闭环触发</strong>：约束日期修改 → 智能助手检测变更 → Webhook POST /api/webhook/recalculate → Bridge重算CPM → TF变为+2天 → 冲突消除 → 写回简道云</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Step 7 -->
+<div class="step">
+  <div class="step-num s6">7</div>
+  <div class="step-card">
+    <div class="step-header">
+      <div class="left">
+        <span class="page-badge mode-a">模式A · 数据汇聚页</span>
+        <h3>📅 05-资源日历：检查资源冲突</h3>
+      </div>
+      <div class="time">周二 09:00</div>
+    </div>
+    <div class="step-body">
+      <div class="narration">排程冲突解决了，张工打开资源日历检查设备分配。发现吊车A在7月2日被两个任务同时占用！</div>
+      <div class="mini-ui">
+        <div class="ui-title">05-资源日历 · 周视图（6/30 - 7/4）</div>
+        <div class="mini-cal">
+          <div class="cal-header"></div>
+          <div class="cal-header">周一 6/30</div>
+          <div class="cal-header">周二 7/1</div>
+          <div class="cal-header">周三 7/2</div>
+          <div class="cal-header">周四 7/3</div>
+          <div class="cal-header">周五 7/4</div>
+
+          <div class="cal-label">🏗️ 吊车A</div>
+          <div class="cal-cell"><div class="cal-occupy normal">4.1 桥梁检测</div></div>
+          <div class="cal-cell"><div class="cal-occupy normal">4.1 桥梁检测</div></div>
+          <div class="cal-cell">
+            <div class="cal-occupy conflict">⚠️ 4.1 桥梁检测</div>
+            <div class="cal-occupy conflict">⚠️ 4.2 二次吊装</div>
+          </div>
+          <div class="cal-cell"></div>
+          <div class="cal-cell"></div>
+
+          <div class="cal-label">🚜 叉车C</div>
+          <div class="cal-cell"></div>
+          <div class="cal-cell"></div>
+          <div class="cal-cell"><div class="cal-occupy normal">4.2 二次吊装</div></div>
+          <div class="cal-cell"></div>
+          <div class="cal-cell"></div>
+
+          <div class="cal-label">🚛 平板车B</div>
+          <div class="cal-cell"><div class="cal-occupy normal">3.2 装车</div></div>
+          <div class="cal-cell"><div class="cal-occupy normal">3.3 运输</div></div>
+          <div class="cal-cell"><div class="cal-occupy normal">3.3 运输</div></div>
+          <div class="cal-cell"><div class="cal-occupy normal">3.4 卸车</div></div>
+          <div class="cal-cell"></div>
+        </div>
+      </div>
+      <div class="action" style="margin-top:12px;"><strong style="color:var(--red)">⚠️ 资源冲突！</strong> 吊车A在7月2日同时被"4.1 桥梁检测"和"4.2 二次吊装"占用。</div>
+      <div class="action">张工点击冲突占用条旁的 <a style="color:var(--blue)">📄详情</a>，跳转到简道云原生页面，将"4.2 二次吊装"的吊车A替换为吊车B。</div>
+      <div class="loopback">
+        <span class="loop-icon">🔄</span>
+        <span><strong>范式F闭环</strong>：资源分配变更 → 智能助手 → Bridge冲突重检 → 冲突消除 → 日历刷新</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Step 8 -->
+<div class="step">
+  <div class="step-num s7">8</div>
+  <div class="step-card">
+    <div class="step-header">
+      <div class="left">
+        <span class="page-badge mode-a">模式A · 数据汇聚页</span>
+        <h3>📈 06-基线对比：保存基线快照</h3>
+      </div>
+      <div class="time">周二 14:00</div>
+    </div>
+    <div class="step-body">
+      <div class="narration">所有冲突解决完毕，张工决定保存当前计划为基线V1.0，作为后续执行对比的基准。</div>
+      <div class="action"><strong>操作</strong>：点击"保存基线" → Bridge层批量快照当前所有任务的ES/EF/LS/LF → 写入version_snapshot表</div>
+      <div class="mini-ui">
+        <div class="ui-title">06-基线对比 · V1.0 vs 当前推算</div>
+        <div style="display:flex; gap:4px; margin-bottom:8px; font-size:9px; color:var(--muted);">
+          <span style="width:100px"></span>
+          <span style="flex:1; text-align:center;">6/16</span>
+          <span style="flex:1; text-align:center;">6/23</span>
+          <span style="flex:1; text-align:center;">6/30</span>
+          <span style="flex:1; text-align:center;">7/7</span>
+        </div>
+        <div class="mini-gantt">
+          <div class="gantt-row">
+            <div class="gantt-label">1.1 路线勘察</div>
+            <div class="gantt-track">
+              <div class="gantt-bar base" style="left:0%;width:12%;">V1</div>
+              <div class="gantt-bar current" style="left:0%;width:12%;opacity:0.7;">当前</div>
+            </div>
+          </div>
+          <div class="gantt-row">
+            <div class="gantt-label">1.2 通行证办理</div>
+            <div class="gantt-track">
+              <div class="gantt-bar base" style="left:12%;width:20%;">V1</div>
+              <div class="gantt-bar current" style="left:12%;width:20%;opacity:0.7;">当前</div>
+            </div>
+          </div>
+          <div class="gantt-row">
+            <div class="gantt-label" style="color:#fcd34d;">4.2 二次吊装</div>
+            <div class="gantt-track">
+              <div class="gantt-bar base" style="left:56%;width:4%;">V1</div>
+              <div class="gantt-bar current" style="left:64%;width:4%;background:var(--amber);">当前+2天</div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex; gap:16px; margin-top:10px; font-size:9px; color:var(--dim);">
+          <span>▓ 基线V1.0（灰色=基准）</span>
+          <span style="color:var(--blue);">█ 当前推算</span>
+          <span style="color:var(--amber);">█ 偏差（延期）</span>
+        </div>
+      </div>
+      <div class="action">基线保存成功！后续项目执行中，甘特图会同时显示灰色基线条和彩色当前条，一眼看出偏差。</div>
+    </div>
+  </div>
+</div>
+
+<!-- Step 9 -->
+<div class="step">
+  <div class="step-num s8">9</div>
+  <div class="step-card">
+    <div class="step-header">
+      <div class="left">
+        <span class="page-badge mode-a">模式A · 数据汇聚页</span>
+        <h3>🚨 07-预警看板：项目执行中的预警</h3>
+      </div>
+      <div class="time">周五 16:00（执行阶段）</div>
+    </div>
+    <div class="step-body">
+      <div class="narration">项目进入执行阶段。周五下午，张工打开预警看板，查看本周产生的预警。</div>
+      <div class="warn-cards">
+        <div class="warn-card p0">
+          <div class="wc-level" style="color:var(--red);">🔴 P0 阻断</div>
+          <div class="wc-title">1.2 通行证办理延期3天</div>
+          <div class="wc-desc">实际完成日期超出基线3天，影响关键路径，项目整体延期风险</div>
+        </div>
+        <div class="warn-card p1">
+          <div class="wc-level" style="color:var(--amber);">🟡 P1 告警</div>
+          <div class="wc-title">2.1 设备检查浮动时间耗尽</div>
+          <div class="wc-desc">TF从5天降至0天，已变为关键路径任务</div>
+        </div>
+        <div class="warn-card p2">
+          <div class="wc-level" style="color:var(--blue);">🔵 P2 提示</div>
+          <div class="wc-title">3.3 运输提前1天完成</div>
+          <div class="wc-desc">实际完成日期早于基线1天，项目进度良好</div>
+        </div>
+      </div>
+      <div class="action">张工点击P0预警卡片旁的 <a style="color:var(--blue)">📄JDY</a> 链接，跳转到简道云预警详情页。</div>
+      <div class="loopback">
+        <span class="loop-icon">🔄</span>
+        <span><strong>范式F闭环</strong>：在简道云中创建行动项"催促通行证办理" → 指派给李调度 → 智能助手推送钉钉通知 → 预警状态更新为"处理中"</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end timeline -->
+
+<!-- Summary -->
+<div class="summary">
+  <h2>📊 旅程统计</h2>
+  <div class="summary-grid">
+    <div class="summary-card">
+      <div class="sc-num" style="color:var(--purple);">9 步</div>
+      <div class="sc-label">完整操作步骤</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-num" style="color:var(--blue);">7 个页面</div>
+      <div class="sc-label">涉及的功能页面</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-num" style="color:var(--green);">5 次闭环</div>
+      <div class="sc-label">范式F双向数据流</div>
+    </div>
+  </div>
+  <div style="margin-top:20px; padding:16px; background:rgba(255,255,255,0.02); border-radius:10px; border:1px solid var(--border);">
+    <div style="font-size:13px; font-weight:700; margin-bottom:8px;">🔑 页面使用路径总结</div>
+    <div style="font-size:12px; color:var(--dim); line-height:2;">
+      <code style="color:var(--blue);">简道云项目表</code> → 创建项目<br>
+      <code style="color:var(--purple);">04-计划编制</code> → 从模板导入WBS + 编辑属性（📄跳转详情页）<br>
+      <code style="color:var(--purple);">01-依赖编辑</code> → 编排任务依赖 + DFS循环检测<br>
+      <code style="color:var(--purple);">02-约束调度</code> → CPM计算 + 发现约束冲突<br>
+      <code style="color:var(--purple);">03-甘特图</code> → 全局可视化 + 右键跳转详情页<br>
+      <code style="color:var(--blue);">简道云详情页</code> → 修改约束日期（原生CRUD）→ 智能助手触发闭环<br>
+      <code style="color:var(--purple);">05-资源日历</code> → 检查资源冲突 + 📄跳转处理<br>
+      <code style="color:var(--purple);">06-基线对比</code> → 保存基线快照<br>
+      <code style="color:var(--purple);">07-预警看板</code> → 执行阶段预警监控 + 📄跳转处理
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  平安快运 PMS · User Journey Walkthrough · 2026-06-14<br>
+  范式F · 数据汇聚页做面 · 原生详情页做点 · Bridge层做翻译
+</div>
+
+</div>
+</body>
+</html>

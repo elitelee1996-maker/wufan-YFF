@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>平安快运 PMS · 混合架构全景图</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0e1a;
+  --bg-card: #111827;
+  --bg-card-hover: #1a2332;
+  --border: #1e293b;
+  --border-glow: #334155;
+  --text: #e2e8f0;
+  --text-dim: #64748b;
+  --text-muted: #475569;
+  --jdy: #3b82f6;
+  --jdy-light: #60a5fa;
+  --jdy-bg: rgba(59,130,246,0.08);
+  --jdy-border: rgba(59,130,246,0.25);
+  --custom: #8b5cf6;
+  --custom-light: #a78bfa;
+  --custom-bg: rgba(139,92,246,0.08);
+  --custom-border: rgba(139,92,246,0.25);
+  --bridge: #f59e0b;
+  --bridge-light: #fbbf24;
+  --bridge-bg: rgba(245,158,11,0.08);
+  --bridge-border: rgba(245,158,11,0.25);
+  --green: #10b981;
+  --green-bg: rgba(16,185,129,0.08);
+  --red: #ef4444;
+  --red-bg: rgba(239,68,68,0.08);
+  --cyan: #06b6d4;
+  --cyan-bg: rgba(6,182,212,0.08);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Noto Sans SC', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Grid background */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image:
+    linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container { max-width: 1400px; margin: 0 auto; padding: 32px 40px; position: relative; z-index: 1; }
+
+/* Header */
+.header {
+  text-align: center;
+  margin-bottom: 48px;
+  position: relative;
+}
+.header::after {
+  content: '';
+  position: absolute;
+  bottom: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--jdy), var(--custom), transparent);
+}
+.header .tag {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--jdy-light);
+  background: var(--jdy-bg);
+  border: 1px solid var(--jdy-border);
+  padding: 3px 12px;
+  border-radius: 20px;
+  margin-bottom: 12px;
+  letter-spacing: 1px;
+}
+.header h1 {
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+}
+.header p {
+  font-size: 14px;
+  color: var(--text-dim);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Legend */
+.legend {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+.legend-dot.jdy { background: var(--jdy); }
+.legend-dot.custom { background: var(--custom); }
+.legend-dot.bridge { background: var(--bridge); }
+.legend-dot.native { background: var(--green); }
+
+/* Section */
+.section {
+  margin-bottom: 48px;
+}
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-title .num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+/* Architecture Layers */
+.arch-layers {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.layer {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  position: relative;
+  transition: all 0.3s;
+}
+.layer:hover {
+  border-color: var(--border-glow);
+  box-shadow: 0 0 30px rgba(59,130,246,0.05);
+}
+.layer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.layer-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.layer-label .icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+.layer-label h3 {
+  font-size: 15px;
+  font-weight: 700;
+}
+.layer-label .sub {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: 'JetBrains Mono', monospace;
+}
+.layer-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+/* Layer: User Interaction */
+.layer-user .icon { background: var(--green-bg); border: 1px solid rgba(16,185,129,0.25); }
+.layer-user .layer-tag { background: var(--green-bg); color: var(--green); border: 1px solid rgba(16,185,129,0.25); }
+
+/* Layer: Custom Pages */
+.layer-custom .icon { background: var(--custom-bg); border: 1px solid var(--custom-border); }
+.layer-custom .layer-tag { background: var(--custom-bg); color: var(--custom-light); border: 1px solid var(--custom-border); }
+
+/* Layer: Bridge */
+.layer-bridge .icon { background: var(--bridge-bg); border: 1px solid var(--bridge-border); }
+.layer-bridge .layer-tag { background: var(--bridge-bg); color: var(--bridge-light); border: 1px solid var(--bridge-border); }
+
+/* Layer: JDY */
+.layer-jdy .icon { background: var(--jdy-bg); border: 1px solid var(--jdy-border); }
+.layer-jdy .layer-tag { background: var(--jdy-bg); color: var(--jdy-light); border: 1px solid var(--jdy-border); }
+
+/* Node Grid */
+.node-grid {
+  display: grid;
+  gap: 10px;
+}
+.node-grid.cols-7 { grid-template-columns: repeat(7, 1fr); }
+.node-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+.node-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.node-grid.cols-6 { grid-template-columns: repeat(6, 1fr); }
+.node-grid.cols-12 { grid-template-columns: repeat(12, 1fr); }
+
+.node {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+  transition: all 0.2s;
+  cursor: default;
+  position: relative;
+}
+.node:hover {
+  background: rgba(255,255,255,0.06);
+  border-color: var(--border-glow);
+  transform: translateY(-1px);
+}
+.node .node-icon { font-size: 20px; margin-bottom: 6px; }
+.node .node-name { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+.node .node-desc { font-size: 10px; color: var(--text-dim); }
+.node .node-file { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text-muted); margin-top: 4px; }
+
+.node.jdy { border-color: var(--jdy-border); }
+.node.jdy:hover { border-color: var(--jdy); box-shadow: 0 0 12px rgba(59,130,246,0.15); }
+.node.custom { border-color: var(--custom-border); }
+.node.custom:hover { border-color: var(--custom); box-shadow: 0 0 12px rgba(139,92,246,0.15); }
+.node.bridge { border-color: var(--bridge-border); }
+.node.bridge:hover { border-color: var(--bridge); box-shadow: 0 0 12px rgba(245,158,11,0.15); }
+.node.native { border-color: rgba(16,185,129,0.25); }
+.node.native:hover { border-color: var(--green); box-shadow: 0 0 12px rgba(16,185,129,0.15); }
+
+/* Flow Arrows between layers */
+.flow-connector {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 0;
+  position: relative;
+}
+.flow-connector .arrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+}
+.flow-connector .arrow-line {
+  width: 40px;
+  height: 1px;
+  background: var(--border-glow);
+  position: relative;
+}
+.flow-connector .arrow-line::after {
+  content: '▼';
+  position: absolute;
+  right: -4px;
+  top: -7px;
+  font-size: 8px;
+  color: var(--border-glow);
+}
+.flow-connector .bi-arrow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.flow-connector .bi-arrow .line {
+  width: 60px;
+  height: 0;
+  border-top: 1px dashed var(--border-glow);
+}
+
+/* Dual-Mode Detail */
+.dual-mode {
+  display: grid;
+  grid-template-columns: 1fr 80px 1fr;
+  gap: 0;
+  margin-top: 32px;
+}
+.mode-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  position: relative;
+}
+.mode-panel.custom-mode { border-color: var(--custom-border); }
+.mode-panel.native-mode { border-color: var(--jdy-border); }
+
+.mode-panel h3 {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.mode-panel .mode-sub {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+}
+.mode-panel .mode-tag {
+  position: absolute;
+  top: -10px;
+  left: 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 2px 10px;
+  border-radius: 4px;
+}
+.mode-panel.custom-mode .mode-tag { background: var(--custom); color: #fff; }
+.mode-panel.native-mode .mode-tag { background: var(--jdy); color: #fff; }
+
+.mode-features {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mode-feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+.mode-feature .feat-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.mode-feature .feat-text { flex: 1; }
+.mode-feature .feat-title { font-weight: 600; margin-bottom: 1px; }
+.mode-feature .feat-desc { color: var(--text-dim); font-size: 11px; }
+
+.mode-bridge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.mode-bridge .bridge-icon {
+  font-size: 28px;
+  opacity: 0.5;
+}
+.mode-bridge .bridge-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  writing-mode: vertical-lr;
+  letter-spacing: 2px;
+}
+
+/* Scenario Flow */
+.scenario-flow {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 32px;
+}
+.scenario-flow h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.scenario-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.scenario-step {
+  display: grid;
+  grid-template-columns: 40px 120px 1fr 200px;
+  gap: 16px;
+  align-items: start;
+  padding: 12px 0;
+  position: relative;
+}
+.scenario-step::before {
+  content: '';
+  position: absolute;
+  left: 19px;
+  top: 36px;
+  bottom: -12px;
+  width: 2px;
+  background: var(--border);
+}
+.scenario-step:last-child::before { display: none; }
+
+.step-num {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  position: relative;
+  z-index: 1;
+}
+.step-num.jdy { background: var(--jdy-bg); border: 2px solid var(--jdy-border); color: var(--jdy-light); }
+.step-num.custom { background: var(--custom-bg); border: 2px solid var(--custom-border); color: var(--custom-light); }
+.step-num.bridge { background: var(--bridge-bg); border: 2px solid var(--bridge-border); color: var(--bridge-light); }
+
+.step-where {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 4px;
+  text-align: center;
+  margin-top: 8px;
+}
+.step-where.jdy { background: var(--jdy-bg); color: var(--jdy-light); border: 1px solid var(--jdy-border); }
+.step-where.custom { background: var(--custom-bg); color: var(--custom-light); border: 1px solid var(--custom-border); }
+.step-where.bridge { background: var(--bridge-bg); color: var(--bridge-light); border: 1px solid var(--bridge-border); }
+
+.step-content {
+  padding-top: 6px;
+}
+.step-content .step-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.step-content .step-desc {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.step-data {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  padding: 6px 10px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.04);
+  margin-top: 8px;
+}
+
+/* Table Map */
+.table-map {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 32px;
+}
+.table-map h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+.table-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.table-card {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  transition: all 0.2s;
+}
+.table-card:hover {
+  border-color: var(--jdy-border);
+  background: var(--jdy-bg);
+}
+.table-card .tc-name {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.table-card .tc-id {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.table-card .tc-usage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.table-card .tc-tag {
+  font-size: 9px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-weight: 500;
+}
+.tc-tag.agg { background: var(--custom-bg); color: var(--custom-light); border: 1px solid var(--custom-border); }
+.tc-tag.detail { background: var(--jdy-bg); color: var(--jdy-light); border: 1px solid var(--jdy-border); }
+.tc-tag.calc { background: var(--bridge-bg); color: var(--bridge-light); border: 1px solid var(--bridge-border); }
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 40px 0 20px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="tag">ARCHITECTURE BLUEPRINT v1.0</div>
+    <h1>平安快运 PMS · 混合架构全景图</h1>
+    <p>简道云原生能力 + 二开定制页面的双向闭环架构<br>数据汇聚页做"面"，简道云详情页做"点"，Bridge层做"翻译"</p>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>用户操作入口</div>
+    <div class="legend-item"><div class="legend-dot custom"></div>二开数据汇聚页（iframe嵌入）</div>
+    <div class="legend-item"><div class="legend-dot jdy"></div>简道云原生页面（表单/详情页/自定义详情页）</div>
+    <div class="legend-item"><div class="legend-dot bridge"></div>Bridge后端服务（计算/翻译/代理）</div>
+  </div>
+
+  <!-- Section 1: Four-Layer Architecture -->
+  <div class="section">
+    <div class="section-title"><span class="num">01</span> 四层架构总览</div>
+    <div class="arch-layers">
+
+      <!-- Layer 1: User -->
+      <div class="layer layer-user">
+        <div class="layer-header">
+          <div class="layer-label">
+            <div class="icon">👤</div>
+            <div>
+              <h3>用户操作层</h3>
+              <div class="sub">项目经理 · 调度员 · 安全工程师 · 管理层</div>
+            </div>
+          </div>
+          <div class="layer-tag">4 ROLES</div>
+        </div>
+        <div class="node-grid cols-4">
+          <div class="node native">
+            <div class="node-icon">👔</div>
+            <div class="node-name">项目经理</div>
+            <div class="node-desc">创建项目、编制计划<br>审批流程、基线管理</div>
+          </div>
+          <div class="node native">
+            <div class="node-icon">🚛</div>
+            <div class="node-name">调度员</div>
+            <div class="node-desc">资源分配、冲突决策<br>进度跟踪、预警处理</div>
+          </div>
+          <div class="node native">
+            <div class="node-icon">🛡️</div>
+            <div class="node-name">安全工程师</div>
+            <div class="node-desc">安全方案、路线确认<br>审查签字、合规检查</div>
+          </div>
+          <div class="node native">
+            <div class="node-icon">📊</div>
+            <div class="node-name">管理层</div>
+            <div class="node-desc">项目看板、偏差报告<br>资源利用率、决策审批</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Connector -->
+      <div class="flow-connector">
+        <div class="arrow">
+          <span>简道云工作台</span>
+          <div class="bi-arrow">
+            <span>▲</span><div class="line"></div><span>▼</span>
+          </div>
+          <span>链接字段跳转 / iframe嵌入</span>
+        </div>
+      </div>
+
+      <!-- Layer 2: Pages (Dual Mode) -->
+      <div class="layer layer-custom">
+        <div class="layer-header">
+          <div class="layer-label">
+            <div class="icon">🖥️</div>
+            <div>
+              <h3>前端交互层 — 双模式协同</h3>
+              <div class="sub">数据汇聚页（二开） ↔ 原生详情页（简道云）</div>
+            </div>
+          </div>
+          <div class="layer-tag">7 PAGES + JDY NATIVE</div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 40px 1fr; gap:0; align-items:stretch;">
+          <!-- Left: Custom Aggregation Pages -->
+          <div style="background:var(--custom-bg); border:1px solid var(--custom-border); border-radius:10px; padding:16px;">
+            <div style="font-size:13px; font-weight:700; color:var(--custom-light); margin-bottom:4px;">📐 数据汇聚页（二开定制）</div>
+            <div style="font-size:11px; color:var(--text-dim); margin-bottom:12px;">做"面"——全局视角、批量操作、复杂计算可视化</div>
+            <div class="node-grid" style="grid-template-columns: repeat(2, 1fr); gap:8px;">
+              <div class="node custom">
+                <div class="node-icon">📋</div>
+                <div class="node-name">计划编制</div>
+                <div class="node-desc">WBS树 + 模板导入</div>
+                <div class="node-file">04-项目计划编制</div>
+              </div>
+              <div class="node custom">
+                <div class="node-icon">🔗</div>
+                <div class="node-name">依赖编辑</div>
+                <div class="node-desc">FS/SS/FF/SF + 循环检测</div>
+                <div class="node-file">01-依赖关系编辑</div>
+              </div>
+              <div class="node custom">
+                <div class="node-icon">⚙️</div>
+                <div class="node-name">约束调度</div>
+                <div class="node-desc">CPM计算 + 冲突面板</div>
+                <div class="node-file">02-约束调度</div>
+              </div>
+              <div class="node custom">
+                <div class="node-icon">📊</div>
+                <div class="node-name">甘特图</div>
+                <div class="node-desc">基准对比 + 关键路径</div>
+                <div class="node-file">03-甘特图</div>
+              </div>
+              <div class="node custom">
+                <div class="node-icon">📅</div>
+                <div class="node-name">资源日历</div>
+                <div class="node-desc">周视图 + 冲突标注</div>
+                <div class="node-file">05-资源日历</div>
+              </div>
+              <div class="node custom">
+                <div class="node-icon">📈</div>
+                <div class="node-name">基线对比</div>
+                <div class="node-desc">双版本叠加 + 偏差表</div>
+                <div class="node-file">06-基线对比</div>
+              </div>
+              <div class="node custom" style="grid-column: span 2;">
+                <div class="node-icon">🚨</div>
+                <div class="node-name">预警看板</div>
+                <div class="node-desc">三级预警卡片 + 筛选 + 详情抽屉</div>
+                <div class="node-file">07-预警看板</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Middle: Bridge Arrow -->
+          <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;">
+            <div style="font-size:10px; color:var(--text-muted); font-family:'JetBrains Mono',monospace; writing-mode:vertical-lr; letter-spacing:3px;">点击单条数据</div>
+            <div style="font-size:20px; color:var(--bridge);">⇄</div>
+            <div style="font-size:10px; color:var(--text-muted); font-family:'JetBrains Mono',monospace; writing-mode:vertical-lr; letter-spacing:3px;">嵌入数据链接</div>
+          </div>
+
+          <!-- Right: JDY Native Pages -->
+          <div style="background:var(--jdy-bg); border:1px solid var(--jdy-border); border-radius:10px; padding:16px;">
+            <div style="font-size:13px; font-weight:700; color:var(--jdy-light); margin-bottom:4px;">📝 简道云原生详情页</div>
+            <div style="font-size:11px; color:var(--text-dim); margin-bottom:12px;">做"点"——单条记录的多维度信息 + 原生CRUD闭环</div>
+            <div class="node-grid" style="grid-template-columns: repeat(2, 1fr); gap:8px;">
+              <div class="node jdy">
+                <div class="node-icon">📄</div>
+                <div class="node-name">项目详情</div>
+                <div class="node-desc">基本信息 + 关联WBS<br>+ 流程审批状态</div>
+              </div>
+              <div class="node jdy">
+                <div class="node-icon">📄</div>
+                <div class="node-name">任务详情</div>
+                <div class="node-desc">属性编辑 + 依赖关系<br>+ 资源分配 + 进度更新</div>
+              </div>
+              <div class="node jdy">
+                <div class="node-icon">📄</div>
+                <div class="node-name">资源详情</div>
+                <div class="node-desc">占用记录 + 冲突历史<br>+ 可用性日历</div>
+              </div>
+              <div class="node jdy">
+                <div class="node-icon">📄</div>
+                <div class="node-name">预警详情</div>
+                <div class="node-desc">处理时间线 + 行动项<br>+ 智能助手推送</div>
+              </div>
+              <div class="node jdy" style="grid-column: span 2;">
+                <div class="node-icon">🔄</div>
+                <div class="node-name">简道云原生能力闭环</div>
+                <div class="node-desc">表单CRUD · 流程审批 · 智能助手 · 按钮触发 · Webhook · 自定义详情页</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Connector -->
+      <div class="flow-connector">
+        <div class="arrow">
+          <span>REST API</span>
+          <div class="bi-arrow">
+            <span>▲</span><div class="line"></div><span>▼</span>
+          </div>
+          <span>FieldMapper 翻译 widget_id ↔ 业务语义</span>
+        </div>
+      </div>
+
+      <!-- Layer 3: Bridge -->
+      <div class="layer layer-bridge">
+        <div class="layer-header">
+          <div class="layer-label">
+            <div class="icon">⚡</div>
+            <div>
+              <h3>Bridge 后端服务层</h3>
+              <div class="sub">FastAPI · 阿里云ECS · 计算引擎 + API代理</div>
+            </div>
+          </div>
+          <div class="layer-tag">5 SERVICES</div>
+        </div>
+        <div class="node-grid cols-6">
+          <div class="node bridge">
+            <div class="node-icon">🔄</div>
+            <div class="node-name">JDY Client</div>
+            <div class="node-desc">API封装<br>Token管理</div>
+          </div>
+          <div class="node bridge">
+            <div class="node-icon">🗺️</div>
+            <div class="node-name">FieldMapper</div>
+            <div class="node-desc">字段映射<br>语义翻译</div>
+          </div>
+          <div class="node bridge">
+            <div class="node-icon">⚙️</div>
+            <div class="node-name">CPM Engine</div>
+            <div class="node-desc">前推/后推法<br>浮动时间</div>
+          </div>
+          <div class="node bridge">
+            <div class="node-icon">📋</div>
+            <div class="node-name">WBS Calculator</div>
+            <div class="node-desc">编码计算<br>拖拽重算</div>
+          </div>
+          <div class="node bridge">
+            <div class="node-icon">👥</div>
+            <div class="node-name">Resource Scheduler</div>
+            <div class="node-desc">冲突检测<br>决策执行</div>
+          </div>
+          <div class="node bridge">
+            <div class="node-icon">📸</div>
+            <div class="node-name">Baseline Manager</div>
+            <div class="node-desc">版本快照<br>偏差计算</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Connector -->
+      <div class="flow-connector">
+        <div class="arrow">
+          <span>简道云 Open API v5/v6</span>
+          <div class="bi-arrow">
+            <span>▲</span><div class="line"></div><span>▼</span>
+          </div>
+          <span>Bearer Token · 30次/秒 · data_id游标翻页</span>
+        </div>
+      </div>
+
+      <!-- Layer 4: JDY Data -->
+      <div class="layer layer-jdy">
+        <div class="layer-header">
+          <div class="layer-label">
+            <div class="icon">🗄️</div>
+            <div>
+              <h3>简道云数据层 — 12张表 + 原生能力</h3>
+              <div class="sub">不只是数据库——同时也是交互闭环的一部分</div>
+            </div>
+          </div>
+          <div class="layer-tag">12 TABLES + NATIVE UX</div>
+        </div>
+        <div class="node-grid cols-6">
+          <div class="node jdy">
+            <div class="node-icon">📁</div>
+            <div class="node-name">模板表</div>
+            <div class="node-desc">template</div>
+          </div>
+          <div class="node jdy">
+            <div class="node-icon">📁</div>
+            <div class="node-name">标准任务表</div>
+            <div class="node-desc">std_task</div>
+          </div>
+          <div class="node jdy">
+            <div class="node-icon">📁</div>
+            <div class="node-name">模板依赖表</div>
+            <div class="node-desc">template_dep</div>
+          </div>
+          <div class="node jdy">
+            <div class="node-icon">📁</div>
+            <div class="node-name">项目表</div>
+            <div class="node-desc">project</div>
+          </div>
+          <div class="node jdy">
+            <div class="node-icon">📁</div>
+            <div class="node-name">WBS节点表</div>
+            <div class="node-desc">wbs_node</div>
+          </div>
+          <div class="node jdy">
+            <div class="node-icon">📁</div>
+            <div class="node-name">依赖关系表</div>
+            <div class="node-desc">dependency</div>
+          </div>
+          <div class="node jdy">
+            <div class="node-icon">📁</div>
+            <div class="node-name">资源表</div>
+            <div class="node-desc">resource</div>
+          </div>
+          <div class="node jdy">
+            <div class="node-icon">📁</div>
+            <div class="node-name">资源占用表</div>
+            <div class="node-desc">resource_occupy</div>
+          </div>
+          <div class="node jdy">
+            <div class="node-icon">📁</div>
+            <div class="node-name">资源冲突表</div>
+            <div class="node-desc">resource_conflict</div>
+          </div>
+          <div class="node jdy">
+            <div class="node-icon">📁</div>
+            <div class="node-name">预警表</div>
+            <div class="node-desc">warning</div>
+          </div>
+          <div class="node jdy">
+            <div class="node-icon">📁</div>
+            <div class="node-name">行动项表</div>
+            <div class="node-desc">action_item</div>
+          </div>
+          <div class="node jdy">
+            <div class="node-icon">📁</div>
+            <div class="node-name">版本快照表</div>
+            <div class="node-desc">version_snapshot</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Section 2: Dual Mode Detail -->
+  <div class="section">
+    <div class="section-title"><span class="num">02</span> 核心设计：数据汇聚页 ↔ 原生详情页 双模式</div>
+
+    <div class="dual-mode">
+      <!-- Left: Custom -->
+      <div class="mode-panel custom-mode">
+        <div class="mode-tag">模式 A · 数据汇聚页</div>
+        <h3 style="color:var(--custom-light)">二开定制页面</h3>
+        <div class="mode-sub">iframe嵌入简道云 · 做"面"的全局视角</div>
+        <div class="mode-features">
+          <div class="mode-feature">
+            <div class="feat-icon">🌐</div>
+            <div class="feat-text">
+              <div class="feat-title">全局聚合视图</div>
+              <div class="feat-desc">WBS树、甘特图、资源日历——跨多条数据的聚合展示，简道云原生做不到</div>
+            </div>
+          </div>
+          <div class="mode-feature">
+            <div class="feat-icon">🧮</div>
+            <div class="feat-text">
+              <div class="feat-title">复杂计算可视化</div>
+              <div class="feat-desc">CPM前推/后推法、关键路径高亮、浮动时间色带——计算在Bridge层完成</div>
+            </div>
+          </div>
+          <div class="mode-feature">
+            <div class="feat-icon">🖱️</div>
+            <div class="feat-text">
+              <div class="feat-title">批量交互操作</div>
+              <div class="feat-desc">拖拽排序、批量添加依赖、甘特图拖拽调整——需要自定义交互逻辑</div>
+            </div>
+          </div>
+          <div class="mode-feature">
+            <div class="feat-icon">🔗</div>
+            <div class="feat-text">
+              <div class="feat-title">嵌入数据链接</div>
+              <div class="feat-desc">每条数据旁放置链接按钮，点击后打开简道云原生详情页，进入模式B</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Middle Bridge -->
+      <div class="mode-bridge">
+        <div class="bridge-icon">⇄</div>
+        <div class="bridge-label">数据链接跳转</div>
+      </div>
+
+      <!-- Right: Native -->
+      <div class="mode-panel native-mode">
+        <div class="mode-tag">模式 B · 原生详情页</div>
+        <h3 style="color:var(--jdy-light)">简道云原生页面</h3>
+        <div class="mode-sub">单条记录的多维度信息 · 做"点"的深度交互</div>
+        <div class="mode-features">
+          <div class="mode-feature">
+            <div class="feat-icon">✏️</div>
+            <div class="feat-text">
+              <div class="feat-title">原生CRUD能力</div>
+              <div class="feat-desc">表单字段编辑、数据校验、联动规则——简道云原生就有，不需要二开重写</div>
+            </div>
+          </div>
+          <div class="mode-feature">
+            <div class="feat-icon">🔄</div>
+            <div class="feat-text">
+              <div class="feat-title">流程审批闭环</div>
+              <div class="feat-desc">提交审批、回退、转交、加签——流程引擎是简道云的核心能力</div>
+            </div>
+          </div>
+          <div class="mode-feature">
+            <div class="feat-icon">🤖</div>
+            <div class="feat-text">
+              <div class="feat-title">智能助手 + 按钮</div>
+              <div class="feat-desc">数据变更自动触发预警、按钮触发Webhook调用Bridge层重新计算CPM</div>
+            </div>
+          </div>
+          <div class="mode-feature">
+            <div class="feat-icon">🎨</div>
+            <div class="feat-text">
+              <div class="feat-title">自定义详情页</div>
+              <div class="feat-desc">单条数据的多维度展示——关联WBS列表、资源占用时间线、历史变更记录</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 3: Scenario Flow -->
+  <div class="section">
+    <div class="section-title"><span class="num">03</span> 典型场景：一次完整操作的双模式切换</div>
+
+    <div class="scenario-flow">
+      <h3>🎬 场景：项目经理发现资源冲突 → 处理 → 闭环</h3>
+      <div class="scenario-steps">
+
+        <div class="scenario-step">
+          <div class="step-num custom">1</div>
+          <div class="step-where custom">数据汇聚页</div>
+          <div class="step-content">
+            <div class="step-title">在资源日历中发现吊车A的时间冲突</div>
+            <div class="step-desc">资源日历（05）以周视图展示所有资源占用，红色脉冲标注冲突时段。项目经理看到吊车A在周三周四被两个任务同时占用。</div>
+          </div>
+          <div class="step-data">
+            页面: 05-资源日历<br>
+            模式: A（数据汇聚）<br>
+            数据源: resource_occupy表
+          </div>
+        </div>
+
+        <div class="scenario-step">
+          <div class="step-num custom">2</div>
+          <div class="step-where custom">数据汇聚页</div>
+          <div class="step-content">
+            <div class="step-title">点击冲突任务旁的"查看详情"链接</div>
+            <div class="step-desc">资源日历中每个占用条旁有一个🔗链接按钮，点击后在新窗口打开该任务在简道云中的原生详情页。</div>
+          </div>
+          <div class="step-data">
+            操作: 点击嵌入链接<br>
+            URL: jdy.com/open/entry/{data_id}<br>
+            跳转: 模式A → 模式B
+          </div>
+        </div>
+
+        <div class="scenario-step">
+          <div class="step-num jdy">3</div>
+          <div class="step-where jdy">简道云详情页</div>
+          <div class="step-content">
+            <div class="step-title">在简道云原生详情页中查看任务全貌</div>
+            <div class="step-desc">自定义详情页展示：任务基本信息、依赖关系列表、资源分配、CPM计算结果（ES/EF/LS/LF/TF）、历史变更记录。这些信息来自多张关联表的聚合。</div>
+          </div>
+          <div class="step-data">
+            页面: wbs_node 自定义详情页<br>
+            模式: B（原生详情）<br>
+            能力: 多维度展示 + 关联查询
+          </div>
+        </div>
+
+        <div class="scenario-step">
+          <div class="step-num jdy">4</div>
+          <div class="step-where jdy">简道云详情页</div>
+          <div class="step-content">
+            <div class="step-title">直接在简道云中修改资源分配</div>
+            <div class="step-desc">利用简道云原生的表单编辑能力，将"二次吊装"的资源从吊车A改为叉车C。无需二开前端重写CRUD逻辑。</div>
+          </div>
+          <div class="step-data">
+            操作: 修改资源字段<br>
+            能力: 原生CRUD + 数据校验<br>
+            联动: 字段联动自动更新
+          </div>
+        </div>
+
+        <div class="scenario-step">
+          <div class="step-num jdy">5</div>
+          <div class="step-where jdy">智能助手</div>
+          <div class="step-content">
+            <div class="step-title">智能助手自动触发：重新计算CPM + 生成预警</div>
+            <div class="step-desc">数据变更触发智能助手 → 调用后端插件/Webhook → Bridge层的CPM Engine重新计算 → 结果写回wbs_node表 → 自动生成预警记录。</div>
+          </div>
+          <div class="step-data">
+            触发: 数据更新事件<br>
+            链路: 智能助手 → Webhook → Bridge<br>
+            写回: wbs_node + warning表
+          </div>
+        </div>
+
+        <div class="scenario-step">
+          <div class="step-num bridge">6</div>
+          <div class="step-where bridge">Bridge层</div>
+          <div class="step-content">
+            <div class="step-title">Bridge层接收Webhook，执行CPM重算</div>
+            <div class="step-desc">CPM Engine读取最新的wbs_node + dependency数据，执行前推/后推法计算，将ES/EF/LS/LF/TF批量写回简道云。</div>
+          </div>
+          <div class="step-data">
+            输入: wbs_node + dependency<br>
+            计算: forward_pass + backward_pass<br>
+            输出: batch_update → JDY
+          </div>
+        </div>
+
+        <div class="scenario-step">
+          <div class="step-num custom">7</div>
+          <div class="step-where custom">数据汇聚页</div>
+          <div class="step-content">
+            <div class="step-title">回到资源日历，冲突已消失</div>
+            <div class="step-desc">刷新资源日历页面，吊车A的冲突标注已消除。预警看板（07）中新增一条"资源冲突已解决"的提示。闭环完成。</div>
+          </div>
+          <div class="step-data">
+            页面: 05-资源日历 + 07-预警看板<br>
+            模式: A（数据汇聚）<br>
+            状态: 冲突已解决 ✅
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 4: Table Usage Map -->
+  <div class="section">
+    <div class="section-title"><span class="num">04</span> 12张表的使用场景分布</div>
+
+    <div class="table-map">
+      <h3>每张表在"数据汇聚页"和"原生详情页"中的角色</h3>
+      <div class="table-grid">
+        <div class="table-card">
+          <div class="tc-name">📁 项目表 project</div>
+          <div class="tc-id">入口表 · 链接字段跳转</div>
+          <div class="tc-usage">
+            <span class="tc-tag detail">详情页: 项目信息编辑</span>
+            <span class="tc-tag agg">汇聚: 项目列表</span>
+          </div>
+        </div>
+        <div class="table-card">
+          <div class="tc-name">📁 WBS节点表 wbs_node</div>
+          <div class="tc-id">核心表 · 21个字段</div>
+          <div class="tc-usage">
+            <span class="tc-tag agg">汇聚: WBS树/甘特图</span>
+            <span class="tc-tag detail">详情: 任务属性编辑</span>
+            <span class="tc-tag calc">计算: CPM结果回写</span>
+          </div>
+        </div>
+        <div class="table-card">
+          <div class="tc-name">📁 依赖关系表 dependency</div>
+          <div class="tc-id">关系表 · 5个字段</div>
+          <div class="tc-usage">
+            <span class="tc-tag agg">汇聚: 依赖编辑器</span>
+            <span class="tc-tag detail">详情: 单条依赖查看</span>
+          </div>
+        </div>
+        <div class="table-card">
+          <div class="tc-name">📁 资源表 resource</div>
+          <div class="tc-id">主数据 · 3个字段</div>
+          <div class="tc-usage">
+            <span class="tc-tag agg">汇聚: 资源日历</span>
+            <span class="tc-tag detail">详情: 资源信息编辑</span>
+          </div>
+        </div>
+        <div class="table-card">
+          <div class="tc-name">📁 资源占用表 resource_occupy</div>
+          <div class="tc-id">事务表 · 5个字段</div>
+          <div class="tc-usage">
+            <span class="tc-tag agg">汇聚: 日历色带渲染</span>
+            <span class="tc-tag calc">计算: 冲突检测输入</span>
+          </div>
+        </div>
+        <div class="table-card">
+          <div class="tc-name">📁 资源冲突表 resource_conflict</div>
+          <div class="tc-id">事件表 · 6个字段</div>
+          <div class="tc-usage">
+            <span class="tc-tag agg">汇聚: 冲突面板</span>
+            <span class="tc-tag detail">详情: 冲突决策操作</span>
+          </div>
+        </div>
+        <div class="table-card">
+          <div class="tc-name">📁 预警表 warning</div>
+          <div class="tc-id">事件表 · 7个字段</div>
+          <div class="tc-usage">
+            <span class="tc-tag agg">汇聚: 预警看板</span>
+            <span class="tc-tag detail">详情: 处理时间线</span>
+            <span class="tc-tag calc">计算: 智能助手生成</span>
+          </div>
+        </div>
+        <div class="table-card">
+          <div class="tc-name">📁 行动项表 action_item</div>
+          <div class="tc-id">跟踪表 · 6个字段</div>
+          <div class="tc-usage">
+            <span class="tc-tag detail">详情: 创建/更新/关闭</span>
+            <span class="tc-tag agg">汇聚: 行动项列表</span>
+          </div>
+        </div>
+        <div class="table-card">
+          <div class="tc-name">📁 版本快照表 version_snapshot</div>
+          <div class="tc-id">历史表 · 4个字段</div>
+          <div class="tc-usage">
+            <span class="tc-tag agg">汇聚: 基线对比视图</span>
+            <span class="tc-tag calc">计算: 偏差分析</span>
+          </div>
+        </div>
+        <div class="table-card">
+          <div class="tc-name">📁 模板表 template</div>
+          <div class="tc-id">配置表 · 5个字段</div>
+          <div class="tc-usage">
+            <span class="tc-tag detail">详情: 模板编辑</span>
+            <span class="tc-tag agg">汇聚: 模板选择器</span>
+          </div>
+        </div>
+        <div class="table-card">
+          <div class="tc-name">📁 标准任务表 std_task</div>
+          <div class="tc-id">配置表 · 12个字段</div>
+          <div class="tc-usage">
+            <span class="tc-tag detail">详情: 任务模板编辑</span>
+            <span class="tc-tag calc">计算: 导入→WBS</span>
+          </div>
+        </div>
+        <div class="table-card">
+          <div class="tc-name">📁 模板依赖表 template_dep</div>
+          <div class="tc-id">配置表 · 5个字段</div>
+          <div class="tc-usage">
+            <span class="tc-tag calc">计算: 导入→依赖</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 5: Key Design Decisions -->
+  <div class="section">
+    <div class="section-title"><span class="num">05</span> 关键设计决策</div>
+    <div style="display:grid; grid-template-columns: repeat(3,1fr); gap:12px;">
+      <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:10px; padding:20px;">
+        <div style="font-size:24px; margin-bottom:8px;">🎯</div>
+        <div style="font-size:14px; font-weight:700; margin-bottom:6px;">什么时候用数据汇聚页？</div>
+        <div style="font-size:12px; color:var(--text-dim); line-height:1.8;">
+          • 需要跨多条数据的<strong style="color:var(--custom-light)">聚合展示</strong>（甘特图、日历）<br>
+          • 需要<strong style="color:var(--custom-light)">复杂计算</strong>（CPM、冲突检测）<br>
+          • 需要<strong style="color:var(--custom-light)">自定义交互</strong>（拖拽、连线）<br>
+          • 简道云原生前端<strong style="color:var(--custom-light)">做不到</strong>的场景
+        </div>
+      </div>
+      <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:10px; padding:20px;">
+        <div style="font-size:24px; margin-bottom:8px;">📝</div>
+        <div style="font-size:14px; font-weight:700; margin-bottom:6px;">什么时候用简道云原生页？</div>
+        <div style="font-size:12px; color:var(--text-dim); line-height:1.8;">
+          • 单条记录的<strong style="color:var(--jdy-light)">字段编辑</strong>（CRUD）<br>
+          • <strong style="color:var(--jdy-light)">流程审批</strong>（提交/回退/转交）<br>
+          • <strong style="color:var(--jdy-light)">智能助手</strong>触发的自动化<br>
+          • <strong style="color:var(--jdy-light)">按钮</strong>触发Webhook调用<br>
+          • <strong style="color:var(--jdy-light)">自定义详情页</strong>多维度展示
+        </div>
+      </div>
+      <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:10px; padding:20px;">
+        <div style="font-size:24px; margin-bottom:8px;">⚡</div>
+        <div style="font-size:14px; font-weight:700; margin-bottom:6px;">Bridge层做什么？</div>
+        <div style="font-size:12px; color:var(--text-dim); line-height:1.8;">
+          • <strong style="color:var(--bridge-light)">FieldMapper</strong>翻译widget_id<br>
+          • <strong style="color:var(--bridge-light)">CPM Engine</strong>计算调度<br>
+          • <strong style="color:var(--bridge-light)">数据聚合</strong>：多表JOIN查询<br>
+          • <strong style="color:var(--bridge-light)">Webhook接收</strong>：智能助手回调<br>
+          • 不做CRUD——CRUD交给简道云原生
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    平安快运 PMS · Architecture Blueprint v1.0 · 2026-06-14<br>
+    简道云 × 二开混合架构 · 数据汇聚页做面 · 原生详情页做点 · Bridge层做翻译
+  </div>
+
+</div>
+</body>
+</html>

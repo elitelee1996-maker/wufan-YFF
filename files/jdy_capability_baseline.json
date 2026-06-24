@@ -1,0 +1,137 @@
+{
+  "_meta": {
+    "source": "https://hc.jiandaoyun.com/update",
+    "captured_at": "2026-06-13",
+    "last_layer2_scan": "2026-06-13",
+    "layer": "baseline_snapshot",
+    "purpose": "擎析阶段0产品知识新鲜度校验锚点",
+    "update_instruction": "执行Layer2/3扫描后更新此文件",
+    "fetch_method": "text模式抓取主页面（markdown模式只能获取侧边栏）"
+  },
+  "latest_version": "V11.2.0",
+  "latest_date": "2026-06-12",
+  "known_versions": [
+    {"version": "V11.2.0", "date": "2026-06-12", "doc_id": 25928, "items_count": 9},
+    {"version": "V11.1.0", "date": "2026-05-29", "doc_id": 25185, "items_count": 11},
+    {"version": "V11.0.0", "date": "2026-05-15", "doc_id": 25089, "items_count": 12},
+    {"version": "V10.20.0", "date": "2026-04-21", "doc_id": 24920, "items_count": 16},
+    {"version": "V10.19.0", "date": "2026-04-03", "doc_id": 23885, "items_count": 9},
+    {"version": "V10.18.0", "date": "2026-03-20", "doc_id": null, "items_count": 10},
+    {"version": "V10.17.0", "date": "2026-03-06", "doc_id": null, "items_count": 7},
+    {"version": "V10.16.0", "date": "2026-02-05", "doc_id": null, "items_count": 13},
+    {"version": "V10.15.0", "date": "2026-01-20", "doc_id": null, "items_count": 8},
+    {"version": "V10.14.0", "date": "2025-12-17", "doc_id": null, "items_count": 18},
+    {"version": "V10.13.0", "date": "2025-12-02", "doc_id": null, "items_count": 12},
+    {"version": "V10.12.0", "date": "2025-11-18", "doc_id": null, "items_count": 10},
+    {"version": "V10.11.0", "date": "2025-10-30", "doc_id": null, "items_count": 9},
+    {"version": "V10.10.0", "date": "2025-10-16", "doc_id": null, "items_count": 11},
+    {"version": "V10.9.0", "date": "2025-09-23", "doc_id": null, "items_count": 10},
+    {"version": "V10.8.0", "date": "2025-09-05", "doc_id": null, "items_count": 8},
+    {"version": "V10.7.0", "date": "2025-08-22", "doc_id": null, "items_count": 10},
+    {"version": "V10.6.0", "date": "2025-08-06", "doc_id": null, "items_count": 10},
+    {"version": "V10.5.0", "date": "2025-07-23", "doc_id": null, "items_count": 10},
+    {"version": "V10.4.0", "date": "2025-07-09", "doc_id": null, "items_count": 10},
+    {"version": "V10.3.0", "date": "2025-06-25", "doc_id": null, "items_count": 9},
+    {"version": "V10.2.0", "date": "2025-05-30", "doc_id": null, "items_count": 14},
+    {"version": "V10.1.0", "date": "2025-05-09", "doc_id": null, "items_count": 14},
+    {"version": "V10.0.0", "date": "2025-04-22", "doc_id": null, "items_count": 16}
+  ],
+  "page_structure": {
+    "main_url": "https://hc.jiandaoyun.com/update",
+    "detail_url_pattern": "https://hc.jiandaoyun.com/doc/{doc_id}",
+    "has_rss": false,
+    "has_public_api": false,
+    "fetch_note": "必须用text模式抓取主页面才能获取完整更新内容；markdown模式只返回侧边栏导航",
+    "sidebar_index_2026": [
+      {"date": "2026-06-12", "doc_id": 25928},
+      {"date": "2026-05-29", "doc_id": 25185},
+      {"date": "2026-05-15", "doc_id": 25089},
+      {"date": "2026-04-21", "doc_id": 24920},
+      {"date": "2026-04-03", "doc_id": 23885},
+      {"date": "2026-03-20", "doc_id": null},
+      {"date": "2026-03-06", "doc_id": null},
+      {"date": "2026-02-05", "doc_id": null},
+      {"date": "2026-01-20", "doc_id": null}
+    ],
+    "supplementary_sources": {
+      "product_announcements": "https://hc.jiandaoyun.com/doc/15271",
+      "monthly_report": "https://hc.jiandaoyun.com/doc/15272"
+    }
+  },
+  "module_categories": [
+    "通用功能",
+    "业务流程",
+    "表单管理",
+    "数据分析",
+    "开放平台",
+    "组织管理",
+    "飞书集成模式",
+    "知识库"
+  ],
+  "paradigm_level_changes": {
+    "自定义详情页": {
+      "first_appeared": "V10.10.0",
+      "maturity": "成熟（已支持移动端、组件显隐、图表、按钮、打印模板）",
+      "impact": "新增架构范式，可替代部分iframe嵌入场景"
+    },
+    "集成应用": {
+      "first_appeared": "V11.0.0",
+      "maturity": "早期（需进一步研究能力边界）",
+      "impact": "可能改变系统集成的架构判定"
+    },
+    "AI能力矩阵": {
+      "first_appeared": "V10.16.0（AI实验室公测）",
+      "maturity": "体系化（6大AI功能 + 插件生态）",
+      "impact": "改变二开边界判定，部分场景不再需要二开"
+    }
+  },
+  "tracking_config": {
+    "layer1_auto_check": {
+      "trigger": "每次擎析评估阶段0",
+      "action": "web_fetch主页面(text模式) → 提取最新版本号 → 与latest_version比对",
+      "on_mismatch": "P1告警：产品已更新，技能书可能滞后"
+    },
+    "layer2_periodic_scan": {
+      "trigger": "每月1次或用户主动触发",
+      "action": "web_fetch主页面(text模式) → 提取最新3个版本变更条目 → 与技能书交叉比对",
+      "output": "变更影响分析报告"
+    },
+    "layer3_deep_sync": {
+      "trigger": "major版本变化或累积3+次Layer1告警",
+      "action": "全量解析 → 更新技能书SKILL.md → 更新反例库 → 重建基线",
+      "output": "知识同步报告 + 更新后的技能书"
+    }
+  },
+  "skill_mapping": {
+    "jdy-architecture-patterns": {
+      "modules": ["通用功能", "表单管理", "业务流程"],
+      "last_updated": "unknown",
+      "known_gaps": ["缺少自定义详情页范式", "缺少集成应用范式", "AI能力未纳入判定维度"]
+    },
+    "jdy-custom-dev-capabilities": {
+      "modules": ["开放平台", "通用功能"],
+      "last_updated": "unknown",
+      "known_gaps": ["前端可定制能力需更新", "API能力矩阵需补充", "插件生态覆盖不足"]
+    },
+    "jdy-api-handbook": {
+      "modules": ["开放平台"],
+      "last_updated": "unknown",
+      "known_gaps": ["缺少资源用量接口", "缺少抄送列表接口", "缺少待办否决接口"]
+    },
+    "ipd-standardization": {
+      "modules": ["通用功能", "业务流程", "表单管理", "数据分析"],
+      "last_updated": "unknown",
+      "known_gaps": ["缺少富文本/计算字段/关联子表字段类型", "缺少AI能力匹配检查项"]
+    },
+    "cost-estimation-model": {
+      "modules": ["通用功能", "表单管理", "业务流程"],
+      "last_updated": "unknown",
+      "known_gaps": ["缺少自定义详情页人天基准", "缺少AI功能配置人天基准", "自动化人天可能需下调"]
+    },
+    "jdy-hybrid-sop": {
+      "modules": ["通用功能", "开放平台"],
+      "last_updated": "unknown",
+      "known_gaps": ["缺少集成应用配置步骤", "缺少自定义详情页设计步骤"]
+    }
+  }
+}

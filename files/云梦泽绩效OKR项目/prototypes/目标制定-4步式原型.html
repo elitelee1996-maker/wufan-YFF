@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>目标制定 — 云梦泽 OKR</title>
+<style>
+/* ===== Fine Design Token System ===== */
+:root {
+  --primary: #00b899;
+  --primary-dark: #00937a;
+  --primary-light: #e6f8f5;
+  --primary-hover: #4dcdb8;
+  --primary-50: #f0faf8;
+  --green: #00b899; --green-light: #e6f8f5; --green-dark: #00937a;
+  --yellow: #f0a800; --yellow-light: #fffbe6;
+  --red: #eb5050; --red-light: #ffecec;
+  --blue: #3370ff; --blue-light: #e6f0ff;
+  --purple: #7c3aed; --purple-light: #f5f3ff;
+  --text-1: #141e31; --text-2: #525967; --text-3: #838892; --text-4: #b5b8be;
+  --bg-0: #f5f6f8; --bg-1: #ffffff; --bg-2: #f0f1f4; --bg-3: #edeff3;
+  --border-1: #e6e8ed; --border-2: #edeff3; --border-3: #f0f1f4;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.04);
+  --shadow: 0 2px 8px rgba(0,0,0,.06);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,.08);
+  --r-sm: 4px; --r: 6px; --r-lg: 8px;
+  --h-sm: 24px; --h: 32px; --h-lg: 40px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg-0);color:var(--text-1);font-size:14px;line-height:1.6;min-height:100vh;}
+
+/* ===== Layout ===== */
+.page{max-width:860px;margin:0 auto;padding:24px 20px 60px;}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+.page-title{font-size:18px;font-weight:700;color:var(--text-1);}
+.page-subtitle{font-size:12px;color:var(--text-3);margin-top:2px;}
+.user-badge{display:flex;align-items:center;gap:8px;}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;}
+.user-name{font-size:13px;color:var(--text-2);font-weight:500;}
+
+/* ===== Step Indicator ===== */
+.steps{display:flex;align-items:center;margin-bottom:28px;padding:0 20px;}
+.step-item{display:flex;align-items:center;gap:8px;cursor:pointer;position:relative;}
+.step-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;border:2px solid var(--border-1);background:var(--bg-1);color:var(--text-3);transition:all .25s;flex-shrink:0;}
+.step-label{font-size:13px;color:var(--text-3);font-weight:400;transition:all .2s;white-space:nowrap;}
+.step-line{flex:1;height:2px;background:var(--border-2);margin:0 12px;min-width:24px;transition:background .3s;}
+.step-item.active .step-dot{background:var(--primary);border-color:var(--primary);color:#fff;}
+.step-item.active .step-label{color:var(--primary);font-weight:600;}
+.step-item.done .step-dot{background:var(--green);border-color:var(--green);color:#fff;}
+.step-item.done .step-label{color:var(--green-dark);font-weight:500;}
+.step-line.done{background:var(--primary);}
+.step-line.active{background:linear-gradient(90deg,var(--primary) 0%,var(--border-2) 100%);}
+
+/* ===== Card ===== */
+.card{background:var(--bg-1);border:1px solid var(--border-2);border-radius:var(--r-lg);box-shadow:var(--shadow-sm);margin-bottom:16px;}
+.card-head{padding:14px 20px;border-bottom:1px solid var(--border-3);display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-size:14px;font-weight:600;color:var(--text-1);display:flex;align-items:center;gap:6px;}
+.card-title .icon{width:20px;height:20px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;}
+.card-title .icon.primary{background:var(--primary);}
+.card-title .icon.blue{background:var(--blue);}
+.card-title .icon.yellow{background:var(--yellow);}
+.card-title .icon.purple{background:var(--purple);}
+.card-hint{font-size:12px;color:var(--text-3);}
+.card-body{padding:20px;}
+.card-foot{padding:12px 20px;border-top:1px solid var(--border-3);background:var(--bg-2);border-radius:0 0 var(--r-lg) var(--r-lg);display:flex;justify-content:space-between;align-items:center;}
+
+/* ===== Form Controls ===== */
+.fg{margin-bottom:18px;}
+.fg:last-child{margin-bottom:0;}
+.fl{display:block;font-size:13px;color:var(--text-2);margin-bottom:6px;font-weight:500;}
+.fl .req{color:var(--red);margin-left:2px;}
+.fl .optional{color:var(--text-4);font-weight:400;margin-left:4px;font-size:12px;}
+.fi,.fs,.ft{width:100%;height:var(--h);padding:0 12px;border:1px solid var(--border-1);border-radius:var(--r-sm);font-size:13px;color:var(--text-1);background:#fff;transition:all .2s;font-family:inherit;}
+.fi:focus,.fs:focus,.ft:focus{border-color:var(--primary);outline:none;box-shadow:0 0 0 2px rgba(0,184,153,.12);}
+.fi:hover,.fs:hover,.ft:hover{border-color:var(--primary-hover);}
+.fi::placeholder,.ft::placeholder{color:var(--text-4);}
+.ft{height:auto;min-height:80px;padding:10px 12px;resize:vertical;line-height:1.6;}
+.fs{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' stroke='%23838892' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;}
+.fh{font-size:12px;color:var(--text-3);margin-top:4px;line-height:1.5;}
+.fh.warn{color:var(--yellow);}
+.fh.error{color:var(--red);}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.fr3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.fi.error,.fs.error{border-color:var(--red);}
+.fi.error:focus,.fs.error:focus{box-shadow:0 0 0 2px rgba(235,80,80,.12);}
+
+/* ===== Buttons ===== */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:var(--h);padding:0 16px;border-radius:var(--r-sm);font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border-1);background:var(--bg-1);color:var(--text-1);transition:all .2s;white-space:nowrap;font-family:inherit;}
+.btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-50);}
+.btn-primary{background:var(--primary);color:#fff;border-color:var(--primary);}
+.btn-primary:hover{background:var(--primary-hover);border-color:var(--primary-hover);color:#fff;}
+.btn-primary:disabled{background:var(--text-4);border-color:var(--text-4);cursor:not-allowed;color:#fff;}
+.btn-ghost{border-color:transparent;background:transparent;color:var(--text-2);}
+.btn-ghost:hover{background:var(--bg-2);color:var(--text-1);border-color:transparent;}
+.btn-outline{border-color:var(--primary);color:var(--primary);background:transparent;}
+.btn-outline:hover{background:var(--primary-light);}
+.btn-danger{border-color:var(--red);color:var(--red);background:transparent;}
+.btn-danger:hover{background:var(--red-light);}
+.btn-lg{height:var(--h-lg);padding:0 24px;font-size:14px;}
+.btn-sm{height:var(--h-sm);padding:0 10px;font-size:12px;}
+
+/* ===== Tags ===== */
+.tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:var(--r-sm);font-size:12px;font-weight:400;line-height:1.6;}
+.tag-green{background:var(--green-light);color:var(--green-dark);}
+.tag-yellow{background:var(--yellow-light);color:#b37e00;}
+.tag-red{background:var(--red-light);color:var(--red);}
+.tag-blue{background:var(--blue-light);color:var(--blue);}
+.tag-purple{background:var(--purple-light);color:var(--purple);}
+.tag-gray{background:var(--bg-2);color:var(--text-2);}
+
+/* ===== Alert ===== */
+.alert{padding:10px 14px;border-radius:var(--r-sm);margin-bottom:16px;font-size:13px;display:flex;align-items:flex-start;gap:8px;line-height:1.5;}
+.alert-info{background:var(--blue-light);color:var(--blue);border:1px solid rgba(51,112,255,.1);}
+.alert-warn{background:var(--yellow-light);color:#8a6200;border:1px solid rgba(240,168,0,.1);}
+.alert-success{background:var(--green-light);color:var(--green-dark);border:1px solid rgba(0,184,153,.1);}
+.alert-icon{flex-shrink:0;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin-top:1px;}
+.alert-info .alert-icon{background:var(--blue);color:#fff;}
+.alert-warn .alert-icon{background:var(--yellow);color:#fff;}
+.alert-success .alert-icon{background:var(--green);color:#fff;}
+
+/* ===== Step Panels ===== */
+.step-panel{display:none;animation:fadeIn .3s ease;}
+.step-panel.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+/* ===== Alignment Selector (Step 2) ===== */
+.align-search{position:relative;margin-bottom:16px;}
+.align-search-input{width:100%;height:var(--h);padding:0 12px 0 36px;border:1px solid var(--border-1);border-radius:var(--r-sm);font-size:13px;color:var(--text-1);background:#fff;transition:all .2s;}
+.align-search-input:focus{border-color:var(--primary);outline:none;box-shadow:0 0 0 2px rgba(0,184,153,.12);}
+.align-search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-3);font-size:14px;}
+.align-section{margin-bottom:16px;}
+.align-section-title{font-size:12px;color:var(--text-3);font-weight:500;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;}
+.align-card{padding:12px 14px;border:1px solid var(--border-2);border-radius:var(--r);cursor:pointer;transition:all .2s;margin-bottom:8px;position:relative;}
+.align-card:hover{border-color:var(--primary);background:var(--primary-50);}
+.align-card.selected{border-color:var(--primary);background:var(--primary-light);box-shadow:0 0 0 1px var(--primary);}
+.align-card-head{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.align-card-radio{width:16px;height:16px;border-radius:50%;border:2px solid var(--border-1);flex-shrink:0;transition:all .2s;display:flex;align-items:center;justify-content:center;}
+.align-card.selected .align-card-radio{border-color:var(--primary);}
+.align-card.selected .align-card-radio::after{content:'';width:8px;height:8px;border-radius:50%;background:var(--primary);}
+.align-card-id{font-size:11px;color:var(--text-3);font-weight:500;}
+.align-card-title{font-size:13px;font-weight:500;color:var(--text-1);line-height:1.5;}
+.align-card-meta{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:12px;color:var(--text-3);}
+.align-card-progress{display:flex;align-items:center;gap:6px;margin-top:8px;}
+.align-progress-bar{flex:1;height:4px;background:var(--bg-3);border-radius:2px;overflow:hidden;}
+.align-progress-fill{height:100%;border-radius:2px;background:var(--primary);transition:width .3s;}
+.align-progress-pct{font-size:12px;font-weight:600;color:var(--text-2);min-width:32px;text-align:right;}
+.align-selected{padding:12px 14px;background:var(--primary-light);border:1px solid var(--primary);border-radius:var(--r);display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.align-selected-dot{width:8px;height:8px;border-radius:50%;background:var(--primary);flex-shrink:0;}
+.align-selected-info{flex:1;min-width:0;}
+.align-selected-title{font-size:13px;font-weight:500;color:var(--text-1);}
+.align-selected-meta{font-size:12px;color:var(--text-3);margin-top:2px;}
+.align-clear{font-size:12px;color:var(--red);cursor:pointer;font-weight:500;flex-shrink:0;padding:4px 8px;border-radius:var(--r-sm);transition:background .15s;}
+.align-clear:hover{background:var(--red-light);}
+.align-empty{text-align:center;padding:32px 20px;color:var(--text-3);font-size:13px;}
+
+/* ===== KR Sub-table (Step 3) ===== */
+.kr-block{border:1px solid var(--border-2);border-radius:var(--r-lg);margin-bottom:12px;overflow:hidden;transition:all .2s;}
+.kr-block:hover{border-color:var(--border-1);}
+.kr-block-head{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--bg-2);border-bottom:1px solid var(--border-3);}
+.kr-block-num{font-size:13px;font-weight:600;color:var(--text-1);display:flex;align-items:center;gap:6px;}
+.kr-block-num .num{width:22px;height:22px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;}
+.kr-block-actions{display:flex;gap:4px;}
+.kr-block-body{padding:16px;}
+.kr-type-fields{margin-top:12px;padding-top:12px;border-top:1px solid var(--border-3);}
+.kr-weight-row{display:flex;align-items:center;gap:8px;}
+.kr-weight-input{width:72px;text-align:center;}
+.weight-summary{padding:12px 16px;background:var(--bg-2);border-radius:var(--r);border:1px solid var(--border-2);display:flex;align-items:center;justify-content:space-between;margin-top:4px;}
+.weight-summary.valid{border-color:var(--green);background:var(--green-light);}
+.weight-summary.invalid{border-color:var(--yellow);background:var(--yellow-light);}
+.weight-label{font-size:13px;font-weight:600;color:var(--text-2);}
+.weight-value{font-size:14px;font-weight:700;}
+.weight-summary.valid .weight-value{color:var(--green-dark);}
+.weight-summary.invalid .weight-value{color:var(--yellow);}
+.weight-hint{font-size:12px;color:var(--text-3);}
+
+/* ===== Preview (Step 4) ===== */
+.preview-section{margin-bottom:20px;}
+.preview-section:last-child{margin-bottom:0;}
+.preview-label{font-size:12px;color:var(--text-3);font-weight:500;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;}
+.preview-value{font-size:14px;color:var(--text-1);font-weight:500;line-height:1.6;}
+.preview-kr-table{width:100%;border-collapse:collapse;font-size:13px;}
+.preview-kr-table th{text-align:left;padding:8px 12px;background:var(--bg-2);color:var(--text-2);font-weight:500;font-size:12px;border-bottom:1px solid var(--border-1);}
+.preview-kr-table td{padding:8px 12px;border-bottom:1px solid var(--border-3);}
+.checklist-item{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px;}
+.checklist-icon{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
+.checklist-icon.pass{background:var(--green-light);color:var(--green-dark);}
+.checklist-icon.fail{background:var(--red-light);color:var(--red);}
+.checklist-icon.warn{background:var(--yellow-light);color:#8a6200;}
+
+/* ===== Divider ===== */
+.divider{height:1px;background:var(--border-2);margin:16px 0;}
+
+/* ===== Toast ===== */
+.toast{position:fixed;top:20px;right:20px;padding:12px 20px;border-radius:var(--r);color:#fff;font-size:13px;font-weight:500;z-index:10000;box-shadow:var(--shadow-lg);animation:toastIn .3s ease;display:flex;align-items:center;gap:8px;}
+.toast-success{background:var(--green);}
+.toast-error{background:var(--red);}
+.toast-info{background:var(--blue);}
+@keyframes toastIn{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}
+
+/* ===== Misc ===== */
+.empty-state{text-align:center;padding:40px 20px;color:var(--text-3);}
+.empty-state p{font-size:13px;margin-top:8px;}
+.text-muted{color:var(--text-3);}
+.text-sm{font-size:12px;}
+.text-xs{font-size:11px;}
+.fw-600{font-weight:600;}
+.mt-8{margin-top:8px;}
+.mt-16{margin-top:16px;}
+.mb-8{margin-bottom:8px;}
+.mb-16{margin-bottom:16px;}
+.flex{display:flex;}
+.flex-center{display:flex;align-items:center;}
+.flex-between{display:flex;align-items:center;justify-content:space-between;}
+.gap-8{gap:8px;}
+.gap-12{gap:12px;}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--text-4);border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:var(--text-3);}
+
+/* ===== Responsive ===== */
+@media(max-width:768px){
+  .page{padding:16px 12px 40px;}
+  .fr,.fr3{grid-template-columns:1fr;}
+  .steps{padding:0;overflow-x:auto;}
+  .step-label{font-size:12px;}
+}
+</style>
+</head>
+<body>
+
+<div class="page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <div class="page-title">目标制定</div>
+      <div class="page-subtitle">制定你的 OKR 目标，对齐上级战略方向</div>
+    </div>
+    <div class="user-badge">
+      <div class="user-name">李琦 · 结算中心</div>
+      <div class="user-avatar">李</div>
+    </div>
+  </div>
+
+  <!-- Step Indicator -->
+  <div class="steps" id="stepIndicator">
+    <div class="step-item active" data-step="1" onclick="goToStep(1)">
+      <div class="step-dot">1</div>
+      <div class="step-label">基本信息</div>
+    </div>
+    <div class="step-line" id="line-1-2"></div>
+    <div class="step-item" data-step="2" onclick="goToStep(2)">
+      <div class="step-dot">2</div>
+      <div class="step-label">对齐上级O</div>
+    </div>
+    <div class="step-line" id="line-2-3"></div>
+    <div class="step-item" data-step="3" onclick="goToStep(3)">
+      <div class="step-dot">3</div>
+      <div class="step-label">KR设定</div>
+    </div>
+    <div class="step-line" id="line-3-4"></div>
+    <div class="step-item" data-step="4" onclick="goToStep(4)">
+      <div class="step-dot">4</div>
+      <div class="step-label">补充说明</div>
+    </div>
+  </div>
+
+  <!-- ===== Step 1: 基本信息 ===== -->
+  <div class="step-panel active" id="panel-1">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title"><span class="icon primary">1</span>基本信息</div>
+        <div class="card-hint">定义目标的方向和归属</div>
+      </div>
+      <div class="card-body">
+        <div class="alert alert-info">
+          <div class="alert-icon">i</div>
+          <div>好的 O 应该是定性、方向明确的描述，例如"打造零差错的银企对账体系"。避免在 O 中放入量化数字，数字留给 KR。</div>
+        </div>
+
+        <div class="fg">
+          <label class="fl">目标名称 (O)<span class="req">*</span></label>
+          <input class="fi" id="goalName" placeholder="请输入目标名称，15-50字为宜" maxlength="100">
+          <div class="fh" id="goalNameHint">建议 15-50 字，定性描述方向，避免量化数字</div>
+        </div>
+
+        <div class="fr">
+          <div class="fg">
+            <label class="fl">目标类型<span class="req">*</span></label>
+            <select class="fs" id="goalType">
+              <option value="">请选择目标类型</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="fl">所属周期<span class="req">*</span></label>
+            <select class="fs" id="goalCycle">
+              <option value="">请选择周期</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="fr">
+          <div class="fg">
+            <label class="fl">目标层级<span class="req">*</span></label>
+            <select class="fs" id="goalLevel">
+              <option value="">请选择层级</option>
+              <option value="department">部门级</option>
+              <option value="team">团队级</option>
+              <option value="personal">个人级</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="fl">责任人</label>
+            <input class="fi" id="goalOwner" value="李琦" readonly style="background:var(--bg-2);color:var(--text-2);">
+            <div class="fh">默认当前用户，可在简道云中修改</div>
+          </div>
+        </div>
+
+        <div class="fr">
+          <div class="fg">
+            <label class="fl">开始日期</label>
+            <input class="fi" id="startDate" type="date" value="2026-04-01">
+          </div>
+          <div class="fg">
+            <label class="fl">截止日期</label>
+            <input class="fi" id="endDate" type="date" value="2026-06-30">
+          </div>
+        </div>
+      </div>
+      <div class="card-foot">
+        <div></div>
+        <div class="flex gap-8">
+          <button class="btn btn-ghost" onclick="saveDraft()">保存草稿</button>
+          <button class="btn btn-primary" onclick="goToStep(2)">下一步：对齐上级O</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Step 2: 对齐上级O ===== -->
+  <div class="step-panel" id="panel-2">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title"><span class="icon blue">2</span>对齐上级O</div>
+        <div class="card-hint">选择你要对齐的上级目标</div>
+      </div>
+      <div class="card-body">
+        <div class="alert alert-info">
+          <div class="alert-icon">i</div>
+          <div>对齐不是拆解。你的 O 由你自主制定，对齐只表达方向一致。每个 O 最多对齐一个上级 O。</div>
+        </div>
+
+        <!-- Selected alignment display -->
+        <div id="alignSelected" style="display:none;">
+          <div class="align-selected">
+            <div class="align-selected-dot"></div>
+            <div class="align-selected-info">
+              <div class="align-selected-title" id="alignSelectedTitle"></div>
+              <div class="align-selected-meta" id="alignSelectedMeta"></div>
+            </div>
+            <div class="align-clear" onclick="clearAlignment()">取消对齐</div>
+          </div>
+        </div>
+
+        <!-- Search -->
+        <div class="align-search">
+          <span class="align-search-icon">&#9906;</span>
+          <input class="align-search-input" id="alignSearch" placeholder="搜索上级目标关键词..." oninput="filterAlignGoals(this.value)">
+        </div>
+
+        <!-- Recommended -->
+        <div class="align-section" id="alignRecommended">
+          <div class="align-section-title">推荐对齐（基于你的组织关系）</div>
+          <div id="alignRecommendList"></div>
+        </div>
+
+        <!-- All goals by level -->
+        <div class="align-section">
+          <div class="align-section-title">公司级目标</div>
+          <div id="alignCompanyList"></div>
+        </div>
+        <div class="align-section">
+          <div class="align-section-title">部门级目标</div>
+          <div id="alignDeptList"></div>
+        </div>
+        <div class="align-section">
+          <div class="align-section-title">团队级目标</div>
+          <div id="alignTeamList"></div>
+        </div>
+
+        <!-- Skip option -->
+        <div class="divider"></div>
+        <div class="flex-center gap-8" style="padding:8px 0;">
+          <input type="checkbox" id="skipAlign" onchange="toggleSkipAlign()" style="accent-color:var(--primary);">
+          <label for="skipAlign" style="font-size:13px;color:var(--text-2);cursor:pointer;">暂不对齐上级O（后续可补充）</label>
+        </div>
+      </div>
+      <div class="card-foot">
+        <button class="btn btn-ghost" onclick="goToStep(1)">上一步</button>
+        <div class="flex gap-8">
+          <button class="btn btn-ghost" onclick="saveDraft()">保存草稿</button>
+          <button class="btn btn-primary" onclick="goToStep(3)">下一步：KR设定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Step 3: KR设定 ===== -->
+  <div class="step-panel" id="panel-3">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title"><span class="icon yellow">3</span>KR 设定</div>
+        <div class="card-hint" id="krCardHint">为 O 定义可衡量的关键结果</div>
+      </div>
+      <div class="card-body">
+        <div class="alert alert-info">
+          <div class="alert-icon">i</div>
+          <div>好的 KR 应该有明确的起始值和目标值，例如"差错率从 0.8% 降至 0.3%"。建议 2-4 个 KR，权重合计必须等于 100%。</div>
+        </div>
+
+        <!-- KR Blocks Container -->
+        <div id="krContainer"></div>
+
+        <!-- Add KR Button -->
+        <button class="btn btn-outline" id="addKrBtn" onclick="addKR()" style="width:100%;margin-top:4px;">
+          + 添加 KR
+        </button>
+
+        <div class="divider"></div>
+
+        <!-- Weight Summary -->
+        <div class="weight-summary invalid" id="weightSummary">
+          <div>
+            <div class="weight-label">KR 权重合计</div>
+            <div class="weight-hint" id="weightHint">请确保所有 KR 权重之和等于 100%</div>
+          </div>
+          <div class="weight-value" id="weightTotal">0%</div>
+        </div>
+      </div>
+      <div class="card-foot">
+        <button class="btn btn-ghost" onclick="goToStep(2)">上一步</button>
+        <div class="flex gap-8">
+          <button class="btn btn-ghost" onclick="saveDraft()">保存草稿</button>
+          <button class="btn btn-primary" onclick="goToStep(4)">下一步：补充说明</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Step 4: 补充说明 ===== -->
+  <div class="step-panel" id="panel-4">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title"><span class="icon purple">4</span>补充说明</div>
+        <div class="card-hint">完善目标描述，确认并提交</div>
+      </div>
+      <div class="card-body">
+        <div class="fg">
+          <label class="fl">目标描述<span class="optional">（选填）</span></label>
+          <textarea class="ft" id="goalDesc" placeholder="描述目标的背景、期望成果、关键里程碑..." rows="4"></textarea>
+        </div>
+        <div class="fg">
+          <label class="fl">关联 OGSM 策略<span class="optional">（选填）</span></label>
+          <select class="fs" id="ogsmLink">
+            <option value="">暂不关联</option>
+            <option value="s1">S-策略：核心品类深度运营</option>
+            <option value="s2">S-策略：交易模式多样化</option>
+            <option value="s3">S-策略：外部生态拓展</option>
+            <option value="s4">S-策略：平台技术升级</option>
+          </select>
+          <div class="fh">将目标与 OGSM 战略解码地图中的策略关联</div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Preview -->
+        <div style="font-size:14px;font-weight:600;color:var(--text-1);margin-bottom:16px;">提交前预览</div>
+
+        <div class="preview-section">
+          <div class="preview-label">目标名称</div>
+          <div class="preview-value" id="prevName">—</div>
+        </div>
+        <div class="fr" style="margin-bottom:12px;">
+          <div class="preview-section" style="margin-bottom:0;">
+            <div class="preview-label">目标类型</div>
+            <div class="preview-value" id="prevType">—</div>
+          </div>
+          <div class="preview-section" style="margin-bottom:0;">
+            <div class="preview-label">所属周期</div>
+            <div class="preview-value" id="prevCycle">—</div>
+          </div>
+        </div>
+        <div class="fr" style="margin-bottom:12px;">
+          <div class="preview-section" style="margin-bottom:0;">
+            <div class="preview-label">目标层级</div>
+            <div class="preview-value" id="prevLevel">—</div>
+          </div>
+          <div class="preview-section" style="margin-bottom:0;">
+            <div class="preview-label">对齐上级O</div>
+            <div class="preview-value" id="prevAlign">—</div>
+          </div>
+        </div>
+
+        <div class="preview-section">
+          <div class="preview-label">关键结果 (KR)</div>
+          <table class="preview-kr-table" id="prevKrTable">
+            <thead>
+              <tr>
+                <th style="width:32px;">#</th>
+                <th>KR 名称</th>
+                <th style="width:80px;">类型</th>
+                <th style="width:60px;">权重</th>
+                <th style="width:80px;">起始值</th>
+                <th style="width:80px;">目标值</th>
+              </tr>
+            </thead>
+            <tbody id="prevKrBody"></tbody>
+          </table>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Checklist -->
+        <div style="font-size:13px;font-weight:600;color:var(--text-1);margin-bottom:10px;">提交前检查</div>
+        <div id="checklist"></div>
+      </div>
+      <div class="card-foot">
+        <button class="btn btn-ghost" onclick="goToStep(3)">上一步</button>
+        <div class="flex gap-8">
+          <button class="btn" onclick="saveDraft()">保存草稿</button>
+          <button class="btn btn-primary btn-lg" id="submitBtn" onclick="submitGoal()">提交目标</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== Mock Data =====
+var MOCK = {
+  goalTypes: [
+    { value: 'business', label: '业务目标' },
+    { value: 'product', label: '产品目标' },
+    { value: 'tech', label: '技术目标' },
+    { value: 'team', label: '团队目标' },
+    { value: 'personal', label: '个人成长' }
+  ],
+  cycles: [
+    { value: '2026Q2', label: '2026 Q2（4月-6月）', type: 'quarter' },
+    { value: '2026Q3', label: '2026 Q3（7月-9月）', type: 'quarter' },
+    { value: '2026', label: '2026 年度', type: 'annual' }
+  ],
+  upperGoals: {
+    company: [
+      { id: 'O-2026-001', title: '建成能源化工行业最具公信力的智慧交易平台', owner: '张总', dept: '公司级', progress: 42, level: 'company' }
+    ],
+    department: [
+      { id: 'O-2026Q2-003', title: '差错率压降：首月对账差错率不超过0.3%', owner: '王总监', dept: '结算中心', progress: 36, level: 'department' },
+      { id: 'O-2026Q2-005', title: '结算流程标准化：建立全链路标准化操作体系', owner: '王总监', dept: '结算中心', progress: 65, level: 'department' },
+      { id: 'O-2026Q2-007', title: '资金安全零事故：确保全季度资金流转安全', owner: '王总监', dept: '结算中心', progress: 88, level: 'department' }
+    ],
+    team: [
+      { id: 'O-2026Q2-012', title: '建立差错实时监控与自动预警体系', owner: '陈组长', dept: '对账组', progress: 28, level: 'team' },
+      { id: 'O-2026Q2-015', title: '银企直连覆盖率提升至90%以上', owner: '刘组长', dept: '资金组', progress: 55, level: 'team' }
+    ]
+  },
+  user: { name: '李琦', dept: '结算中心', role: 'department_head' }
+};
+
+// ===== State =====
+var state = {
+  currentStep: 1,
+  maxVisited: 1,
+  goalName: '',
+  goalType: '',
+  goalCycle: '',
+  goalLevel: '',
+  startDate: '2026-04-01',
+  endDate: '2026-06-30',
+  goalDesc: '',
+  ogsmLink: '',
+  selectedAlign: null,
+  skipAlign: false,
+  krs: [
+    { name: '', type: 'numeric', weight: 40, startValue: 0, targetValue: '', unit: '', deadline: '2026-06-30' }
+  ]
+};
+
+// ===== Init =====
+document.addEventListener('DOMContentLoaded', function() {
+  initDropdowns();
+  renderAlignGoals();
+  renderKRBlocks();
+  loadDraft();
+});
+
+function initDropdowns() {
+  var typeSelect = document.getElementById('goalType');
+  MOCK.goalTypes.forEach(function(t) {
+    var opt = document.createElement('option');
+    opt.value = t.value;
+    opt.textContent = t.label;
+    typeSelect.appendChild(opt);
+  });
+
+  var cycleSelect = document.getElementById('goalCycle');
+  MOCK.cycles.forEach(function(c) {
+    var opt = document.createElement('option');
+    opt.value = c.value;
+    opt.textContent = c.label;
+    cycleSelect.appendChild(opt);
+  });
+}
+
+// ===== Step Navigation =====
+function goToStep(n) {
+  if (n < 1 || n > 4) return;
+
+  // Validate current step before going forward
+  if (n > state.currentStep) {
+    if (!validateStep(state.currentStep)) return;
+  }
+
+  // Save current step data
+  saveStepData();
+
+  // Update state
+  state.currentStep = n;
+  if (n > state.maxVisited) state.maxVisited = n;
+
+  // Update UI
+  updateStepIndicator();
+  showPanel(n);
+
+  // Step-specific init
+  if (n === 3) {
+    var name = document.getElementById('goalName').value.trim();
+    if (name) {
+      document.getElementById('krCardHint').textContent = 'O：' + (name.length > 30 ? name.substring(0, 30) + '...' : name);
+    }
+  }
+  if (n === 4) {
+    renderPreview();
+    renderChecklist();
+  }
+
+  // Scroll to top
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function validateStep(step) {
+  if (step === 1) {
+    var name = document.getElementById('goalName').value.trim();
+    var type = document.getElementById('goalType').value;
+    var cycle = document.getElementById('goalCycle').value;
+    var level = document.getElementById('goalLevel').value;
+    var errors = [];
+    if (!name) errors.push('目标名称');
+    if (!type) errors.push('目标类型');
+    if (!cycle) errors.push('所属周期');
+    if (!level) errors.push('目标层级');
+    if (errors.length > 0) {
+      showToast('请填写必填项：' + errors.join('、'), 'error');
+      // Highlight empty fields
+      if (!name) document.getElementById('goalName').classList.add('error');
+      if (!type) document.getElementById('goalType').classList.add('error');
+      if (!cycle) document.getElementById('goalCycle').classList.add('error');
+      if (!level) document.getElementById('goalLevel').classList.add('error');
+      return false;
+    }
+    // Clear error states
+    ['goalName','goalType','goalCycle','goalLevel'].forEach(function(id) {
+      document.getElementById(id).classList.remove('error');
+    });
+    return true;
+  }
+  if (step === 3) {
+    var total = calcWeightTotal();
+    if (total !== 100) {
+      showToast('KR 权重合计必须等于 100%，当前为 ' + total + '%', 'error');
+      return false;
+    }
+    // Check all KR names filled
+    var allFilled = true;
+    state.krs.forEach(function(kr) {
+      if (!kr.name.trim()) allFilled = false;
+    });
+    if (!allFilled) {
+      showToast('请填写所有 KR 的名称', 'error');
+      return false;
+    }
+    return true;
+  }
+  return true;
+}
+
+function saveStepData() {
+  state.goalName = document.getElementById('goalName').value.trim();
+  state.goalType = document.getElementById('goalType').value;
+  state.goalCycle = document.getElementById('goalCycle').value;
+  state.goalLevel = document.getElementById('goalLevel').value;
+  state.startDate = document.getElementById('startDate').value;
+  state.endDate = document.getElementById('endDate').value;
+  state.goalDesc = document.getElementById('goalDesc').value.trim();
+  state.ogsmLink = document.getElementById('ogsmLink').value;
+
+  // Save KR data from DOM
+  state.krs.forEach(function(kr, i) {
+    var nameEl = document.getElementById('kr-name-' + i);
+    var typeEl = document.getElementById('kr-type-' + i);
+    var weightEl = document.getElementById('kr-weight-' + i);
+    if (nameEl) kr.name = nameEl.value.trim();
+    if (typeEl) kr.type = typeEl.value;
+    if (weightEl) kr.weight = parseInt(weightEl.value) || 0;
+
+    var startEl = document.getElementById('kr-start-' + i);
+    var targetEl = document.getElementById('kr-target-' + i);
+    var unitEl = document.getElementById('kr-unit-' + i);
+    var deadlineEl = document.getElementById('kr-deadline-' + i);
+    if (startEl) kr.startValue = parseFloat(startEl.value) || 0;
+    if (targetEl) kr.targetValue = targetEl.value;
+    if (unitEl) kr.unit = unitEl.value.trim();
+    if (deadlineEl) kr.deadline = deadlineEl.value;
+  });
+}
+
+function updateStepIndicator() {
+  var items = document.querySelectorAll('.step-item');
+  var lines = document.querySelectorAll('.step-line');
+
+  items.forEach(function(item) {
+    var s = parseInt(item.getAttribute('data-step'));
+    item.classList.remove('active', 'done');
+    if (s === state.currentStep) {
+      item.classList.add('active');
+    } else if (s < state.currentStep) {
+      item.classList.add('done');
+    }
+  });
+
+  // Update lines
+  for (var i = 0; i < lines.length; i++) {
+    lines[i].classList.remove('done', 'active');
+    if (i + 1 < state.currentStep) {
+      lines[i].classList.add('done');
+    } else if (i + 1 === state.currentStep) {
+      lines[i].classList.add('active');
+    }
+  }
+}
+
+function showPanel(n) {
+  document.querySelectorAll('.step-panel').forEach(function(p) {
+    p.classList.remove('active');
+  });
+  document.getElementById('panel-' + n).classList.add('active');
+}
+
+// ===== Alignment Selector =====
+function renderAlignGoals() {
+  renderAlignLevel('company', 'alignCompanyList');
+  renderAlignLevel('department', 'alignDeptList');
+  renderAlignLevel('team', 'alignTeamList');
+
+  // Recommended: department level goals for current user's dept
+  var recEl = document.getElementById('alignRecommendList');
+  var recommended = MOCK.upperGoals.department;
+  if (recommended && recommended.length > 0) {
+    recEl.innerHTML = recommended.map(function(g) { return buildAlignCard(g); }).join('');
+  } else {
+    recEl.innerHTML = '<div class="align-empty">暂无推荐目标</div>';
+  }
+}
+
+function renderAlignLevel(level, containerId) {
+  var el = document.getElementById(containerId);
+  var goals = MOCK.upperGoals[level];
+  if (goals && goals.length > 0) {
+    el.innerHTML = goals.map(function(g) { return buildAlignCard(g); }).join('');
+  } else {
+    el.innerHTML = '<div class="align-empty">暂无' + ({company:'公司级',department:'部门级',team:'团队级'}[level]) + '目标</div>';
+  }
+}
+
+function buildAlignCard(g) {
+  var isSelected = state.selectedAlign && state.selectedAlign.id === g.id;
+  var levelTag = {company:'公司级',department:'部门级',team:'团队级'}[g.level] || '';
+  var tagClass = {company:'tag-blue',department:'tag-green',team:'tag-yellow'}[g.level] || 'tag-gray';
+  return '<div class="align-card' + (isSelected ? ' selected' : '') + '" onclick="selectAlign(\'' + g.id + '\')" data-id="' + g.id + '" data-title="' + g.title + '">' +
+    '<div class="align-card-head">' +
+      '<div class="align-card-radio"></div>' +
+      '<span class="tag ' + tagClass + '">' + levelTag + '</span>' +
+      '<span class="align-card-id">' + g.id + '</span>' +
+    '</div>' +
+    '<div class="align-card-title">' + g.title + '</div>' +
+    '<div class="align-card-meta">' +
+      '<span>' + g.owner + '</span>' +
+      '<span>' + g.dept + '</span>' +
+    '</div>' +
+    '<div class="align-card-progress">' +
+      '<div class="align-progress-bar"><div class="align-progress-fill" style="width:' + g.progress + '%"></div></div>' +
+      '<div class="align-progress-pct">' + g.progress + '%</div>' +
+    '</div>' +
+  '</div>';
+}
+
+function selectAlign(id) {
+  // Find goal data
+  var goal = null;
+  ['company','department','team'].forEach(function(level) {
+    MOCK.upperGoals[level].forEach(function(g) {
+      if (g.id === id) goal = g;
+    });
+  });
+  if (!goal) return;
+
+  state.selectedAlign = goal;
+  state.skipAlign = false;
+  document.getElementById('skipAlign').checked = false;
+
+  // Update all cards
+  document.querySelectorAll('.align-card').forEach(function(card) {
+    card.classList.toggle('selected', card.getAttribute('data-id') === id);
+  });
+
+  // Show selected banner
+  var selEl = document.getElementById('alignSelected');
+  selEl.style.display = 'block';
+  document.getElementById('alignSelectedTitle').textContent = goal.id + ' · ' + goal.title;
+  document.getElementById('alignSelectedMeta').textContent = goal.owner + ' · ' + goal.dept + ' · 进度 ' + goal.progress + '%';
+}
+
+function clearAlignment() {
+  state.selectedAlign = null;
+  document.querySelectorAll('.align-card').forEach(function(card) {
+    card.classList.remove('selected');
+  });
+  document.getElementById('alignSelected').style.display = 'none';
+}
+
+function toggleSkipAlign() {
+  var checked = document.getElementById('skipAlign').checked;
+  if (checked) {
+    clearAlignment();
+    state.skipAlign = true;
+  }
+}
+
+function filterAlignGoals(keyword) {
+  keyword = keyword.trim().toLowerCase();
+  document.querySelectorAll('.align-card').forEach(function(card) {
+    var title = card.getAttribute('data-title') || '';
+    var id = card.getAttribute('data-id') || '';
+    if (!keyword || title.toLowerCase().indexOf(keyword) >= 0 || id.toLowerCase().indexOf(keyword) >= 0) {
+      card.style.display = '';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}
+
+// ===== KR Sub-table =====
+function renderKRBlocks() {
+  var container = document.getElementById('krContainer');
+  container.innerHTML = '';
+  state.krs.forEach(function(kr, i) {
+    container.innerHTML += buildKRBlock(kr, i);
+  });
+  updateWeightSummary();
+  updateAddBtnVisibility();
+}
+
+function buildKRBlock(kr, i) {
+  var typeOptions = [
+    { value: 'numeric', label: '数值型' },
+    { value: 'percentage', label: '百分比型' },
+    { value: 'boolean', label: '是否型' },
+    { value: 'milestone', label: '里程碑型' }
+  ];
+  var typeSelectHtml = typeOptions.map(function(t) {
+    return '<option value="' + t.value + '"' + (kr.type === t.value ? ' selected' : '') + '>' + t.label + '</option>';
+  }).join('');
+
+  var fieldsHtml = buildKRTypeFields(kr, i);
+
+  return '<div class="kr-block" id="kr-block-' + i + '">' +
+    '<div class="kr-block-head">' +
+      '<div class="kr-block-num"><span class="num">' + (i + 1) + '</span>KR #' + (i + 1) + '</div>' +
+      '<div class="kr-block-actions">' +
+        (state.krs.length > 1 ? '<button class="btn btn-danger btn-sm" onclick="removeKR(' + i + ')">删除</button>' : '') +
+      '</div>' +
+    '</div>' +
+    '<div class="kr-block-body">' +
+      '<div class="fg">' +
+        '<label class="fl">KR 名称<span class="req">*</span></label>' +
+        '<input class="fi" id="kr-name-' + i + '" value="' + (kr.name || '') + '" placeholder="例如：首月对账差错率不超过0.3%" oninput="onKRChange()">' +
+      '</div>' +
+      '<div class="fr3">' +
+        '<div class="fg">' +
+          '<label class="fl">KR 类型</label>' +
+          '<select class="fs" id="kr-type-' + i + '" onchange="onKRTypeChange(' + i + ')">' + typeSelectHtml + '</select>' +
+        '</div>' +
+        '<div class="fg">' +
+          '<label class="fl">权重 (%)</label>' +
+          '<div class="kr-weight-row">' +
+            '<input class="fi kr-weight-input" id="kr-weight-' + i + '" type="number" min="1" max="100" value="' + (kr.weight || 0) + '" oninput="onKRChange()">' +
+            '<span class="text-sm text-muted">%</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="fg">' +
+          '<label class="fl">截止日期</label>' +
+          '<input class="fi" id="kr-deadline-' + i + '" type="date" value="' + (kr.deadline || '') + '" oninput="onKRChange()">' +
+        '</div>' +
+      '</div>' +
+      '<div class="kr-type-fields" id="kr-fields-' + i + '">' + fieldsHtml + '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+function buildKRTypeFields(kr, i) {
+  var type = kr.type || 'numeric';
+  if (type === 'numeric') {
+    return '<div class="fr3">' +
+      '<div class="fg"><label class="fl">起始值</label><input class="fi" id="kr-start-' + i + '" type="number" value="' + (kr.startValue || 0) + '" oninput="onKRChange()"></div>' +
+      '<div class="fg"><label class="fl">目标值<span class="req">*</span></label><input class="fi" id="kr-target-' + i + '" type="number" value="' + (kr.targetValue || '') + '" placeholder="例如：5000" oninput="onKRChange()"></div>' +
+      '<div class="fg"><label class="fl">单位</label><input class="fi" id="kr-unit-' + i + '" value="' + (kr.unit || '') + '" placeholder="万元、家、%" oninput="onKRChange()"></div>' +
+    '</div>';
+  } else if (type === 'percentage') {
+    return '<div class="fr">' +
+      '<div class="fg"><label class="fl">起始值 (%)</label><input class="fi" id="kr-start-' + i + '" type="number" min="0" max="100" value="' + (kr.startValue || 0) + '" oninput="onKRChange()"></div>' +
+      '<div class="fg"><label class="fl">目标值 (%)<span class="req">*</span></label><input class="fi" id="kr-target-' + i + '" type="number" min="0" max="100" value="' + (kr.targetValue || '') + '" placeholder="例如：95" oninput="onKRChange()"></div>' +
+    '</div>';
+  } else if (type === 'boolean') {
+    return '<div class="alert alert-info" style="margin-bottom:0;"><div class="alert-icon">i</div><div>是否型 KR 只有"完成"和"未完成"两种状态，完成率计算为 0% 或 100%。</div></div>';
+  } else if (type === 'milestone') {
+    return '<div class="alert alert-info" style="margin-bottom:0;"><div class="alert-icon">i</div><div>里程碑型 KR 在指定日期前完成即为 100%，未完成为 0%。请在上方设置截止日期。</div></div>';
+  }
+  return '';
+}
+
+function onKRTypeChange(i) {
+  saveStepData();
+  var typeEl = document.getElementById('kr-type-' + i);
+  state.krs[i].type = typeEl.value;
+  // Re-render just the fields section
+  var fieldsEl = document.getElementById('kr-fields-' + i);
+  fieldsEl.innerHTML = buildKRTypeFields(state.krs[i], i);
+}
+
+function addKR() {
+  if (state.krs.length >= 5) {
+    showToast('最多支持 5 个 KR', 'error');
+    return;
+  }
+  saveStepData();
+  // Auto-distribute weight
+  var remaining = 100;
+  state.krs.forEach(function(kr) { remaining -= (kr.weight || 0); });
+  var newWeight = Math.max(10, Math.round(remaining / 1));
+
+  state.krs.push({
+    name: '',
+    type: 'numeric',
+    weight: newWeight,
+    startValue: 0,
+    targetValue: '',
+    unit: '',
+    deadline: state.endDate || '2026-06-30'
+  });
+  renderKRBlocks();
+}
+
+function removeKR(i) {
+  if (state.krs.length <= 1) return;
+  saveStepData();
+  state.krs.splice(i, 1);
+  renderKRBlocks();
+}
+
+function onKRChange() {
+  // Debounced weight update
+  clearTimeout(window._krTimer);
+  window._krTimer = setTimeout(function() {
+    updateWeightSummary();
+  }, 200);
+}
+
+function calcWeightTotal() {
+  var total = 0;
+  state.krs.forEach(function(kr, i) {
+    var el = document.getElementById('kr-weight-' + i);
+    if (el) total += parseInt(el.value) || 0;
+  });
+  return total;
+}
+
+function updateWeightSummary() {
+  var total = calcWeightTotal();
+  var summaryEl = document.getElementById('weightSummary');
+  var totalEl = document.getElementById('weightTotal');
+  var hintEl = document.getElementById('weightHint');
+
+  totalEl.textContent = total + '%';
+
+  if (total === 100) {
+    summaryEl.className = 'weight-summary valid';
+    hintEl.textContent = '权重分配正确';
+  } else if (total > 100) {
+    summaryEl.className = 'weight-summary invalid';
+    hintEl.textContent = '权重超出 100%，请调整（超出 ' + (total - 100) + '%）';
+  } else {
+    summaryEl.className = 'weight-summary invalid';
+    hintEl.textContent = '还差 ' + (100 - total) + '% 达到 100%';
+  }
+}
+
+function updateAddBtnVisibility() {
+  var btn = document.getElementById('addKrBtn');
+  if (state.krs.length >= 5) {
+    btn.style.display = 'none';
+  } else {
+    btn.style.display = '';
+  }
+}
+
+// ===== Preview (Step 4) =====
+function renderPreview() {
+  saveStepData();
+
+  document.getElementById('prevName').textContent = state.goalName || '—';
+
+  var typeLabel = '—';
+  MOCK.goalTypes.forEach(function(t) { if (t.value === state.goalType) typeLabel = t.label; });
+  document.getElementById('prevType').textContent = typeLabel;
+
+  var cycleLabel = '—';
+  MOCK.cycles.forEach(function(c) { if (c.value === state.goalCycle) cycleLabel = c.label; });
+  document.getElementById('prevCycle').textContent = cycleLabel;
+
+  var levelMap = { department: '部门级', team: '团队级', personal: '个人级' };
+  document.getElementById('prevLevel').textContent = levelMap[state.goalLevel] || '—';
+
+  if (state.selectedAlign) {
+    document.getElementById('prevAlign').textContent = state.selectedAlign.id + ' · ' + state.selectedAlign.title;
+  } else if (state.skipAlign) {
+    document.getElementById('prevAlign').textContent = '暂不对齐';
+  } else {
+    document.getElementById('prevAlign').textContent = '未选择';
+  }
+
+  // KR table
+  var tbody = document.getElementById('prevKrBody');
+  tbody.innerHTML = '';
+  var typeLabels = { numeric: '数值型', percentage: '百分比型', boolean: '是否型', milestone: '里程碑型' };
+  state.krs.forEach(function(kr, i) {
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td style="font-weight:600;color:var(--primary);">' + (i + 1) + '</td>' +
+      '<td>' + (kr.name || '<span class="text-muted">未填写</span>') + '</td>' +
+      '<td><span class="tag tag-gray">' + (typeLabels[kr.type] || kr.type) + '</span></td>' +
+      '<td style="font-weight:600;">' + (kr.weight || 0) + '%</td>' +
+      '<td>' + (kr.type === 'boolean' || kr.type === 'milestone' ? '—' : (kr.startValue || 0)) + '</td>' +
+      '<td>' + (kr.type === 'boolean' || kr.type === 'milestone' ? '—' : (kr.targetValue || '—')) + (kr.unit ? ' ' + kr.unit : '') + '</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+function renderChecklist() {
+  var el = document.getElementById('checklist');
+  var items = [];
+
+  // Check name
+  items.push({
+    pass: state.goalName.length > 0,
+    text: '目标名称已填写（' + state.goalName.length + ' 字）'
+  });
+
+  // Check name length
+  items.push({
+    pass: state.goalName.length >= 10,
+    warn: state.goalName.length > 0 && state.goalName.length < 10,
+    text: state.goalName.length >= 10 ? '目标名称长度合适' : '目标名称建议 15-50 字，当前偏短'
+  });
+
+  // Check type & cycle
+  items.push({
+    pass: state.goalType && state.goalCycle && state.goalLevel,
+    text: '目标类型、周期、层级已选择'
+  });
+
+  // Check alignment
+  items.push({
+    pass: state.selectedAlign !== null || state.skipAlign,
+    warn: !state.selectedAlign && !state.skipAlign,
+    text: state.selectedAlign ? '已对齐上级O：' + state.selectedAlign.id : (state.skipAlign ? '已选择暂不对齐' : '未选择对齐上级O')
+  });
+
+  // Check KR count
+  items.push({
+    pass: state.krs.length >= 2,
+    warn: state.krs.length === 1,
+    text: state.krs.length >= 2 ? '已添加 ' + state.krs.length + ' 个 KR' : '建议至少添加 2 个 KR（当前 ' + state.krs.length + ' 个）'
+  });
+
+  // Check weight
+  var total = 0;
+  state.krs.forEach(function(kr) { total += (kr.weight || 0); });
+  items.push({
+    pass: total === 100,
+    text: 'KR 权重合计 ' + total + '%' + (total === 100 ? '（正确）' : '（需等于 100%）')
+  });
+
+  // Check KR names
+  var allNamed = true;
+  state.krs.forEach(function(kr) { if (!kr.name.trim()) allNamed = false; });
+  items.push({
+    pass: allNamed,
+    text: allNamed ? '所有 KR 名称已填写' : '存在未填写名称的 KR'
+  });
+
+  el.innerHTML = items.map(function(item) {
+    var iconClass = item.pass ? 'pass' : (item.warn ? 'warn' : 'fail');
+    var iconText = item.pass ? '&#10003;' : (item.warn ? '!' : '&#10007;');
+    return '<div class="checklist-item">' +
+      '<div class="checklist-icon ' + iconClass + '">' + iconText + '</div>' +
+      '<span style="color:' + (item.pass ? 'var(--text-1)' : (item.warn ? '#8a6200' : 'var(--red)')) + '">' + item.text + '</span>' +
+    '</div>';
+  }).join('');
+
+  // Update submit button
+  var hasError = items.some(function(item) { return !item.pass && !item.warn; });
+  document.getElementById('submitBtn').disabled = hasError;
+}
+
+// ===== Draft Save/Load =====
+function saveDraft() {
+  saveStepData();
+  try {
+    localStorage.setItem('okr_goal_draft', JSON.stringify(state));
+    showToast('草稿已保存', 'success');
+  } catch(e) {
+    showToast('保存失败：' + e.message, 'error');
+  }
+}
+
+function loadDraft() {
+  try {
+    var saved = localStorage.getItem('okr_goal_draft');
+    if (!saved) return;
+    var draft = JSON.parse(saved);
+    if (draft.goalName) document.getElementById('goalName').value = draft.goalName;
+    if (draft.goalType) document.getElementById('goalType').value = draft.goalType;
+    if (draft.goalCycle) document.getElementById('goalCycle').value = draft.goalCycle;
+    if (draft.goalLevel) document.getElementById('goalLevel').value = draft.goalLevel;
+    if (draft.startDate) document.getElementById('startDate').value = draft.startDate;
+    if (draft.endDate) document.getElementById('endDate').value = draft.endDate;
+    if (draft.goalDesc) document.getElementById('goalDesc').value = draft.goalDesc;
+    if (draft.ogsmLink) document.getElementById('ogsmLink').value = draft.ogsmLink;
+
+    if (draft.krs && draft.krs.length > 0) {
+      state.krs = draft.krs;
+      renderKRBlocks();
+    }
+    if (draft.selectedAlign) {
+      state.selectedAlign = draft.selectedAlign;
+      selectAlign(draft.selectedAlign.id);
+    }
+    if (draft.skipAlign) {
+      state.skipAlign = true;
+      document.getElementById('skipAlign').checked = true;
+    }
+
+    showToast('已恢复上次保存的草稿', 'info');
+  } catch(e) {
+    // Ignore parse errors
+  }
+}
+
+// ===== Submit =====
+function submitGoal() {
+  saveStepData();
+
+  // Final validation
+  if (!state.goalName) { showToast('目标名称不能为空', 'error'); return; }
+  var total = 0;
+  state.krs.forEach(function(kr) { total += (kr.weight || 0); });
+  if (total !== 100) { showToast('KR 权重合计必须等于 100%', 'error'); return; }
+
+  // Build payload
+  var payload = {
+    goal_name: state.goalName,
+    goal_type: state.goalType,
+    cycle: state.goalCycle,
+    level: state.goalLevel,
+    owner: '李琦',
+    start_date: state.startDate,
+    end_date: state.endDate,
+    description: state.goalDesc,
+    ogsm_link: state.ogsmLink,
+    align_to: state.selectedAlign ? state.selectedAlign.id : null,
+    krs: state.krs.map(function(kr, i) {
+      return {
+        name: kr.name,
+        type: kr.type,
+        weight: kr.weight,
+        start_value: kr.startValue,
+        target_value: kr.targetValue,
+        unit: kr.unit,
+        deadline: kr.deadline
+      };
+    })
+  };
+
+  console.log('Submit payload:', JSON.stringify(payload, null, 2));
+
+  // Simulate submit
+  showToast('目标提交成功！等待上级审批', 'success');
+
+  // Clear draft
+  localStorage.removeItem('okr_goal_draft');
+}
+
+// ===== Toast =====
+function showToast(msg, type) {
+  type = type || 'info';
+  var colors = { success: 'toast-success', error: 'toast-error', info: 'toast-info' };
+  var t = document.createElement('div');
+  t.className = 'toast ' + (colors[type] || colors.info);
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function() {
+    t.style.opacity = '0';
+    t.style.transform = 'translateY(-10px)';
+    t.style.transition = 'all .3s';
+    setTimeout(function() { t.remove(); }, 300);
+  }, 3000);
+}
+
+// ===== Input event listeners for real-time validation clearing =====
+document.addEventListener('input', function(e) {
+  if (e.target.classList.contains('error') && e.target.value.trim()) {
+    e.target.classList.remove('error');
+  }
+});
+document.addEventListener('change', function(e) {
+  if (e.target.classList.contains('error') && e.target.value) {
+    e.target.classList.remove('error');
+  }
+});
+</script>
+
+</body>
+</html>

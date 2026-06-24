@@ -1,0 +1,29 @@
+"""批量删除表单中多条记录（最多100条/次）"""
+import json
+
+
+async def execute(ctx, **params):
+    """执行简道云 API 调用"""
+    import sys
+    import os
+    
+    # 添加父目录到路径，以便导入 lib 模块
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+    
+    from lib.api_client import call_jdy_api
+    
+    # 构建请求参数
+    url = "https://api.jiandaoyun.com/api/v5/app/entry/data/batch_delete"
+    method = "POST"
+    
+    # 准备请求体
+    json_body = {}
+    for key, value in params.items():
+        if value is not None and value != "":
+            json_body[key] = value
+    
+    try:
+        result = await call_jdy_api(ctx, method, url, json_body=json_body)
+        return json.dumps(result, ensure_ascii=False, default=str)
+    except Exception as e:
+        return f"错误: {str(e)}"

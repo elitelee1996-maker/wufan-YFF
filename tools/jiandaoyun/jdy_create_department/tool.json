@@ -1,0 +1,43 @@
+{
+  "name": "jdy_create_department",
+  "display_name": "创建部门",
+  "description_zh": "在企业通讯录中创建新部门",
+  "description": "Create a new department in the organization. Required: name, parent_no (parent department number, root=1). Optional: dept_no (auto-assigned if omitted), integrate_id. Returns the created department info. Rate limit: 30/s.",
+  "params": {
+    "name": {
+      "type": "string",
+      "description": "部门名称"
+    },
+    "parent_no": {
+      "type": "integer",
+      "description": "父部门编号，根部门为1"
+    },
+    "dept_no": {
+      "type": "integer",
+      "description": "自定义部门编号（可选，不填则自动分配）",
+      "default": 0
+    },
+    "integrate_id": {
+      "type": "string",
+      "description": "集成模式关联ID",
+      "default": ""
+    }
+  },
+  "api": {
+    "url": "https://api.jiandaoyun.com/api/v5/corp/department/create",
+    "method": "POST",
+    "headers": {
+      "Authorization": "Bearer ${conn:jiandaoyun.api_key}",
+      "Content-Type": "application/json"
+    }
+  },
+  "requires_connections": [
+    {
+      "category": "jiandaoyun",
+      "fields": [
+        "api_key"
+      ],
+      "required": true
+    }
+  ]
+}

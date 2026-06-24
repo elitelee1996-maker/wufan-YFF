@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>项目计划编制 — 紧前紧后关系编辑原型</title>
+<style>
+:root {
+  --primary: #4f46e5;
+  --primary-light: #eef2ff;
+  --primary-hover: #4338ca;
+  --green: #059669;
+  --green-light: #d1fae5;
+  --green-bg: #ecfdf5;
+  --amber: #d97706;
+  --amber-light: #fef3c7;
+  --red: #dc2626;
+  --red-light: #fee2e2;
+  --blue: #2563eb;
+  --blue-light: #dbeafe;
+  --slate-50: #f8fafc;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1;
+  --slate-400: #94a3b8;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+  --slate-700: #334155;
+  --slate-800: #1e293b;
+  --slate-900: #0f172a;
+  --radius: 8px;
+  --radius-sm: 4px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -1px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.08);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; background: var(--slate-100); color: var(--slate-800); font-size: 14px; line-height: 1.5; }
+
+/* ===== Header ===== */
+.header { background: #fff; border-bottom: 1px solid var(--slate-200); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
+.header-left { display: flex; align-items: center; gap: 16px; }
+.header-left h1 { font-size: 17px; font-weight: 700; color: var(--slate-900); }
+.project-badge { background: var(--primary-light); color: var(--primary); padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+.header-stats { display: flex; gap: 20px; font-size: 13px; color: var(--slate-500); }
+.header-stats span { display: flex; align-items: center; gap: 4px; }
+.header-stats strong { color: var(--slate-800); font-size: 15px; }
+.header-actions { display: flex; gap: 8px; }
+
+/* ===== Buttons ===== */
+.btn { padding: 7px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid var(--slate-200); background: #fff; color: var(--slate-700); transition: all 0.15s; display: inline-flex; align-items: center; gap: 5px; }
+.btn:hover { background: var(--slate-50); border-color: var(--slate-300); }
+.btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.btn-ghost { border: none; background: transparent; color: var(--slate-500); }
+.btn-ghost:hover { background: var(--slate-100); color: var(--slate-700); }
+.btn-danger { color: var(--red); }
+.btn-danger:hover { background: var(--red-light); }
+.btn-success { background: var(--green); color: #fff; border-color: var(--green); }
+
+/* ===== Main Layout ===== */
+.main-content { padding: 20px 24px; display: flex; flex-direction: column; gap: 20px; height: calc(100vh - 57px); overflow: hidden; }
+
+/* ===== Table Section ===== */
+.table-section { background: #fff; border-radius: var(--radius); border: 1px solid var(--slate-200); box-shadow: var(--shadow); flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.section-header { padding: 14px 20px; border-bottom: 1px solid var(--slate-200); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.section-title { font-size: 14px; font-weight: 600; color: var(--slate-800); display: flex; align-items: center; gap: 8px; }
+.section-title .icon { font-size: 16px; }
+.table-scroll { flex: 1; overflow-y: auto; }
+table { width: 100%; border-collapse: collapse; }
+thead { position: sticky; top: 0; z-index: 10; }
+th { background: var(--slate-50); padding: 10px 14px; text-align: left; font-size: 12px; font-weight: 600; color: var(--slate-500); text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid var(--slate-200); white-space: nowrap; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--slate-100); font-size: 13px; vertical-align: middle; }
+tr.activity-row { cursor: pointer; transition: background 0.1s; }
+tr.activity-row:hover { background: var(--slate-50); }
+tr.activity-row.selected { background: var(--primary-light); }
+tr.activity-row.highlight-predecessor { background: var(--green-bg); }
+tr.activity-row.highlight-successor { background: var(--amber-light); }
+
+/* ===== Activity ID & Name ===== */
+.act-id { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; color: var(--primary); font-weight: 600; background: var(--primary-light); padding: 2px 8px; border-radius: 4px; }
+.act-name { font-weight: 500; color: var(--slate-800); }
+.act-wbs { font-size: 12px; color: var(--slate-400); margin-left: 4px; }
+
+/* ===== Dependency Tags ===== */
+.dep-tags { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.dep-tag { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+.dep-tag.fs { background: #dbeafe; color: #1d4ed8; }
+.dep-tag.ss { background: #fce7f3; color: #be185d; }
+.dep-tag.ff { background: #fef3c7; color: #92400e; }
+.dep-tag.sf { background: #e0e7ff; color: #4338ca; }
+.dep-tag:hover { filter: brightness(0.92); transform: translateY(-1px); }
+.dep-tag .remove-dep { font-size: 13px; margin-left: 2px; opacity: 0.5; }
+.dep-tag .remove-dep:hover { opacity: 1; color: var(--red); }
+.dep-tag .lag { font-size: 10px; opacity: 0.7; margin-left: 1px; }
+.add-dep-btn { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 4px; font-size: 11px; color: var(--slate-400); border: 1px dashed var(--slate-300); cursor: pointer; transition: all 0.15s; background: transparent; }
+.add-dep-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+.no-dep { color: var(--slate-300); font-size: 12px; font-style: italic; }
+
+/* ===== Duration & Dates ===== */
+.duration-cell { font-weight: 600; color: var(--slate-700); }
+.date-cell { font-size: 12px; color: var(--slate-500); }
+
+/* ===== Graph Section ===== */
+.graph-section { background: #fff; border-radius: var(--radius); border: 1px solid var(--slate-200); box-shadow: var(--shadow); height: 340px; flex-shrink: 0; display: flex; flex-direction: column; overflow: hidden; }
+.graph-container { flex: 1; position: relative; overflow: hidden; }
+.graph-container svg { width: 100%; height: 100%; }
+
+/* ===== SVG Styles ===== */
+.node-group { cursor: pointer; }
+.node-group:hover .node-rect { filter: brightness(0.95); }
+.node-rect { rx: 6; ry: 6; transition: all 0.2s; }
+.node-rect.default { fill: #fff; stroke: var(--slate-300); stroke-width: 1.5; }
+.node-rect.start { fill: var(--green-light); stroke: var(--green); stroke-width: 2; }
+.node-rect.end { fill: var(--amber-light); stroke: var(--amber); stroke-width: 2; }
+.node-rect.selected { fill: var(--primary-light); stroke: var(--primary); stroke-width: 2.5; }
+.node-rect.predecessor { fill: var(--green-bg); stroke: var(--green); stroke-width: 2; }
+.node-rect.successor { fill: var(--amber-light); stroke: var(--amber); stroke-width: 2; }
+.node-rect.dimmed { fill: var(--slate-50); stroke: var(--slate-200); stroke-width: 1; opacity: 0.4; }
+.node-id { font-size: 11px; font-weight: 700; fill: var(--slate-500); text-anchor: middle; }
+.node-name { font-size: 11px; font-weight: 500; fill: var(--slate-800); text-anchor: middle; }
+.node-duration { font-size: 10px; fill: var(--slate-400); text-anchor: middle; }
+.edge-line { fill: none; stroke: var(--slate-300); stroke-width: 1.5; transition: all 0.2s; }
+.edge-line.highlighted { stroke: var(--primary); stroke-width: 2.5; }
+.edge-line.predecessor-edge { stroke: var(--green); stroke-width: 2; }
+.edge-line.successor-edge { stroke: var(--amber); stroke-width: 2; }
+.edge-line.dimmed { opacity: 0.15; }
+.edge-line.ss, .edge-line.ff, .edge-line.sf { stroke-dasharray: 6 3; }
+.edge-label { font-size: 9px; font-weight: 600; text-anchor: middle; }
+.edge-label.fs { fill: #1d4ed8; }
+.edge-label.ss { fill: #be185d; }
+.edge-label.ff { fill: #92400e; }
+.edge-label.sf { fill: #4338ca; }
+marker polygon { transition: fill 0.2s; }
+
+/* ===== Legend ===== */
+.graph-legend { display: flex; gap: 16px; padding: 8px 20px; border-top: 1px solid var(--slate-100); font-size: 11px; color: var(--slate-500); align-items: center; flex-shrink: 0; background: var(--slate-50); }
+.legend-item { display: flex; align-items: center; gap: 5px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 3px; border: 1.5px solid; }
+.legend-line { width: 20px; height: 2px; }
+
+/* ===== Modal ===== */
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15,23,42,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(2px); }
+.modal-overlay.show { display: flex; }
+.modal { background: #fff; border-radius: 12px; width: 560px; max-height: 85vh; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); display: flex; flex-direction: column; }
+.modal-header { padding: 18px 24px; border-bottom: 1px solid var(--slate-200); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.modal-header h3 { font-size: 16px; font-weight: 600; }
+.modal-close { cursor: pointer; font-size: 22px; color: var(--slate-400); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 6px; border: none; background: transparent; }
+.modal-close:hover { background: var(--slate-100); color: var(--slate-600); }
+.modal-body { padding: 20px 24px; flex: 1; overflow-y: auto; }
+.modal-footer { padding: 14px 24px; border-top: 1px solid var(--slate-200); display: flex; justify-content: flex-end; gap: 8px; flex-shrink: 0; }
+
+/* ===== Current Dependencies List ===== */
+.current-deps { margin-bottom: 20px; }
+.current-deps-title { font-size: 13px; font-weight: 600; color: var(--slate-600); margin-bottom: 8px; }
+.current-dep-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--slate-50); border-radius: 6px; margin-bottom: 6px; }
+.current-dep-info { display: flex; align-items: center; gap: 8px; }
+.current-dep-info .act-id { font-size: 11px; }
+.current-dep-type { font-size: 11px; padding: 1px 6px; border-radius: 3px; font-weight: 600; }
+.current-dep-type.fs { background: #dbeafe; color: #1d4ed8; }
+.current-dep-type.ss { background: #fce7f3; color: #be185d; }
+.current-dep-type.ff { background: #fef3c7; color: #92400e; }
+.current-dep-type.sf { background: #e0e7ff; color: #4338ca; }
+.remove-dep-btn { padding: 4px 8px; border: none; background: transparent; color: var(--slate-400); cursor: pointer; border-radius: 4px; font-size: 12px; }
+.remove-dep-btn:hover { background: var(--red-light); color: var(--red); }
+
+/* ===== Add Dependency Form ===== */
+.add-dep-section { border-top: 1px solid var(--slate-200); padding-top: 16px; }
+.add-dep-title { font-size: 13px; font-weight: 600; color: var(--primary); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+.form-group { margin-bottom: 12px; }
+.form-label { font-size: 12px; font-weight: 500; color: var(--slate-600); margin-bottom: 5px; display: block; }
+.form-select, .form-input { width: 100%; padding: 8px 12px; border: 1px solid var(--slate-200); border-radius: 6px; font-size: 13px; color: var(--slate-800); background: #fff; transition: border 0.15s; }
+.form-select:focus, .form-input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-hint { font-size: 11px; color: var(--slate-400); margin-top: 4px; }
+
+/* ===== Activity Info Card ===== */
+.activity-info { background: var(--primary-light); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+.activity-info .act-id { font-size: 13px; padding: 3px 10px; }
+.activity-info .info-text { font-size: 14px; font-weight: 600; color: var(--slate-800); }
+.activity-info .info-sub { font-size: 12px; color: var(--slate-500); }
+
+/* ===== Empty State ===== */
+.empty-deps { text-align: center; padding: 20px; color: var(--slate-400); font-size: 13px; }
+.empty-deps .icon { font-size: 28px; margin-bottom: 8px; }
+
+/* ===== Tooltip ===== */
+.tooltip { position: absolute; background: var(--slate-800); color: #fff; padding: 6px 10px; border-radius: 6px; font-size: 12px; pointer-events: none; z-index: 100; white-space: nowrap; opacity: 0; transition: opacity 0.15s; }
+.tooltip.show { opacity: 1; }
+
+/* ===== Validation Warning ===== */
+.validation-warning { background: var(--red-light); border: 1px solid #fca5a5; border-radius: 6px; padding: 10px 14px; margin-bottom: 12px; display: none; align-items: center; gap: 8px; font-size: 13px; color: var(--red); }
+.validation-warning.show { display: flex; }
+.validation-warning .icon { font-size: 16px; }
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--slate-300); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--slate-400); }
+
+/* ===== Animations ===== */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+.modal-overlay.show .modal { animation: slideIn 0.2s ease-out; }
+tr.activity-row { animation: fadeIn 0.2s ease-out; }
+</style>
+<link rel="stylesheet" href="paradigm-f-enhance.css">
+</head>
+<body>
+
+<!-- ===== Header ===== -->
+<div class="header">
+  <div class="header-left">
+    <h1>项目计划编制</h1>
+    <span class="project-badge">半导体洁净室扩建项目</span>
+  </div>
+  <div class="header-stats">
+    <span>活动数 <strong id="stat-activities">10</strong></span>
+    <span>依赖关系 <strong id="stat-deps">13</strong></span>
+    <span>计划工期 <strong>90天</strong></span>
+    <span>2026.07.01 — 2026.10.29</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn" onclick="resetHighlight()">重置视图</button>
+    <button class="btn btn-primary" onclick="alert('保存成功（原型演示）')">保存计划</button>
+  </div>
+</div>
+
+<!-- ===== Main Content ===== -->
+<div class="main-content">
+
+  <!-- Activity Table -->
+  <div class="table-section">
+    <div class="section-header">
+      <div class="section-title">
+        <span class="icon">📋</span> 活动清单与依赖关系
+        <span style="font-size:12px;color:var(--slate-400);font-weight:400;margin-left:4px">点击行查看依赖链 · 点击标签编辑依赖</span>
+      </div>
+      <button class="btn btn-sm btn-primary" onclick="alert('新增活动（原型演示）')">+ 新增活动</button>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:80px">编号</th>
+            <th style="width:200px">活动名称</th>
+            <th style="width:60px">工期</th>
+            <th style="width:90px">计划开始</th>
+            <th style="width:90px">计划结束</th>
+            <th>紧前活动 <span style="font-weight:400;text-transform:none;font-size:11px">(点击标签管理)</span></th>
+            <th style="width:60px">紧后数</th>
+            <th style="width:50px"></th>
+          </tr>
+        </thead>
+        <tbody id="activity-table-body">
+          <!-- Rendered by JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Network Graph -->
+  <div class="graph-section">
+    <div class="section-header">
+      <div class="section-title">
+        <span class="icon">🔗</span> 依赖关系网络图
+        <span id="graph-hint" style="font-size:12px;color:var(--slate-400);font-weight:400;margin-left:4px">点击节点高亮依赖链</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span id="selected-info" style="font-size:12px;color:var(--primary);font-weight:500;display:none"></span>
+      </div>
+    </div>
+    <div class="graph-container">
+      <svg id="network-svg" viewBox="0 0 900 280" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <marker id="arrow-default" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
+          </marker>
+          <marker id="arrow-primary" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#4f46e5"/>
+          </marker>
+          <marker id="arrow-green" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#059669"/>
+          </marker>
+          <marker id="arrow-amber" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#d97706"/>
+          </marker>
+        </defs>
+        <!-- Edges and nodes rendered by JS -->
+      </svg>
+    </div>
+    <div class="graph-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--green-light);border-color:var(--green)"></div>起始活动</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#fff;border-color:var(--slate-300)"></div>普通活动</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--amber-light);border-color:var(--amber)"></div>结束活动</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--primary-light);border-color:var(--primary)"></div>当前选中</div>
+      <span style="color:var(--slate-300)">|</span>
+      <div class="legend-item"><div class="legend-line" style="background:var(--slate-300)"></div>FS 完成-开始</div>
+      <div class="legend-item"><div class="legend-line" style="background:var(--slate-300);border-top:2px dashed #be185d;height:0"></div>SS/FF 特殊类型</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Dependency Edit Modal ===== -->
+<div class="modal-overlay" id="dep-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-title">编辑依赖关系</h3>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <!-- Activity Info -->
+      <div class="activity-info" id="modal-activity-info"></div>
+
+      <!-- Validation Warning -->
+      <div class="validation-warning" id="validation-warning">
+        <span class="icon">⚠️</span>
+        <span id="validation-msg">检测到循环依赖，无法添加此关系</span>
+      </div>
+
+      <!-- Current Dependencies -->
+      <div class="current-deps" id="current-deps-section">
+        <div class="current-deps-title">当前紧前活动</div>
+        <div id="current-deps-list"></div>
+      </div>
+
+      <!-- Add New Dependency -->
+      <div class="add-dep-section">
+        <div class="add-dep-title">➕ 添加紧前活动</div>
+        <div class="form-group">
+          <label class="form-label">选择紧前活动</label>
+          <select class="form-select" id="dep-predecessor-select">
+            <option value="">-- 请选择活动 --</option>
+          </select>
+          <div class="form-hint">仅显示尚未成为本活动紧前、且不会形成循环依赖的活动</div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">依赖类型</label>
+            <select class="form-select" id="dep-type-select">
+              <option value="FS">FS — 完成才能开始（最常用）</option>
+              <option value="SS">SS — 同时开始</option>
+              <option value="FF">FF — 同时完成</option>
+              <option value="SF">SF — 开始后才能完成</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">滞后天数</label>
+            <input type="number" class="form-input" id="dep-lag-input" value="0" min="-30" max="90">
+            <div class="form-hint">正值=滞后等待，负值=提前开始</div>
+          </div>
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px" onclick="addDependency()">
+          添加依赖关系
+        </button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Tooltip ===== -->
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+// ===== Mock Data =====
+const activities = [
+  { id: 'A01', name: '项目立项审批', wbs: '1.1', duration: 5, startDate: '07-01', endDate: '07-07', predecessors: [] },
+  { id: 'A02', name: '需求调研与方案确认', wbs: '1.2', duration: 10, startDate: '07-08', endDate: '07-19', predecessors: [{ id: 'A01', type: 'FS', lag: 0 }] },
+  { id: 'A03', name: '洁净室土建设计', wbs: '2.1', duration: 15, startDate: '07-20', endDate: '08-05', predecessors: [{ id: 'A02', type: 'FS', lag: 0 }] },
+  { id: 'A04', name: '设备选型与长周期采购', wbs: '2.2', duration: 20, startDate: '07-20', endDate: '08-10', predecessors: [{ id: 'A02', type: 'FS', lag: 0 }] },
+  { id: 'A05', name: '土建施工', wbs: '3.1', duration: 25, startDate: '08-06', endDate: '09-01', predecessors: [{ id: 'A03', type: 'FS', lag: 0 }] },
+  { id: 'A06', name: '机电安装', wbs: '3.2', duration: 20, startDate: '08-16', endDate: '09-06', predecessors: [{ id: 'A03', type: 'SS', lag: 10 }, { id: 'A04', type: 'FS', lag: 5 }] },
+  { id: 'A07', name: '设备进场与安装', wbs: '3.3', duration: 15, startDate: '09-02', endDate: '09-18', predecessors: [{ id: 'A05', type: 'FS', lag: 0 }, { id: 'A04', type: 'FS', lag: 0 }] },
+  { id: 'A08', name: '系统联调测试', wbs: '4.1', duration: 10, startDate: '09-19', endDate: '09-30', predecessors: [{ id: 'A06', type: 'FS', lag: 0 }, { id: 'A07', type: 'FS', lag: 0 }] },
+  { id: 'A09', name: '洁净度验证', wbs: '4.2', duration: 5, startDate: '09-24', endDate: '10-05', predecessors: [{ id: 'A08', type: 'SS', lag: 5 }] },
+  { id: 'A10', name: '竣工验收交付', wbs: '5.1', duration: 5, startDate: '10-06', endDate: '10-12', predecessors: [{ id: 'A08', type: 'FS', lag: 0 }, { id: 'A09', type: 'FF', lag: 0 }] },
+];
+
+// ===== Graph Layout =====
+const nodePositions = {
+  'A01': { col: 0, row: 0 },
+  'A02': { col: 1, row: 0 },
+  'A03': { col: 2, row: -1 },
+  'A04': { col: 2, row: 1 },
+  'A05': { col: 3, row: -2 },
+  'A06': { col: 3, row: 0 },
+  'A07': { col: 3, row: 2 },
+  'A08': { col: 4, row: -0.5 },
+  'A09': { col: 4, row: 1.5 },
+  'A10': { col: 5, row: 0.5 },
+};
+
+const NODE_W = 120, NODE_H = 48;
+const COL_SPACING = 150, ROW_SPACING = 58;
+const GRAPH_OFFSET_X = 40, GRAPH_OFFSET_Y = 140;
+
+let selectedActivityId = null;
+
+// ===== Compute Successors =====
+function getSuccessors(actId) {
+  const result = [];
+  activities.forEach(a => {
+    a.predecessors.forEach(p => {
+      if (p.id === actId) result.push({ id: a.id, type: p.type, lag: p.lag });
+    });
+  });
+  return result;
+}
+
+function getSuccessorCount(actId) {
+  return getSuccessors(actId).length;
+}
+
+// ===== Cycle Detection =====
+function wouldCreateCycle(fromId, toId) {
+  // Check if adding edge fromId -> toId (fromId is predecessor of toId) creates a cycle
+  // A cycle exists if toId can reach fromId through existing dependencies
+  const visited = new Set();
+  function dfs(currentId) {
+    if (currentId === fromId) return true;
+    if (visited.has(currentId)) return false;
+    visited.add(currentId);
+    const act = activities.find(a => a.id === currentId);
+    if (!act) return false;
+    for (const pred of act.predecessors) {
+      if (dfs(pred.id)) return true;
+    }
+    return false;
+  }
+  return dfs(toId);
+}
+
+// ===== Render Table =====
+function renderTable() {
+  const tbody = document.getElementById('activity-table-body');
+  tbody.innerHTML = '';
+
+  activities.forEach(act => {
+    const tr = document.createElement('tr');
+    tr.className = 'activity-row' + (selectedActivityId === act.id ? ' selected' : '');
+    tr.setAttribute('data-id', act.id);
+    tr.onclick = () => selectActivity(act.id);
+
+    // ID
+    const tdId = document.createElement('td');
+    tdId.innerHTML = `<span class="act-id">${act.id}</span>`;
+    tr.appendChild(tdId);
+
+    // Name
+    const tdName = document.createElement('td');
+    tdName.innerHTML = `<span class="act-name">${act.name}</span><span class="act-wbs">${act.wbs}</span><a class="jdy-link" href="javascript:void(0)" onclick="simulateLoopback('${act.name}')" title="在简道云中打开">详情</a>`;
+    tr.appendChild(tdName);
+
+    // Duration
+    const tdDur = document.createElement('td');
+    tdDur.innerHTML = `<span class="duration-cell">${act.duration}天</span>`;
+    tr.appendChild(tdDur);
+
+    // Start Date
+    const tdStart = document.createElement('td');
+    tdStart.innerHTML = `<span class="date-cell">${act.startDate}</span>`;
+    tr.appendChild(tdStart);
+
+    // End Date
+    const tdEnd = document.createElement('td');
+    tdEnd.innerHTML = `<span class="date-cell">${act.endDate}</span>`;
+    tr.appendChild(tdEnd);
+
+    // Predecessors
+    const tdPred = document.createElement('td');
+    if (act.predecessors.length === 0) {
+      tdPred.innerHTML = `<span class="no-dep">无（起始活动）</span> <button class="add-dep-btn" onclick="event.stopPropagation();openDepModal('${act.id}')">+ 添加</button>`;
+    } else {
+      let tagsHtml = act.predecessors.map(p => {
+        const lagText = p.lag !== 0 ? `<span class="lag">${p.lag > 0 ? '+' : ''}${p.lag}d</span>` : '';
+        return `<span class="dep-tag ${p.type.toLowerCase()}" onclick="event.stopPropagation();openDepModal('${act.id}')" title="点击编辑依赖">${p.id} <b>${p.type}</b>${lagText}<span class="remove-dep" onclick="event.stopPropagation();removeDependency('${act.id}','${p.id}')" title="删除此依赖">&times;</span></span>`;
+      }).join('');
+      tagsHtml += ` <button class="add-dep-btn" onclick="event.stopPropagation();openDepModal('${act.id}')">+ 添加</button>`;
+      tdPred.innerHTML = `<div class="dep-tags">${tagsHtml}</div>`;
+    }
+    tr.appendChild(tdPred);
+
+    // Successor Count
+    const tdSucc = document.createElement('td');
+    const succCount = getSuccessorCount(act.id);
+    tdSucc.innerHTML = `<span style="font-weight:600;color:${succCount > 0 ? 'var(--amber)' : 'var(--slate-300)'}">${succCount}</span>`;
+    tr.appendChild(tdSucc);
+
+    // Actions
+    const tdAct = document.createElement('td');
+    tdAct.innerHTML = `<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openDepModal('${act.id}')" title="编辑依赖">⚙</button>`;
+    tr.appendChild(tdAct);
+
+    tbody.appendChild(tr);
+  });
+
+  updateStats();
+}
+
+// ===== Update Stats =====
+function updateStats() {
+  document.getElementById('stat-activities').textContent = activities.length;
+  let totalDeps = 0;
+  activities.forEach(a => totalDeps += a.predecessors.length);
+  document.getElementById('stat-deps').textContent = totalDeps;
+}
+
+// ===== Select Activity =====
+function selectActivity(actId) {
+  if (selectedActivityId === actId) {
+    selectedActivityId = null;
+    resetHighlight();
+    return;
+  }
+  selectedActivityId = actId;
+  highlightDependencyChain(actId);
+  renderTable();
+  renderGraph();
+}
+
+// ===== Highlight Dependency Chain =====
+function highlightDependencyChain(actId) {
+  const predecessorIds = new Set();
+  const successorIds = new Set();
+
+  // Get all predecessors (direct)
+  const act = activities.find(a => a.id === actId);
+  act.predecessors.forEach(p => predecessorIds.add(p.id));
+
+  // Get all successors (direct)
+  getSuccessors(actId).forEach(s => successorIds.add(s.id));
+
+  // Highlight table rows
+  document.querySelectorAll('.activity-row').forEach(row => {
+    const rowId = row.getAttribute('data-id');
+    row.classList.remove('highlight-predecessor', 'highlight-successor', 'selected');
+    if (rowId === actId) {
+      row.classList.add('selected');
+    } else if (predecessorIds.has(rowId)) {
+      row.classList.add('highlight-predecessor');
+    } else if (successorIds.has(rowId)) {
+      row.classList.add('highlight-successor');
+    }
+  });
+
+  // Show selected info
+  const infoEl = document.getElementById('selected-info');
+  infoEl.style.display = 'inline';
+  infoEl.innerHTML = `🟢 ${predecessorIds.size}个紧前 &nbsp; 🔶 ${successorIds.size}个紧后`;
+  document.getElementById('graph-hint').style.display = 'none';
+}
+
+// ===== Reset Highlight =====
+function resetHighlight() {
+  selectedActivityId = null;
+  document.querySelectorAll('.activity-row').forEach(row => {
+    row.classList.remove('highlight-predecessor', 'highlight-successor', 'selected');
+  });
+  document.getElementById('selected-info').style.display = 'none';
+  document.getElementById('graph-hint').style.display = 'inline';
+  renderGraph();
+}
+
+// ===== Render Graph =====
+function renderGraph() {
+  const svg = document.getElementById('network-svg');
+  // Clear existing content except defs
+  const defs = svg.querySelector('defs');
+  svg.innerHTML = '';
+  svg.appendChild(defs);
+
+  const predecessorIds = new Set();
+  const successorIds = new Set();
+  if (selectedActivityId) {
+    const act = activities.find(a => a.id === selectedActivityId);
+    act.predecessors.forEach(p => predecessorIds.add(p.id));
+    getSuccessors(selectedActivityId).forEach(s => successorIds.add(s.id));
+  }
+
+  // Draw edges first (behind nodes)
+  activities.forEach(act => {
+    act.predecessors.forEach(pred => {
+      const fromPos = nodePositions[pred.id];
+      const toPos = nodePositions[act.id];
+      if (!fromPos || !toPos) return;
+
+      const x1 = GRAPH_OFFSET_X + fromPos.col * COL_SPACING + NODE_W;
+      const y1 = GRAPH_OFFSET_Y + fromPos.row * ROW_SPACING + NODE_H / 2;
+      const x2 = GRAPH_OFFSET_X + toPos.col * COL_SPACING;
+      const y2 = GRAPH_OFFSET_Y + toPos.row * ROW_SPACING + NODE_H / 2;
+
+      // Bezier curve
+      const cx1 = x1 + (x2 - x1) * 0.4;
+      const cx2 = x1 + (x2 - x1) * 0.6;
+      const path = `M${x1},${y1} C${cx1},${y1} ${cx2},${y2} ${x2},${y2}`;
+
+      let edgeClass = 'edge-line ' + pred.type.toLowerCase();
+      let markerEnd = 'url(#arrow-default)';
+
+      if (selectedActivityId) {
+        if (pred.id === selectedActivityId || act.id === selectedActivityId) {
+          if (predecessorIds.has(pred.id) || pred.id === selectedActivityId) {
+            edgeClass += ' predecessor-edge';
+            markerEnd = 'url(#arrow-green)';
+          }
+          if (successorIds.has(act.id) || act.id === selectedActivityId) {
+            edgeClass += ' successor-edge';
+            markerEnd = 'url(#arrow-amber)';
+          }
+          if (act.id === selectedActivityId) {
+            edgeClass += ' predecessor-edge';
+            markerEnd = 'url(#arrow-green)';
+          }
+        } else {
+          edgeClass += ' dimmed';
+        }
+      }
+
+      const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      pathEl.setAttribute('d', path);
+      pathEl.setAttribute('class', edgeClass);
+      pathEl.setAttribute('marker-end', markerEnd);
+      svg.appendChild(pathEl);
+
+      // Edge label
+      const labelX = (x1 + x2) / 2;
+      const labelY = (y1 + y2) / 2 - 8;
+      const labelText = pred.type + (pred.lag !== 0 ? (pred.lag > 0 ? '+' + pred.lag : pred.lag) : '');
+      if (pred.type !== 'FS' || pred.lag !== 0) {
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', labelX);
+        text.setAttribute('y', labelY);
+        text.setAttribute('class', 'edge-label ' + pred.type.toLowerCase());
+        text.textContent = labelText;
+        svg.appendChild(text);
+      }
+    });
+  });
+
+  // Draw nodes
+  activities.forEach(act => {
+    const pos = nodePositions[act.id];
+    if (!pos) return;
+
+    const x = GRAPH_OFFSET_X + pos.col * COL_SPACING;
+    const y = GRAPH_OFFSET_Y + pos.row * ROW_SPACING;
+
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.setAttribute('class', 'node-group');
+    g.setAttribute('data-id', act.id);
+    g.onclick = () => selectActivity(act.id);
+
+    // Determine node style
+    let rectClass = 'node-rect ';
+    if (selectedActivityId) {
+      if (act.id === selectedActivityId) rectClass += 'selected';
+      else if (predecessorIds.has(act.id)) rectClass += 'predecessor';
+      else if (successorIds.has(act.id)) rectClass += 'successor';
+      else rectClass += 'dimmed';
+    } else {
+      if (act.predecessors.length === 0) rectClass += 'start';
+      else if (getSuccessorCount(act.id) === 0) rectClass += 'end';
+      else rectClass += 'default';
+    }
+
+    // Rectangle
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', x);
+    rect.setAttribute('y', y);
+    rect.setAttribute('width', NODE_W);
+    rect.setAttribute('height', NODE_H);
+    rect.setAttribute('class', rectClass);
+    g.appendChild(rect);
+
+    // ID text
+    const idText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    idText.setAttribute('x', x + NODE_W / 2);
+    idText.setAttribute('y', y + 15);
+    idText.setAttribute('class', 'node-id');
+    idText.textContent = act.id;
+    g.appendChild(idText);
+
+    // Name text (truncate if too long)
+    const nameText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    nameText.setAttribute('x', x + NODE_W / 2);
+    nameText.setAttribute('y', y + 30);
+    nameText.setAttribute('class', 'node-name');
+    const displayName = act.name.length > 8 ? act.name.substring(0, 8) + '…' : act.name;
+    nameText.textContent = displayName;
+    g.appendChild(nameText);
+
+    // Duration text
+    const durText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    durText.setAttribute('x', x + NODE_W / 2);
+    durText.setAttribute('y', y + 43);
+    durText.setAttribute('class', 'node-duration');
+    durText.textContent = act.duration + '天';
+    g.appendChild(durText);
+
+    svg.appendChild(g);
+  });
+}
+
+// ===== Dependency Modal =====
+let currentEditActId = null;
+
+function openDepModal(actId) {
+  currentEditActId = actId;
+  const act = activities.find(a => a.id === actId);
+
+  // Set modal title
+  document.getElementById('modal-title').textContent = '编辑依赖关系';
+
+  // Activity info
+  document.getElementById('modal-activity-info').innerHTML = `
+    <span class="act-id">${act.id}</span>
+    <div>
+      <div class="info-text">${act.name} <a class="jdy-link" href="javascript:void(0)" onclick="simulateLoopback('${act.name}')">详情</a></div>
+      <div class="info-sub">工期 ${act.duration}天 · ${act.startDate} ~ ${act.endDate}</div>
+    </div>
+  `;
+
+  // Render current dependencies
+  renderCurrentDeps(act);
+
+  // Populate predecessor select (exclude self, existing predecessors, and would-create-cycle)
+  populatePredecessorSelect(act);
+
+  // Reset form
+  document.getElementById('dep-type-select').value = 'FS';
+  document.getElementById('dep-lag-input').value = '0';
+  document.getElementById('validation-warning').classList.remove('show');
+
+  // Show modal
+  document.getElementById('dep-modal').classList.add('show');
+}
+
+function renderCurrentDeps(act) {
+  const container = document.getElementById('current-deps-list');
+  if (act.predecessors.length === 0) {
+    container.innerHTML = '<div class="empty-deps"><div class="icon">📭</div>暂无紧前活动，请在下方添加</div>';
+    return;
+  }
+
+  container.innerHTML = act.predecessors.map(p => {
+    const predAct = activities.find(a => a.id === p.id);
+    const lagText = p.lag !== 0 ? ` · 滞后${p.lag > 0 ? '+' : ''}${p.lag}天` : '';
+    return `<div class="current-dep-item">
+      <div class="current-dep-info">
+        <span class="act-id">${p.id}</span>
+        <span style="font-size:13px;font-weight:500">${predAct ? predAct.name : '未知'}</span>
+        <span class="current-dep-type ${p.type.toLowerCase()}">${p.type}</span>
+        <span style="font-size:11px;color:var(--slate-400)">${lagText}</span>
+      </div>
+      <button class="remove-dep-btn" onclick="removeDependency('${act.id}','${p.id}')">删除</button>
+    </div>`;
+  }).join('');
+}
+
+function populatePredecessorSelect(act) {
+  const select = document.getElementById('dep-predecessor-select');
+  select.innerHTML = '<option value="">-- 请选择活动 --</option>';
+
+  const existingPredIds = new Set(act.predecessors.map(p => p.id));
+
+  activities.forEach(a => {
+    if (a.id === act.id) return; // Skip self
+    if (existingPredIds.has(a.id)) return; // Skip existing predecessors
+    // Check if adding this would create a cycle
+    if (wouldCreateCycle(a.id, act.id)) return;
+
+    const opt = document.createElement('option');
+    opt.value = a.id;
+    opt.textContent = `${a.id} - ${a.name}`;
+    select.appendChild(opt);
+  });
+}
+
+function addDependency() {
+  const predId = document.getElementById('dep-predecessor-select').value;
+  const depType = document.getElementById('dep-type-select').value;
+  const lag = parseInt(document.getElementById('dep-lag-input').value) || 0;
+
+  if (!predId) {
+    showValidation('请选择一个紧前活动');
+    return;
+  }
+
+  // Cycle check
+  if (wouldCreateCycle(predId, currentEditActId)) {
+    showValidation(`检测到循环依赖：${predId} → ${currentEditActId} 会形成闭环，无法添加`);
+    return;
+  }
+
+  // Add dependency
+  const act = activities.find(a => a.id === currentEditActId);
+  act.predecessors.push({ id: predId, type: depType, lag: lag });
+
+  // Re-render
+  renderCurrentDeps(act);
+  populatePredecessorSelect(act);
+  renderTable();
+  renderGraph();
+
+  // Reset form
+  document.getElementById('dep-predecessor-select').value = '';
+  document.getElementById('validation-warning').classList.remove('show');
+}
+
+function removeDependency(actId, predId) {
+  const act = activities.find(a => a.id === actId);
+  act.predecessors = act.predecessors.filter(p => p.id !== predId);
+
+  // Re-render
+  if (currentEditActId === actId && document.getElementById('dep-modal').classList.contains('show')) {
+    renderCurrentDeps(act);
+    populatePredecessorSelect(act);
+  }
+  renderTable();
+  renderGraph();
+}
+
+function showValidation(msg) {
+  const el = document.getElementById('validation-warning');
+  document.getElementById('validation-msg').textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 4000);
+}
+
+function closeModal() {
+  document.getElementById('dep-modal').classList.remove('show');
+  currentEditActId = null;
+}
+
+// ===== Keyboard shortcuts =====
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+
+// ===== Init =====
+renderTable();
+renderGraph();
+</script>
+<script src="paradigm-f-enhance.js"></script>
+<script>
+// 范式F增强 - 初始化
+document.addEventListener('DOMContentLoaded', function() {
+  renderParadigmFBar(
+    '依赖编辑',
+    '网络图 + DFS循环检测 + 批量添加',
+    '简道云原生详情页',
+    '依赖变更→Bridge重算拓扑'
+  );
+});
+</script>
+</body>
+</html>

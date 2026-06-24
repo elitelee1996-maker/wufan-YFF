@@ -1,0 +1,46 @@
+{
+  "name": "jdy_get_flow_logs",
+  "display_name": "查询流程日志",
+  "description_zh": "查询流程实例的审批日志",
+  "description": "Query workflow instance logs. Currently supports returning logs with approval comments (type='comment'). Returns logs[] with flow_id, flow_name, create_action, create_time, finish_action, finish_time, comment (string), signature{url} (optional, 15-day valid), attachments[]{name,size,mime,url}, operator{username,name,departments,type,status}. Rate limit: 30/s.",
+  "params": {
+    "instance_id": {
+      "type": "string",
+      "description": "流程实例ID（即数据的data_id）"
+    },
+    "types": {
+      "type": "array",
+      "description": "返回的日志类型，目前仅支持[\"comment\"]（审批意见）",
+      "default": [
+        "comment"
+      ]
+    },
+    "limit": {
+      "type": "integer",
+      "description": "每页条数，最大100，默认100",
+      "default": 100
+    },
+    "skip": {
+      "type": "integer",
+      "description": "跳过的条数（分页用），默认0",
+      "default": 0
+    }
+  },
+  "api": {
+    "url": "https://api.jiandaoyun.com/api/v1/workflow/instance/logs",
+    "method": "POST",
+    "headers": {
+      "Authorization": "Bearer ${conn:jiandaoyun.api_key}",
+      "Content-Type": "application/json"
+    }
+  },
+  "requires_connections": [
+    {
+      "category": "jiandaoyun",
+      "fields": [
+        "api_key"
+      ],
+      "required": true
+    }
+  ]
+}

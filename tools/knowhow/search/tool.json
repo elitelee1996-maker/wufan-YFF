@@ -1,0 +1,72 @@
+{
+  "name": "knowhow_search",
+  "display_name": "搜索知识库",
+  "description_zh": "在 KnowHow 知识库中搜索项目案例、专家资料、合同文档等知识内容。支持自然语言检索和元数据过滤。",
+  "description": "Search the KnowHow knowledge base for project cases, expert profiles, contracts, and other knowledge. Supports semantic search with metadata filtering by tags, industry, products, author, quality, node_path etc. Use this when the user asks about any internal knowledge, cases, experts, or documents. For browsing without a query, pass empty query string for pure metadata filtering.",
+  "params": {
+    "query": {
+      "type": "string",
+      "description": "Natural language search query. Use empty string for pure metadata filtering without semantic search."
+    },
+    "business_domain": {
+      "type": "string",
+      "description": "Business domain: 'project' for project cases, 'contract' for contracts. Default: 'project'."
+    },
+    "datasets": {
+      "type": "string",
+      "description": "Retrieval strategy: 'summary' (fast), 'chunk' (detailed), 'both' (default)."
+    },
+    "rerank_enable": {
+      "type": "boolean",
+      "description": "Whether to enable rerank refinement. Default: true."
+    },
+    "top_k": {
+      "type": "integer",
+      "description": "Number of results to return (1-500). Default: 20."
+    },
+    "score_threshold": {
+      "type": "number",
+      "description": "Score threshold - results below this are filtered out."
+    },
+    "vector_weight": {
+      "type": "number",
+      "description": "Vector weight for Weaviate hybrid search (0-1). Higher = more vector similarity."
+    },
+    "rerank_blend_weight": {
+      "type": "number",
+      "description": "Vector score weight in final result (0-1). Only effective when rerank enabled. Default: 0.5."
+    },
+    "filter_tags": {
+      "type": "array",
+      "description": "Filter by tags (资料类型/业务维度/业务系统/终端/项目需求场景). JSON string array."
+    },
+    "filter_industry": {
+      "type": "string",
+      "description": "Filter by industry. Use 'containsAny' operator."
+    },
+    "filter_products": {
+      "type": "string",
+      "description": "Filter by product line. Use 'containsAny' operator."
+    },
+    "filter_author": {
+      "type": "string",
+      "description": "Filter by author name. Use 'equals' operator."
+    },
+    "filter_quality": {
+      "type": "string",
+      "description": "Filter by content quality. Use 'equals' operator."
+    },
+    "filter_customer": {
+      "type": "string",
+      "description": "Filter by customer name. Use 'equals' operator."
+    },
+    "filter_node_path": {
+      "type": "string",
+      "description": "Filter by folder path. Use 'containsAny' operator."
+    }
+  },
+  "timeout": 30,
+  "requires_connections": [
+    { "category": "knowhow", "fields": ["api_key"], "required": true }
+  ]
+}

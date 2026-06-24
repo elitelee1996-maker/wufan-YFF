@@ -1,0 +1,29 @@
+{
+  "name": "jdy_get_flow_instance",
+  "display_name": "查询流程实例信息",
+  "description_zh": "查询指定数据的流程实例信息，包括当前节点、流程状态等",
+  "description": "Query workflow instance info. Requires instance_id (same as data_id). Returns instance details including current flow node, flow status, operator list. Rate limit: 30/s.",
+  "params": {
+    "instance_id": {
+      "type": "string",
+      "description": "流程实例ID（即数据的data_id）"
+    }
+  },
+  "api": {
+    "url": "https://api.jiandaoyun.com/api/v1/workflow/instance/get",
+    "method": "POST",
+    "headers": {
+      "Authorization": "Bearer ${conn:jiandaoyun.api_key}",
+      "Content-Type": "application/json"
+    }
+  },
+  "requires_connections": [
+    {
+      "category": "jiandaoyun",
+      "fields": [
+        "api_key"
+      ],
+      "required": true
+    }
+  ]
+}

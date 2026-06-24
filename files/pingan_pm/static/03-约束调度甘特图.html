@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>约束调度甘特图 — 项目计划原型</title>
+<style>
+:root {
+  --primary: #4f46e5;
+  --primary-light: #eef2ff;
+  --green: #059669;
+  --green-light: #d1fae5;
+  --amber: #d97706;
+  --amber-light: #fef3c7;
+  --red: #dc2626;
+  --red-light: #fee2e2;
+  --blue: #2563eb;
+  --blue-light: #dbeafe;
+  --slate-50: #f8fafc;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1;
+  --slate-400: #94a3b8;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+  --slate-700: #334155;
+  --slate-800: #1e293b;
+  --slate-900: #0f172a;
+  --radius: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; background: var(--slate-100); color: var(--slate-800); font-size: 14px; }
+
+/* Header */
+.header { background: #fff; border-bottom: 1px solid var(--slate-200); padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; }
+.header h1 { font-size: 16px; font-weight: 700; color: var(--slate-900); }
+.header-badge { background: var(--primary-light); color: var(--primary); padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; margin-left: 12px; }
+.header-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+
+/* Project Info Header */
+.project-info { display: flex; align-items: center; gap: 14px; }
+.project-icon { width: 40px; height: 40px; border-radius: 8px; background: linear-gradient(135deg, #10b981, #059669); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; flex-shrink: 0; }
+.project-details { display: flex; flex-direction: column; gap: 4px; }
+.project-name-input { font-size: 16px; font-weight: 700; color: var(--slate-900); border: 1px solid transparent; background: transparent; padding: 2px 6px; border-radius: 4px; width: 280px; transition: all 0.15s; }
+.project-name-input:hover { border-color: var(--slate-200); background: var(--slate-50); }
+.project-name-input:focus { border-color: var(--primary); background: #fff; outline: none; box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+.project-meta { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--slate-500); flex-wrap: wrap; }
+.meta-sep { color: var(--slate-300); }
+.meta-label { color: var(--slate-400); }
+
+/* Member Selector */
+.member-selector { position: relative; display: inline-flex; }
+.member-selector-trigger { display: flex; align-items: center; gap: 6px; padding: 2px 8px; border: 1px solid var(--slate-200); border-radius: 6px; cursor: pointer; background: #fff; transition: all 0.15s; }
+.member-selector-trigger:hover { border-color: var(--primary); background: var(--primary-light); }
+.member-avatar { width: 22px; height: 22px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; }
+.member-name { font-size: 12px; font-weight: 500; color: var(--slate-700); }
+.member-arrow { font-size: 10px; color: var(--slate-400); transition: transform 0.15s; }
+.member-selector.open .member-arrow { transform: rotate(180deg); }
+.member-dropdown { display: none; position: absolute; top: calc(100% + 4px); left: 0; background: #fff; border: 1px solid var(--slate-200); border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); width: 240px; z-index: 100; }
+.member-dropdown.show { display: block; }
+.member-dropdown-search { padding: 8px; border-bottom: 1px solid var(--slate-100); }
+.member-dropdown-search input { width: 100%; padding: 6px 10px; border: 1px solid var(--slate-200); border-radius: 6px; font-size: 12px; outline: none; box-sizing: border-box; }
+.member-dropdown-search input:focus { border-color: var(--primary); }
+.member-dropdown-list { max-height: 200px; overflow-y: auto; }
+.member-dropdown-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; cursor: pointer; transition: background 0.1s; }
+.member-dropdown-item:hover { background: var(--slate-50); }
+.member-dropdown-item .item-avatar { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; flex-shrink: 0; }
+.member-dropdown-item .item-info { display: flex; flex-direction: column; }
+.member-dropdown-item .item-name { font-size: 13px; font-weight: 500; color: var(--slate-800); }
+.member-dropdown-item .item-dept { font-size: 11px; color: var(--slate-400); }
+
+/* Buttons */
+.btn { padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid var(--slate-200); background: #fff; color: var(--slate-700); transition: all 0.15s; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.btn:hover { background: var(--slate-50); }
+.btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+.btn-primary:hover { background: #4338ca; }
+.btn-success { background: var(--green); color: #fff; border-color: var(--green); }
+.btn-success:hover { background: #047857; }
+.btn-sm { padding: 4px 8px; font-size: 11px; }
+.btn-danger { background: var(--red); color: #fff; border-color: var(--red); }
+
+/* Layout */
+.main { display: flex; flex-direction: column; height: calc(100vh - 49px); overflow: hidden; }
+
+/* Toolbar */
+.toolbar { background: #fff; border-bottom: 1px solid var(--slate-200); padding: 8px 20px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.toolbar-group { display: flex; align-items: center; gap: 6px; }
+.toolbar-divider { width: 1px; height: 24px; background: var(--slate-200); margin: 0 4px; }
+.toolbar-label { font-size: 11px; color: var(--slate-400); font-weight: 500; }
+.preset-btn { padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; border: 1px solid var(--slate-200); background: var(--slate-50); color: var(--slate-600); transition: all 0.15s; }
+.preset-btn:hover { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
+
+/* Summary pills */
+.summary-pills { display: flex; gap: 8px; margin-left: auto; }
+.pill { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.pill-ok { background: var(--green-light); color: var(--green); }
+.pill-warn { background: var(--amber-light); color: var(--amber); }
+.pill-conflict { background: var(--red-light); color: var(--red); }
+
+/* Gantt Container */
+.gantt-wrapper { flex: 1; display: flex; overflow: hidden; background: #fff; }
+
+/* Left Panel - Activity List */
+.gantt-left { width: 280px; flex-shrink: 0; border-right: 2px solid var(--slate-200); overflow-y: auto; background: #fff; }
+.gantt-left-header { height: 56px; background: var(--slate-50); border-bottom: 1px solid var(--slate-200); display: flex; align-items: center; padding: 0 12px; position: sticky; top: 0; z-index: 10; }
+.gantt-left-header th { font-size: 10px; font-weight: 600; color: var(--slate-400); text-transform: uppercase; letter-spacing: 0.5px; }
+.col-id { width: 52px; }
+.col-name { width: 140px; }
+.col-dur { width: 40px; text-align: center; }
+.col-delay { width: 48px; text-align: center; }
+
+.gantt-row-left { height: 44px; display: flex; align-items: center; padding: 0 12px; border-bottom: 1px solid var(--slate-100); transition: background 0.1s; }
+.gantt-row-left:hover { background: var(--slate-50); }
+.gantt-row-left.conflict { background: var(--red-light); }
+.gantt-row-left.warning { background: var(--amber-light); }
+.gantt-row-left .cell-id { width: 52px; }
+.gantt-row-left .cell-name { width: 140px; font-size: 12px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gantt-row-left .cell-dur { width: 40px; text-align: center; font-size: 11px; color: var(--slate-500); }
+.gantt-row-left .cell-delay { width: 48px; text-align: center; }
+
+.act-id { font-family: 'SF Mono', monospace; font-size: 10px; color: var(--primary); font-weight: 600; background: var(--primary-light); padding: 1px 5px; border-radius: 3px; }
+.delay-input { width: 36px; padding: 2px 4px; border: 1px solid var(--slate-200); border-radius: 4px; font-size: 11px; text-align: center; color: var(--slate-700); }
+.delay-input:focus { border-color: var(--primary); outline: none; }
+.delay-input.has-delay { border-color: var(--red); color: var(--red); font-weight: 600; background: var(--red-light); }
+
+/* Constraint badge in left panel */
+.constraint-indicator { width: 4px; height: 20px; border-radius: 2px; margin-right: 6px; flex-shrink: 0; }
+.constraint-indicator.asap { background: transparent; }
+.constraint-indicator.mso { background: var(--blue); }
+.constraint-indicator.mfo { background: #be185d; }
+.constraint-indicator.snet { background: var(--green); }
+.constraint-indicator.snlt { background: var(--amber); }
+
+/* Right Panel - Gantt Chart */
+.gantt-right { flex: 1; overflow: auto; position: relative; }
+.gantt-right-header { height: 56px; background: var(--slate-50); border-bottom: 1px solid var(--slate-200); position: sticky; top: 0; z-index: 10; display: flex; flex-direction: column; }
+.gantt-months { display: flex; height: 24px; border-bottom: 1px solid var(--slate-200); }
+.gantt-month { font-size: 11px; font-weight: 600; color: var(--slate-600); border-right: 1px solid var(--slate-200); display: flex; align-items: center; padding-left: 8px; }
+.gantt-days { display: flex; height: 32px; }
+.gantt-day { font-size: 9px; color: var(--slate-400); display: flex; align-items: center; justify-content: center; border-right: 1px solid var(--slate-100); }
+.gantt-day.weekend { background: var(--slate-50); }
+.gantt-day.week-start { border-right: 1px solid var(--slate-200); font-weight: 600; color: var(--slate-500); }
+
+.gantt-body { position: relative; }
+.gantt-row-right { height: 44px; position: relative; border-bottom: 1px solid var(--slate-100); }
+.gantt-row-right.conflict { background: rgba(254,226,226,0.3); }
+.gantt-row-right.warning { background: rgba(254,243,199,0.3); }
+
+/* Grid lines */
+.grid-line { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--slate-100); pointer-events: none; }
+.grid-line.week { background: var(--slate-200); }
+.grid-line.month { background: var(--slate-300); }
+
+/* Today line */
+.today-line { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--primary); z-index: 5; pointer-events: none; }
+.today-label { position: absolute; top: -18px; left: -14px; font-size: 9px; color: var(--primary); font-weight: 600; white-space: nowrap; }
+
+/* Bars */
+.bar-baseline { position: absolute; height: 10px; border-radius: 2px; background: var(--slate-200); top: 6px; opacity: 0.7; }
+.bar-calc { position: absolute; height: 22px; border-radius: 4px; top: 14px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: #fff; cursor: pointer; transition: all 0.2s; z-index: 3; }
+.bar-calc:hover { filter: brightness(1.1); transform: scaleY(1.1); }
+.bar-calc.normal { background: var(--primary); }
+.bar-calc.delayed { background: #7c3aed; }
+.bar-calc.conflict { background: var(--red); }
+.bar-calc.warning { background: var(--amber); }
+.bar-label { position: absolute; left: 4px; font-size: 9px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Constraint line */
+.constraint-line { position: absolute; top: 2px; bottom: 2px; width: 2px; z-index: 4; pointer-events: none; }
+.constraint-line.rigid { background: var(--red); }
+.constraint-line.flexible { background: var(--amber); border-left: 2px dashed var(--amber); background: transparent; width: 0; }
+.constraint-label { position: absolute; top: -14px; font-size: 8px; font-weight: 700; white-space: nowrap; transform: translateX(-50%); padding: 1px 4px; border-radius: 2px; }
+.constraint-label.rigid { background: var(--red-light); color: var(--red); }
+.constraint-label.flexible { background: var(--amber-light); color: var(--amber); }
+
+/* Float indicator */
+.float-indicator { position: absolute; height: 4px; top: 38px; border-radius: 2px; z-index: 2; }
+.float-indicator.positive { background: var(--green-light); border: 1px solid var(--green); }
+.float-indicator.negative { background: var(--red-light); border: 1px solid var(--red); }
+.float-indicator.warning { background: var(--amber-light); border: 1px solid var(--amber); }
+.float-text { position: absolute; right: -2px; top: -10px; font-size: 8px; font-weight: 700; white-space: nowrap; }
+.float-text.positive { color: var(--green); }
+.float-text.negative { color: var(--red); }
+.float-text.warning { color: var(--amber); }
+
+/* Dependency arrows (SVG overlay) */
+.gantt-svg-overlay { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 2; }
+
+/* Conflict callout */
+.conflict-callout { position: absolute; z-index: 10; background: var(--red); color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 700; white-space: nowrap; pointer-events: none; box-shadow: 0 2px 4px rgba(220,38,38,0.3); }
+.conflict-callout::after { content: ''; position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%); border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 4px solid var(--red); }
+
+/* Tooltip */
+.tooltip { position: fixed; background: var(--slate-800); color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 11px; pointer-events: none; z-index: 1000; white-space: nowrap; opacity: 0; transition: opacity 0.15s; box-shadow: 0 4px 12px rgba(0,0,0,0.2); max-width: 300px; }
+.tooltip.show { opacity: 1; }
+.tooltip-row { display: flex; justify-content: space-between; gap: 16px; margin: 2px 0; }
+.tooltip-label { color: var(--slate-400); }
+.tooltip-value { font-weight: 600; }
+.tooltip-value.conflict { color: #fca5a5; }
+.tooltip-value.ok { color: #86efac; }
+
+/* Conflict Panel */
+.conflict-panel { background: #fff; border-top: 2px solid var(--red); flex-shrink: 0; max-height: 200px; overflow-y: auto; display: none; }
+.conflict-panel.show { display: block; }
+.conflict-panel-header { padding: 8px 20px; background: var(--red-light); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 5; }
+.conflict-panel-title { font-size: 13px; font-weight: 600; color: var(--red); display: flex; align-items: center; gap: 6px; }
+.conflict-list { padding: 8px 20px; display: flex; flex-direction: column; gap: 6px; }
+.conflict-card { background: var(--slate-50); border: 1px solid var(--slate-200); border-left: 3px solid var(--red); border-radius: 6px; padding: 8px 12px; display: flex; align-items: flex-start; gap: 12px; font-size: 12px; }
+.conflict-card.warning { border-left-color: var(--amber); }
+.conflict-card-id { flex-shrink: 0; }
+.conflict-card-body { flex: 1; }
+.conflict-card-body strong { color: var(--red); }
+.conflict-card-body .cause { color: var(--slate-500); font-size: 11px; margin-top: 2px; }
+.conflict-card-actions { flex-shrink: 0; display: flex; gap: 4px; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--slate-300); border-radius: 3px; }
+</style>
+<link rel="stylesheet" href="paradigm-f-enhance.css">
+</head>
+<body>
+
+<div class="header">
+  <!-- Project Info -->
+  <div class="project-info">
+    <div class="project-icon">P</div>
+    <div class="project-details">
+      <input type="text" class="project-name-input" value="平安货运大型设备运输" placeholder="请输入项目名称" id="project-name-input">
+      <div class="project-meta">
+        <span>基线 v1.0</span>
+        <span class="meta-sep">·</span>
+        <span>当前 v1.3</span>
+        <span class="meta-sep">·</span>
+        <span id="stat-tasks">48个任务</span>
+        <span class="meta-sep">·</span>
+        <span class="meta-label">项目经理:</span>
+        <div class="member-selector" id="member-selector">
+          <div class="member-selector-trigger" onclick="toggleMemberDropdown(event)">
+            <span class="member-avatar" id="selected-member-avatar" style="background:#4f46e5">郭</span>
+            <span class="member-name" id="selected-member-name">郭强</span>
+            <span class="member-arrow">▾</span>
+          </div>
+          <div class="member-dropdown" id="member-dropdown">
+            <div class="member-dropdown-search">
+              <input type="text" placeholder="搜索成员..." oninput="filterMembers(this.value)" onclick="event.stopPropagation()">
+            </div>
+            <div class="member-dropdown-list" id="member-dropdown-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="btn" onclick="alert('版本已保存（原型演示）')">保存版本</button>
+    <button class="btn btn-success" onclick="alert('已提交审批（原型演示）')">提交审批</button>
+  </div>
+</div>
+
+<div class="main">
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="toolbar-group">
+      <span class="toolbar-label">预设场景：</span>
+      <button class="preset-btn" onclick="applyPreset('none')">无延期</button>
+      <button class="preset-btn" onclick="applyPreset('mild')">轻微延期</button>
+      <button class="preset-btn" onclick="applyPreset('severe')">严重延期</button>
+      <button class="preset-btn" onclick="applyPreset('cascade')">级联冲突</button>
+    </div>
+    <div class="toolbar-divider"></div>
+    <div class="toolbar-group">
+      <span class="toolbar-label">图例：</span>
+      <span style="display:flex;align-items:center;gap:3px;font-size:11px;color:var(--slate-500)">
+        <span style="width:16px;height:8px;background:var(--slate-200);border-radius:2px;display:inline-block"></span> 基准
+      </span>
+      <span style="display:flex;align-items:center;gap:3px;font-size:11px;color:var(--slate-500)">
+        <span style="width:16px;height:8px;background:var(--primary);border-radius:2px;display:inline-block"></span> 推算
+      </span>
+      <span style="display:flex;align-items:center;gap:3px;font-size:11px;color:var(--slate-500)">
+        <span style="width:2px;height:12px;background:var(--red);display:inline-block"></span> 刚性约束
+      </span>
+      <span style="display:flex;align-items:center;gap:3px;font-size:11px;color:var(--slate-500)">
+        <span style="width:2px;height:12px;border-left:2px dashed var(--amber);display:inline-block"></span> 弹性约束
+      </span>
+    </div>
+    <div class="summary-pills">
+      <span class="pill pill-ok" id="pill-ok">正常 0</span>
+      <span class="pill pill-warn" id="pill-warn">预警 0</span>
+      <span class="pill pill-conflict" id="pill-conflict">冲突 0</span>
+    </div>
+  </div>
+
+  <!-- Gantt -->
+  <div class="gantt-wrapper">
+    <!-- Left: Activity List -->
+    <div class="gantt-left" id="gantt-left">
+      <div class="gantt-left-header">
+        <th class="col-id" style="font-size:10px;font-weight:600;color:var(--slate-400)">编号</th>
+        <th class="col-name" style="font-size:10px;font-weight:600;color:var(--slate-400)">活动名称</th>
+        <th class="col-dur" style="font-size:10px;font-weight:600;color:var(--slate-400)">工期</th>
+        <th class="col-delay" style="font-size:10px;font-weight:600;color:var(--slate-400)">延期</th>
+      </div>
+      <div id="gantt-left-body"></div>
+    </div>
+
+    <!-- Right: Gantt Chart -->
+    <div class="gantt-right" id="gantt-right">
+      <div class="gantt-right-header" id="gantt-header"></div>
+      <div class="gantt-body" id="gantt-body"></div>
+    </div>
+  </div>
+
+  <!-- Conflict Panel -->
+  <div class="conflict-panel" id="conflict-panel">
+    <div class="conflict-panel-header">
+      <div class="conflict-panel-title">🚨 冲突与预警列表</div>
+      <button class="btn btn-sm" onclick="document.getElementById('conflict-panel').classList.remove('show')">收起</button>
+    </div>
+    <div class="conflict-list" id="conflict-list"></div>
+  </div>
+</div>
+
+<!-- Tooltip -->
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+// ===== Config =====
+const BASE_DATE = new Date(2026, 6, 1); // July 1
+const DAY_WIDTH = 12; // pixels per day
+const ROW_HEIGHT = 44;
+const TOTAL_DAYS = 100; // show 100 days
+
+// ===== Activities =====
+const activities = [
+  { id: 'A01', name: '项目立项审批', duration: 5, constraint: 'ASAP', constraintDate: null, delay: 0, predecessors: [] },
+  { id: 'A02', name: '需求调研与方案确认', duration: 10, constraint: 'ASAP', constraintDate: null, delay: 0, predecessors: ['A01'] },
+  { id: 'A03', name: '洁净室土建设计', duration: 15, constraint: 'MFO', constraintDate: 49, delay: 0, predecessors: ['A02'] },
+  { id: 'A04', name: '设备选型与长周期采购', duration: 20, constraint: 'ASAP', constraintDate: null, delay: 0, predecessors: ['A02'] },
+  { id: 'A05', name: '土建施工', duration: 25, constraint: 'ASAP', constraintDate: null, delay: 0, predecessors: ['A03'] },
+  { id: 'A06', name: '机电安装', duration: 20, constraint: 'SNLT', constraintDate: 59, delay: 0, predecessors: ['A03', 'A04'] },
+  { id: 'A07', name: '设备进场与安装', duration: 15, constraint: 'ASAP', constraintDate: null, delay: 0, predecessors: ['A05', 'A04'] },
+  { id: 'A08', name: '系统联调测试', duration: 10, constraint: 'MFO', constraintDate: 84, delay: 0, predecessors: ['A06', 'A07'] },
+  { id: 'A09', name: '洁净度验证', duration: 5, constraint: 'MSO', constraintDate: 84, delay: 0, predecessors: ['A08'] },
+  { id: 'A10', name: '竣工验收交付', duration: 5, constraint: 'MFO', constraintDate: 89, delay: 0, predecessors: ['A08', 'A09'] },
+];
+
+let schedule = [];
+
+// ===== Scheduling Engine =====
+function runSchedule() {
+  schedule = [];
+  const computed = {};
+
+  // Topological order
+  const order = topoSort();
+
+  order.forEach(id => {
+    const act = activities.find(a => a.id === id);
+    const effDur = act.duration + act.delay;
+
+    let ES = 0;
+    if (act.predecessors.length > 0) {
+      ES = Math.max(...act.predecessors.map(pid => computed[pid].EF));
+    }
+
+    // SNET: push ES forward if needed
+    if (act.constraint === 'SNET' && act.constraintDate !== null) {
+      if (ES < act.constraintDate) ES = act.constraintDate;
+    }
+
+    const EF = ES + effDur;
+
+    // Float calculation
+    let float = null;
+    let status = 'ok';
+
+    if (act.constraint === 'MFO' && act.constraintDate !== null) {
+      float = act.constraintDate - EF;
+    } else if (act.constraint === 'MSO' && act.constraintDate !== null) {
+      float = act.constraintDate - ES;
+    } else if (act.constraint === 'SNLT' && act.constraintDate !== null) {
+      float = act.constraintDate - ES;
+    }
+
+    if (float !== null) {
+      if (float < 0) status = 'conflict';
+      else if (float <= 2) status = 'warning';
+    }
+
+    computed[id] = { ES, EF, effDur, float, status };
+  });
+
+  // Build schedule with baseline
+  const baselineComputed = {};
+  order.forEach(id => {
+    const act = activities.find(a => a.id === id);
+    let bES = 0;
+    if (act.predecessors.length > 0) {
+      bES = Math.max(...act.predecessors.map(pid => baselineComputed[pid].EF));
+    }
+    if (act.constraint === 'SNET' && act.constraintDate !== null) {
+      if (bES < act.constraintDate) bES = act.constraintDate;
+    }
+    baselineComputed[id] = { ES: bES, EF: bES + act.duration };
+  });
+
+  activities.forEach(act => {
+    const c = computed[act.id];
+    const b = baselineComputed[act.id];
+    schedule.push({
+      ...act,
+      ES: c.ES, EF: c.EF, effDur: c.effDur, float: c.float, status: c.status,
+      bES: b.ES, bEF: b.EF,
+    });
+  });
+
+  renderAll();
+}
+
+function topoSort() {
+  const visited = new Set();
+  const result = [];
+  function dfs(id) {
+    if (visited.has(id)) return;
+    visited.add(id);
+    activities.filter(a => a.predecessors.includes(id)).forEach(a => dfs(a.id));
+    result.unshift(id);
+  }
+  activities.forEach(a => dfs(a.id));
+  return result;
+}
+
+// ===== Render All =====
+function renderAll() {
+  renderLeftPanel();
+  renderGanttHeader();
+  renderGanttBody();
+  renderConflictPanel();
+  updatePills();
+}
+
+// ===== Left Panel =====
+function renderLeftPanel() {
+  const body = document.getElementById('gantt-left-body');
+  body.innerHTML = schedule.map(s => {
+    const rowClass = s.status === 'conflict' ? 'conflict' : (s.status === 'warning' ? 'warning' : '');
+    const delayClass = s.delay > 0 ? 'has-delay' : '';
+    return `<div class="gantt-row-left ${rowClass}">
+      <div class="cell-id"><span class="act-id">${s.id}</span></div>
+      <div class="cell-name" title="${s.name}" oncontextmenu="showContextMenu(event, '${s.name}', '${s.id}')">
+        <div style="display:flex;align-items:center">
+          <div class="constraint-indicator ${s.constraint.toLowerCase()}"></div>
+          <span>${s.name}</span>
+          <a class="jdy-link" href="javascript:void(0)" onclick="simulateLoopback('${s.name}')" title="在简道云中打开" style="margin-left:4px;">📄</a>
+        </div>
+      </div>
+      <div class="cell-dur">${s.duration}d</div>
+      <div class="cell-delay">
+        <input type="number" class="delay-input ${delayClass}" value="${s.delay}" min="0" max="30"
+               onchange="setDelay('${s.id}', this.value)" onclick="event.stopPropagation()">
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ===== Gantt Header =====
+function renderGanttHeader() {
+  const header = document.getElementById('gantt-header');
+  let monthsHtml = '';
+  let daysHtml = '';
+
+  const months = {};
+  for (let d = 0; d < TOTAL_DAYS; d++) {
+    const date = new Date(BASE_DATE.getTime() + d * 86400000);
+    const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+    const monthName = date.toLocaleDateString('zh-CN', { month: 'short' });
+
+    if (!months[monthKey]) {
+      months[monthKey] = { name: monthName, start: d, count: 0 };
+    }
+    months[monthKey].count++;
+
+    const dayOfWeek = date.getDay();
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+    const isWeekStart = dayOfWeek === 1;
+    const dayNum = date.getDate();
+
+    daysHtml += `<div class="gantt-day ${isWeekend ? 'weekend' : ''} ${isWeekStart ? 'week-start' : ''}" style="width:${DAY_WIDTH}px;min-width:${DAY_WIDTH}px">${dayNum}</div>`;
+  }
+
+  Object.values(months).forEach(m => {
+    monthsHtml += `<div class="gantt-month" style="width:${m.count * DAY_WIDTH}px;min-width:${m.count * DAY_WIDTH}px">${m.name}</div>`;
+  });
+
+  header.innerHTML = `
+    <div class="gantt-months">${monthsHtml}</div>
+    <div class="gantt-days">${daysHtml}</div>
+  `;
+}
+
+// ===== Gantt Body =====
+function renderGanttBody() {
+  const body = document.getElementById('gantt-body');
+  const totalWidth = TOTAL_DAYS * DAY_WIDTH;
+  const totalHeight = schedule.length * ROW_HEIGHT;
+  body.style.width = totalWidth + 'px';
+  body.style.height = totalHeight + 'px';
+
+  let html = '';
+
+  // Grid lines
+  for (let d = 0; d < TOTAL_DAYS; d++) {
+    const date = new Date(BASE_DATE.getTime() + d * 86400000);
+    const dayOfWeek = date.getDay();
+    const x = d * DAY_WIDTH;
+    let cls = 'grid-line';
+    if (dayOfWeek === 1) cls += ' week';
+    if (date.getDate() === 1) cls += ' month';
+    html += `<div class="${cls}" style="left:${x}px"></div>`;
+  }
+
+  // Today line (project start = day 0)
+  html += `<div class="today-line" style="left:0"><div class="today-label">项目开始</div></div>`;
+
+  // Rows
+  schedule.forEach((s, i) => {
+    const y = i * ROW_HEIGHT;
+    const rowClass = s.status === 'conflict' ? 'conflict' : (s.status === 'warning' ? 'warning' : '');
+
+    html += `<div class="gantt-row-right ${rowClass}" style="top:${y}px" data-id="${s.id}">`;
+
+    // Baseline bar (gray)
+    const bLeft = s.bES * DAY_WIDTH;
+    const bWidth = s.duration * DAY_WIDTH;
+    html += `<div class="bar-baseline" style="left:${bLeft}px;width:${bWidth}px" title="基准: ${s.duration}天"></div>`;
+
+    // Calculated bar (colored)
+    const cLeft = s.ES * DAY_WIDTH;
+    const cWidth = s.effDur * DAY_WIDTH;
+    let barClass = 'normal';
+    if (s.status === 'conflict') barClass = 'conflict';
+    else if (s.status === 'warning') barClass = 'warning';
+    else if (s.delay > 0) barClass = 'delayed';
+
+    html += `<div class="bar-calc ${barClass}" style="left:${cLeft}px;width:${cWidth}px"
+                  onmouseenter="showTooltip(event,'${s.id}')" onmouseleave="hideTooltip()">
+      <span class="bar-label">${s.id} ${s.effDur}d</span>
+    </div>`;
+
+    // Constraint line
+    if (s.constraintDate !== null && s.constraint !== 'ASAP') {
+      const cx = s.constraintDate * DAY_WIDTH;
+      const isRigid = (s.constraint === 'MFO' || s.constraint === 'MSO');
+      const lineClass = isRigid ? 'rigid' : 'flexible';
+      html += `<div class="constraint-line ${lineClass}" style="left:${cx}px">
+        <div class="constraint-label ${lineClass}" style="left:0">${s.constraint} D${s.constraintDate}</div>
+      </div>`;
+    }
+
+    // Float indicator
+    if (s.float !== null) {
+      const floatClass = s.float < 0 ? 'negative' : (s.float <= 2 ? 'warning' : 'positive');
+      if (s.float >= 0) {
+        // Positive float: show as green bar after the calculated bar
+        const fLeft = (s.ES + s.effDur) * DAY_WIDTH;
+        const fWidth = s.float * DAY_WIDTH;
+        html += `<div class="float-indicator positive" style="left:${fLeft}px;width:${fWidth}px">
+          <span class="float-text positive">+${s.float}d</span>
+        </div>`;
+      } else {
+        // Negative float: show as red bar overlapping past constraint
+        const fLeft = s.constraintDate * DAY_WIDTH;
+        const fWidth = Math.abs(s.float) * DAY_WIDTH;
+        html += `<div class="float-indicator negative" style="left:${fLeft}px;width:${fWidth}px">
+          <span class="float-text negative">${s.float}d</span>
+        </div>`;
+        // Conflict callout
+        html += `<div class="conflict-callout" style="left:${fLeft + fWidth/2 - 20}px;top:${y > 0 ? -16 : 40}px">
+          冲突! 超出${Math.abs(s.float)}天
+        </div>`;
+      }
+    }
+
+    html += '</div>';
+  });
+
+  // SVG overlay for dependency arrows
+  html += `<svg class="gantt-svg-overlay" width="${totalWidth}" height="${totalHeight}" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arrow" markerWidth="6" markerHeight="4" refX="6" refY="2" orient="auto">
+        <polygon points="0 0, 6 2, 0 4" fill="#94a3b8"/>
+      </marker>
+      <marker id="arrow-red" markerWidth="6" markerHeight="4" refX="6" refY="2" orient="auto">
+        <polygon points="0 0, 6 2, 0 4" fill="#dc2626"/>
+      </marker>
+    </defs>`;
+
+  schedule.forEach((s, i) => {
+    s.predecessors.forEach(pid => {
+      const pred = schedule.find(x => x.id === pid);
+      if (!pred) return;
+      const predIdx = schedule.indexOf(pred);
+
+      const x1 = pred.ES * DAY_WIDTH + pred.effDur * DAY_WIDTH;
+      const y1 = predIdx * ROW_HEIGHT + ROW_HEIGHT / 2;
+      const x2 = s.ES * DAY_WIDTH;
+      const y2 = i * ROW_HEIGHT + ROW_HEIGHT / 2;
+
+      // Path: right from pred, down/up, right to successor
+      const midX = x1 + (x2 - x1) / 2;
+      const isConflict = s.status === 'conflict' || pred.status === 'conflict';
+      const color = isConflict ? '#dc2626' : '#94a3b8';
+      const marker = isConflict ? 'url(#arrow-red)' : 'url(#arrow)';
+
+      html += `<path d="M${x1},${y1} L${midX},${y1} L${midX},${y2} L${x2},${y2}" 
+                     fill="none" stroke="${color}" stroke-width="1.5" marker-end="${marker}" opacity="0.6"/>`;
+    });
+  });
+
+  html += '</svg>';
+
+  body.innerHTML = html;
+}
+
+// ===== Conflict Panel =====
+function renderConflictPanel() {
+  const panel = document.getElementById('conflict-panel');
+  const issues = schedule.filter(s => s.status === 'conflict' || s.status === 'warning');
+
+  if (issues.length === 0) {
+    panel.classList.remove('show');
+    return;
+  }
+
+  panel.classList.add('show');
+  const list = document.getElementById('conflict-list');
+
+  const constraintLabels = { MFO: '必须完成于', MSO: '必须开始于', SNLT: '不晚于开始', SNET: '不早于开始' };
+
+  list.innerHTML = issues.map(s => {
+    const isConflict = s.status === 'conflict';
+    const icon = isConflict ? '🔴' : '🟡';
+    const cardClass = isConflict ? '' : 'warning';
+    const absFloat = Math.abs(s.float);
+
+    // Find root causes
+    const causes = [];
+    s.predecessors.forEach(pid => {
+      const pred = schedule.find(x => x.id === pid);
+      if (pred && pred.delay > 0) causes.push(`${pid}延期+${pred.delay}天`);
+      else if (pred && pred.ES > pred.bES) causes.push(`${pid}被级联推迟${pred.ES - pred.bES}天`);
+    });
+
+    const constraintDay = s.constraintDate;
+    const constraintDateStr = formatDate(addDays(BASE_DATE, constraintDay));
+
+    let detailHtml = '';
+    if (s.constraint === 'MFO') {
+      detailHtml = `推算结束 <strong>${formatDate(addDays(BASE_DATE, s.EF))}</strong> 超出约束 <strong>${constraintDateStr}</strong>，超出 <strong>${absFloat}天</strong>`;
+    } else if (s.constraint === 'MSO') {
+      detailHtml = `推算开始 <strong>${formatDate(addDays(BASE_DATE, s.ES))}</strong> 晚于约束 <strong>${constraintDateStr}</strong>，晚 <strong>${absFloat}天</strong>`;
+    } else if (s.constraint === 'SNLT') {
+      detailHtml = `推算开始 <strong>${formatDate(addDays(BASE_DATE, s.ES))}</strong> 晚于约束 <strong>${constraintDateStr}</strong>，晚 <strong>${absFloat}天</strong>`;
+    }
+
+    return `<div class="conflict-card ${cardClass}">
+      <div class="conflict-card-id"><span class="act-id">${s.id}</span></div>
+      <div class="conflict-card-body">
+        <div>${icon} <strong>${s.name}</strong> — ${constraintLabels[s.constraint]} ${constraintDateStr}</div>
+        <div>${detailHtml}</div>
+        ${causes.length > 0 ? `<div class="cause">根因：${causes.join('；')}</div>` : ''}
+      </div>
+      <div class="conflict-card-actions">
+        ${isConflict ? `<button class="btn btn-sm btn-danger" onclick="autoResolve('${s.id}')">自动优化</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ===== Auto Resolve (demo) =====
+function autoResolve(actId) {
+  const act = activities.find(a => a.id === actId);
+  const s = schedule.find(x => x.id === actId);
+  if (!s || s.float >= 0) return;
+
+  // Strategy: compress this activity's duration by the float amount
+  const compressBy = Math.abs(s.float);
+  act.duration = Math.max(1, act.duration - compressBy);
+  act.delay = 0;
+  runSchedule();
+}
+
+// ===== Tooltip =====
+function showTooltip(event, actId) {
+  const s = schedule.find(x => x.id === actId);
+  if (!s) return;
+
+  const constraintLabels = { ASAP: '尽快', MSO: '必须开始于', MFO: '必须完成于', SNET: '不早于开始', SNLT: '不晚于开始' };
+
+  const tooltip = document.getElementById('tooltip');
+  let html = `<div style="font-weight:700;margin-bottom:4px">${s.id} ${s.name}</div>`;
+  html += `<div class="tooltip-row"><span class="tooltip-label">工期</span><span class="tooltip-value">${s.effDur}天${s.delay > 0 ? ' (含延期+' + s.delay + ')' : ''}</span></div>`;
+  html += `<div class="tooltip-row"><span class="tooltip-label">基准</span><span class="tooltip-value">${formatDate(addDays(BASE_DATE, s.bES))} → ${formatDate(addDays(BASE_DATE, s.bEF))}</span></div>`;
+  html += `<div class="tooltip-row"><span class="tooltip-label">推算</span><span class="tooltip-value ${s.status}">${formatDate(addDays(BASE_DATE, s.ES))} → ${formatDate(addDays(BASE_DATE, s.EF))}</span></div>`;
+
+  if (s.constraint !== 'ASAP') {
+    html += `<div class="tooltip-row"><span class="tooltip-label">约束</span><span class="tooltip-value">${s.constraint} ${constraintLabels[s.constraint]} ${formatDate(addDays(BASE_DATE, s.constraintDate))}</span></div>`;
+  }
+  if (s.float !== null) {
+    html += `<div class="tooltip-row"><span class="tooltip-label">浮动</span><span class="tooltip-value ${s.status}">${s.float > 0 ? '+' : ''}${s.float}天</span></div>`;
+  }
+  if (s.predecessors.length > 0) {
+    html += `<div class="tooltip-row"><span class="tooltip-label">紧前</span><span class="tooltip-value">${s.predecessors.join(', ')}</span></div>`;
+  }
+
+  tooltip.innerHTML = html;
+  tooltip.classList.add('show');
+
+  const rect = event.target.getBoundingClientRect();
+  tooltip.style.left = rect.left + 'px';
+  tooltip.style.top = (rect.bottom + 8) + 'px';
+}
+
+function hideTooltip() {
+  document.getElementById('tooltip').classList.remove('show');
+}
+
+// ===== Update Pills =====
+function updatePills() {
+  let ok = 0, warn = 0, conflict = 0;
+  schedule.forEach(s => {
+    if (s.status === 'ok') ok++;
+    else if (s.status === 'warning') warn++;
+    else if (s.status === 'conflict') conflict++;
+  });
+  document.getElementById('pill-ok').textContent = `正常 ${ok}`;
+  document.getElementById('pill-warn').textContent = `预警 ${warn}`;
+  document.getElementById('pill-conflict').textContent = `冲突 ${conflict}`;
+}
+
+// ===== Helpers =====
+function addDays(date, days) {
+  return new Date(date.getTime() + days * 86400000);
+}
+
+function formatDate(date) {
+  return `${date.getMonth() + 1}/${date.getDate()}`;
+}
+
+// ===== Member Selector =====
+const members = [
+  { name: '郭强', dept: '项目管理部', color: '#4f46e5' },
+  { name: '李婷', dept: '项目管理部', color: '#7c3aed' },
+  { name: '王伟', dept: '工程部', color: '#059669' },
+  { name: '赵敏', dept: '技术部', color: '#d97706' },
+  { name: '陈磊', dept: '技术部', color: '#dc2626' },
+  { name: '刘洋', dept: '采购部', color: '#2563eb' },
+  { name: '周芳', dept: '质量部', color: '#be185d' },
+  { name: '张明', dept: '工程部', color: '#0891b2' },
+];
+
+function getAvatarText(name) { return name.charAt(0); }
+
+function renderMemberList(filter) {
+  const list = document.getElementById('member-dropdown-list');
+  const filtered = filter ? members.filter(m => m.name.includes(filter) || m.dept.includes(filter)) : members;
+  list.innerHTML = filtered.map(m => `
+    <div class="member-dropdown-item" onclick="selectMember('${m.name}','${m.dept}','${m.color}')">
+      <div class="item-avatar" style="background:${m.color}">${getAvatarText(m.name)}</div>
+      <div class="item-info">
+        <span class="item-name">${m.name}</span>
+        <span class="item-dept">${m.dept}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleMemberDropdown(e) {
+  e.stopPropagation();
+  const dropdown = document.getElementById('member-dropdown');
+  const selector = document.getElementById('member-selector');
+  const isOpen = dropdown.classList.contains('show');
+  if (isOpen) {
+    dropdown.classList.remove('show');
+    selector.classList.remove('open');
+  } else {
+    renderMemberList();
+    dropdown.classList.add('show');
+    selector.classList.add('open');
+  }
+}
+
+function selectMember(name, dept, color) {
+  document.getElementById('selected-member-avatar').textContent = getAvatarText(name);
+  document.getElementById('selected-member-avatar').style.background = color;
+  document.getElementById('selected-member-name').textContent = name;
+  document.getElementById('member-dropdown').classList.remove('show');
+  document.getElementById('member-selector').classList.remove('open');
+}
+
+function filterMembers(query) {
+  renderMemberList(query);
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', () => {
+  document.getElementById('member-dropdown').classList.remove('show');
+  document.getElementById('member-selector').classList.remove('open');
+});
+
+// ===== Actions =====
+function setDelay(actId, value) {
+  const act = activities.find(a => a.id === actId);
+  act.delay = Math.max(0, parseInt(value) || 0);
+  runSchedule();
+}
+
+function resetAll() {
+  activities.forEach(a => { a.delay = 0; });
+  // Reset durations to original
+  const originals = { A01:5, A02:10, A03:15, A04:20, A05:25, A06:20, A07:15, A08:10, A09:5, A10:5 };
+  activities.forEach(a => { a.duration = originals[a.id]; });
+  runSchedule();
+}
+
+function applyPreset(type) {
+  resetAll();
+  if (type === 'none') return;
+
+  if (type === 'mild') {
+    activities.find(a => a.id === 'A03').delay = 3;
+  } else if (type === 'severe') {
+    activities.find(a => a.id === 'A03').delay = 8;
+    activities.find(a => a.id === 'A04').delay = 5;
+  } else if (type === 'cascade') {
+    activities.find(a => a.id === 'A02').delay = 5;
+    activities.find(a => a.id === 'A04').delay = 3;
+  }
+  runSchedule();
+}
+
+// ===== Sync scroll between left and right =====
+const ganttRight = document.getElementById('gantt-right');
+const ganttLeft = document.getElementById('gantt-left');
+ganttRight.addEventListener('scroll', () => {
+  ganttLeft.scrollTop = ganttRight.scrollTop;
+});
+ganttLeft.addEventListener('scroll', () => {
+  ganttRight.scrollTop = ganttLeft.scrollTop;
+});
+
+// ===== Init =====
+runSchedule();
+</script>
+<script src="paradigm-f-enhance.js"></script>
+<script>
+// 范式F增强 - 初始化
+document.addEventListener('DOMContentLoaded', function() {
+  renderParadigmFBar(
+    '甘特图',
+    '双层甘特图 + 关键路径 + 浮动时间',
+    '简道云原生详情页',
+    '拖拽调整→Bridge级联→写回JDY'
+  );
+});
+</script>
+</body>
+</html>

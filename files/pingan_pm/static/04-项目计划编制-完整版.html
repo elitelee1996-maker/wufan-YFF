@@ -1,0 +1,2886 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>项目计划铺排 - 平安货运项目管理系统</title>
+<link rel="stylesheet" href="https://docs.fanruan.design/assets/react/fine-design-runtime/fine-design/fine-design.min.css" />
+<style>
+:root {
+  /* 品牌色 - Fine Design 主色为青绿 #00b899 */
+  --primary: var(--fd-color-brand-6, #00b899);
+  --primary-dark: var(--fd-color-brand-7, #00937a);
+  --primary-light: var(--fd-color-brand-1, #e6f8f5);
+  --primary-hover: var(--fd-color-brand-5, #4dcdb8);
+  
+  /* 语义色 */
+  --green: var(--fd-color-success-6, #00b899);
+  --yellow: var(--fd-color-warning-6, #f0a800);
+  --red: var(--fd-color-error-6, #eb5050);
+  --cyan: var(--fd-color-info-6, #3370ff);
+  
+  /* 文本色 */
+  --text-1: var(--fd-color-text, #141e31);
+  --text-2: var(--fd-color-text-secondary, #525967);
+  --text-3: var(--fd-color-text-tertiary, #838892);
+  
+  /* 背景色 */
+  --bg-0: var(--fd-color-grey-2, #f5f6f8);
+  --bg-1: var(--fd-color-bg-container, #ffffff);
+  --bg-2: var(--fd-color-grey-3, #f0f1f4);
+  
+  /* 边框色 */
+  --border-1: var(--fd-color-border, #e6e8ed);
+  --border-2: var(--fd-color-border-secondary, #edeff3);
+  
+  /* 圆角 */
+  --r-sm: var(--fd-border-radius, 4px);
+  --r: var(--fd-border-radius-lg, 6px);
+  --r-lg: var(--fd-border-radius-xl, 8px);
+  
+  /* 控件高度 */
+  --control-h: var(--fd-control-height, 32px);
+  --control-h-sm: var(--fd-control-height-sm, 24px);
+  --control-h-lg: var(--fd-control-height-lg, 40px);
+  
+  /* 甘特图专用 */
+  --day-width: 36px;
+  --row-height: 36px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+  background: var(--bg-0);
+  color: var(--text-1);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Header */
+.header {
+  background: var(--bg-1);
+  border-bottom: 1px solid var(--border-1);
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-logo {
+  width: 36px;
+  height: 36px;
+  background: var(--primary);
+  border-radius: var(--r);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.header-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.header-subtitle {
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Editable Project Info */
+.project-info-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 400px;
+}
+
+.project-info-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.project-info-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.project-info-field label {
+  font-size: 12px;
+  color: var(--text-3);
+  white-space: nowrap;
+  min-width: fit-content;
+}
+
+.project-info-field input,
+.project-info-field select {
+  font-size: 13px;
+  padding: 4px 8px;
+  border: 1px solid var(--border-1);
+  border-radius: var(--r-sm);
+  background: var(--bg-1);
+  color: var(--text-1);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.project-info-field input:focus,
+.project-info-field select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.project-info-field input.project-name-input {
+  font-size: 15px;
+  font-weight: 600;
+  width: 220px;
+  padding: 4px 8px;
+}
+
+.project-info-field input.version-input {
+  width: 50px;
+  text-align: center;
+}
+
+.project-info-field input.pm-input {
+  width: 120px;
+}
+
+/* Member Search Dropdown */
+.member-search-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.member-search-wrapper .pm-input {
+  padding-right: 28px;
+}
+
+.member-search-icon {
+  position: absolute;
+  right: 8px;
+  color: var(--text-3);
+  font-size: 12px;
+  cursor: pointer;
+  pointer-events: none;
+}
+
+.member-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  min-width: 240px;
+  max-height: 240px;
+  overflow-y: auto;
+  background: var(--bg-1);
+  border: 1px solid var(--border-1);
+  border-radius: var(--r);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  margin-top: 4px;
+  display: none;
+}
+
+.member-dropdown.show {
+  display: block;
+}
+
+.member-dropdown-search {
+  padding: 8px;
+  border-bottom: 1px solid var(--border-2);
+  position: sticky;
+  top: 0;
+  background: var(--bg-1);
+}
+
+.member-dropdown-search input {
+  width: 100%;
+  font-size: 13px;
+  padding: 6px 8px;
+  border: 1px solid var(--border-1);
+  border-radius: var(--r-sm);
+  outline: none;
+}
+
+.member-dropdown-search input:focus {
+  border-color: var(--primary);
+}
+
+.member-dropdown-list {
+  padding: 4px 0;
+}
+
+.member-dropdown-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.15s;
+}
+
+.member-dropdown-item:hover {
+  background: var(--primary-light);
+}
+
+.member-dropdown-item .member-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.member-dropdown-item .member-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.member-dropdown-item .member-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-1);
+}
+
+.member-dropdown-item .member-dept {
+  font-size: 11px;
+  color: var(--text-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.member-dropdown-empty {
+  padding: 16px;
+  text-align: center;
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.member-dropdown-loading {
+  padding: 16px;
+  text-align: center;
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+/* Toolbar */
+.toolbar {
+  background: var(--bg-1);
+  border-bottom: 1px solid var(--border-1);
+  padding: 8px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-right: 12px;
+  border-right: 1px solid var(--border-1);
+}
+
+.toolbar-group:last-child {
+  border-right: none;
+}
+
+/* Buttons */
+.btn {
+  padding: 6px 14px;
+  border-radius: var(--r);
+  font-size: 12px;
+  cursor: pointer;
+  border: 1px solid var(--border-1);
+  background: var(--bg-1);
+  color: var(--text-1);
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.btn:hover {
+  background: var(--bg-2);
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+}
+
+.btn-sm {
+  padding: 4px 10px;
+  font-size: 11px;
+}
+
+.btn-icon {
+  padding: 6px 8px;
+}
+
+/* Main layout */
+.main {
+  display: flex;
+  height: calc(100vh - 100px);
+}
+
+/* Left panel - task list */
+.task-panel {
+  width: 380px;
+  background: var(--bg-1);
+  border-right: 1px solid var(--border-1);
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.task-panel-header {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-1);
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  background: var(--bg-1);
+  z-index: 10;
+}
+
+.task-row {
+  display: flex;
+  align-items: center;
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--border-2);
+  cursor: pointer;
+  transition: background 0.15s;
+  min-height: var(--row-height);
+}
+
+.task-row:hover {
+  background: var(--primary-light);
+}
+
+.task-row.selected {
+  background: var(--primary-light);
+  border-left: 3px solid var(--primary);
+}
+
+.task-row.milestone {
+  font-weight: 600;
+}
+
+.task-row.delayed {
+  background: #fef2f2;
+}
+
+.task-row.conflict {
+  background: #fef2f2;
+  border-left: 3px solid var(--red);
+}
+
+.task-indent {
+  display: inline-block;
+}
+
+.task-toggle {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--text-3);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.task-code {
+  font-size: 11px;
+  color: var(--primary);
+  font-weight: 600;
+  min-width: 45px;
+}
+
+.task-name {
+  flex: 1;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.task-duration {
+  font-size: 11px;
+  color: var(--text-3);
+  min-width: 40px;
+  text-align: right;
+}
+
+.task-status {
+  min-width: 50px;
+  text-align: center;
+}
+
+/* Right panel - Gantt chart */
+.gantt-panel {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+  /* 自定义滚动条 */
+  scrollbar-width: thin;
+  scrollbar-color: #b0bec5 #eceff1;
+}
+.gantt-panel::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.gantt-panel::-webkit-scrollbar-track {
+  background: #eceff1;
+  border-radius: 5px;
+}
+.gantt-panel::-webkit-scrollbar-thumb {
+  background: #b0bec5;
+  border-radius: 5px;
+  border: 2px solid #eceff1;
+}
+.gantt-panel::-webkit-scrollbar-thumb:hover {
+  background: #78909c;
+}
+.gantt-panel::-webkit-scrollbar-corner {
+  background: #eceff1;
+}
+
+.gantt-header {
+  display: flex;
+  border-bottom: 2px solid var(--border-1);
+  position: sticky;
+  top: 0;
+  background: var(--bg-1);
+  z-index: 10;
+}
+
+.gantt-header {
+  flex-direction: column;
+}
+
+.gantt-header-row {
+  display: flex;
+}
+
+.gantt-header-cell {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-3);
+  border-right: 1px solid var(--border-2);
+  flex: none;
+  box-sizing: border-box;
+}
+
+.gantt-header-month {
+  padding: 4px 0;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--text-1);
+  background: var(--bg-1);
+  border-bottom: 1px solid var(--border-2);
+}
+
+.gantt-header-day {
+  padding: 2px 0;
+  font-size: 10px;
+}
+
+.gantt-header-day.weekend {
+  background: #f5f5f5;
+  color: #bbb;
+}
+
+.gantt-header-day.today {
+  background: var(--primary-light);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.gantt-body {
+  position: relative;
+}
+
+.gantt-row-bg {
+  display: flex;
+  min-height: var(--row-height);
+  border-bottom: 1px solid var(--border-2);
+}
+
+.gantt-row-bg:hover {
+  background: var(--bg-2);
+}
+
+.gantt-row-bg.milestone-row {
+  background: var(--bg-2);
+}
+
+.gantt-cell {
+  min-width: var(--day-width);
+  flex: 1;
+  border-right: 1px solid var(--border-2);
+  position: relative;
+}
+
+.gantt-cell.weekend {
+  background: var(--bg-2);
+}
+
+.gantt-cell.today-col {
+  background: rgba(0, 184, 153, 0.05);
+}
+
+.gantt-today-col {
+  position: absolute;
+  top: 0;
+  background: rgba(0, 184, 153, 0.05);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Gantt bars */
+.gantt-bar-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.gantt-bar {
+  position: absolute;
+  height: 24px;
+  top: 6px;
+  border-radius: var(--r-sm);
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  font-size: 10px;
+  color: #fff;
+  font-weight: 500;
+  cursor: grab;
+  pointer-events: all;
+  transition: box-shadow 0.2s;
+  user-select: none;
+  z-index: 5;
+}
+
+.gantt-bar:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+}
+
+.gantt-bar.dragging {
+  cursor: grabbing;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  z-index: 20;
+  opacity: 0.9;
+}
+
+.gantt-bar.normal {
+  background: var(--primary);
+}
+
+.gantt-bar.milestone-bar {
+  background: transparent;
+  width: 20px !important;
+  height: 24px;
+  border-radius: 0;
+  top: 6px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.milestone-diamond {
+  width: 14px;
+  height: 14px;
+  background: var(--red);
+  transform: rotate(45deg);
+  border-radius: 2px;
+}
+
+.gantt-bar.warning {
+  background: var(--yellow);
+}
+
+.gantt-bar.conflict-bar {
+  background: var(--red);
+  animation: pulse 1.5s infinite;
+}
+
+.gantt-bar.baseline {
+  background: #90a4ae;
+  opacity: 0.4;
+  height: 18px;
+  top: 9px;
+}
+
+/* 汇总任务条 — 括号型（类似 MS Project） */
+.gantt-bar.summary-bar {
+  background: rgba(84, 110, 122, 0.08);
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  cursor: grab;
+  height: 18px;
+  top: 10px;
+  overflow: visible;
+  pointer-events: all;
+  z-index: 6;
+}
+.gantt-bar.summary-bar:hover {
+  background: rgba(84, 110, 122, 0.15);
+  box-shadow: none;
+}
+.gantt-bar.summary-bar:hover::before,
+.gantt-bar.summary-bar:hover::after,
+.gantt-bar.summary-bar:hover .summary-cap-left,
+.gantt-bar.summary-bar:hover .summary-cap-right {
+  background: var(--primary);
+}
+.gantt-bar.summary-bar.dragging {
+  background: rgba(84, 110, 122, 0.2);
+}
+.gantt-bar.summary-bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #546e7a;
+  border-radius: 1px;
+}
+.gantt-bar.summary-bar::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #546e7a;
+  border-radius: 1px;
+}
+.gantt-bar.summary-bar .summary-cap-left,
+.gantt-bar.summary-bar .summary-cap-right {
+  position: absolute;
+  top: 0;
+  width: 3px;
+  height: 100%;
+  background: #546e7a;
+  border-radius: 1px;
+}
+.gantt-bar.summary-bar .summary-cap-left { left: 0; }
+.gantt-bar.summary-bar .summary-cap-right { right: 0; }
+.gantt-bar.summary-bar .summary-label {
+  position: absolute;
+  top: -14px;
+  left: 0;
+  font-size: 10px;
+  font-weight: 600;
+  color: #37474f;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+  pointer-events: none;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Resize handles */
+.gantt-bar .resize-left,
+.gantt-bar .resize-right {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  z-index: 15;
+}
+
+.gantt-bar .resize-left {
+  left: -3px;
+}
+
+.gantt-bar .resize-right {
+  right: -3px;
+}
+
+.gantt-bar .resize-left:hover,
+.gantt-bar .resize-right:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Dependency lines (SVG overlay) */
+.dep-lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Today line */
+.today-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  background: var(--primary);
+  z-index: 8;
+  pointer-events: none;
+}
+
+.today-line::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+
+/* Constraint marker */
+.constraint-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--red);
+  opacity: 0.4;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.constraint-marker::after {
+  content: 'MFO';
+  position: absolute;
+  top: -14px;
+  left: -8px;
+  font-size: 9px;
+  color: var(--red);
+}
+
+/* Float indicator */
+.float-bar {
+  position: absolute;
+  height: 4px;
+  top: 30px;
+  border-radius: 2px;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.float-bar.positive {
+  background: var(--green);
+  opacity: 0.5;
+}
+
+.float-bar.negative {
+  background: var(--red);
+  opacity: 0.7;
+}
+
+/* Tags */
+.tag {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.tag-red {
+  background: #fef2f2;
+  color: var(--red);
+}
+
+.tag-orange {
+  background: #fff7ed;
+  color: var(--yellow);
+}
+
+.tag-green {
+  background: #f0fdf4;
+  color: var(--green);
+}
+
+.tag-blue {
+  background: #eff6ff;
+  color: var(--cyan);
+}
+
+.tag-gray {
+  background: var(--bg-2);
+  color: var(--text-2);
+}
+
+/* Tooltip */
+.tooltip {
+  position: fixed;
+  background: #333;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: var(--r);
+  font-size: 11px;
+  z-index: 1000;
+  pointer-events: none;
+  display: none;
+  max-width: 280px;
+  line-height: 1.5;
+}
+
+.tooltip.show {
+  display: block;
+}
+
+/* Template selection modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-overlay.show {
+  display: flex;
+}
+
+.modal {
+  background: var(--bg-1);
+  border-radius: var(--r-lg);
+  width: 700px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-header h3 {
+  font-size: 16px;
+}
+
+.modal-close {
+  cursor: pointer;
+  font-size: 22px;
+  color: var(--text-3);
+  background: none;
+  border: none;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-1);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* Template cards */
+.template-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.template-card {
+  border: 2px solid var(--border-1);
+  border-radius: var(--r);
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.template-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px rgba(0, 184, 153, 0.15);
+}
+
+.template-card.selected {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.template-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.template-card-desc {
+  font-size: 12px;
+  color: var(--text-2);
+  margin-bottom: 8px;
+}
+
+.template-card-meta {
+  display: flex;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+/* PERT display */
+.pert-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+/* Notification */
+.notification {
+  position: fixed;
+  top: 60px;
+  right: 20px;
+  background: var(--bg-1);
+  border: 1px solid var(--border-1);
+  border-radius: var(--r);
+  padding: 12px 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  z-index: 2000;
+  display: none;
+  max-width: 360px;
+}
+
+.notification.show {
+  display: block;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.notification-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.notification-body {
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+/* Drag preview */
+.drag-preview {
+  position: fixed;
+  background: var(--primary);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: var(--r-sm);
+  font-size: 11px;
+  font-weight: 500;
+  z-index: 3000;
+  pointer-events: none;
+  display: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Legend */
+.legend {
+  display: flex;
+  gap: 16px;
+  padding: 8px 24px;
+  background: var(--bg-1);
+  border-top: 1px solid var(--border-1);
+  font-size: 11px;
+  color: var(--text-2);
+  align-items: center;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+/* Loading */
+.loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.loading-content {
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border-1);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 14px;
+  color: var(--text-2);
+}
+</style>
+<link rel="stylesheet" href="paradigm-f-enhance.css">
+</head>
+<body>
+
+<!-- Loading -->
+<div class="loading" id="loading">
+  <div class="loading-content">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">正在加载项目数据...</div>
+  </div>
+</div>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <div class="header-logo">P</div>
+    <div class="project-info-form">
+      <!-- Row 1: Project Name -->
+      <div class="project-info-row">
+        <div class="project-info-field">
+          <input type="text" class="project-name-input" id="project-name-input" 
+                 value="平安货运大型设备运输" placeholder="输入项目名称" />
+        </div>
+      </div>
+      <!-- Row 2: Version info + PM -->
+      <div class="project-info-row">
+        <div class="project-info-field">
+          <label>基线</label>
+          <input type="text" class="version-input" id="baseline-version-input" value="v1.0" />
+        </div>
+        <div class="project-info-field">
+          <label>当前</label>
+          <input type="text" class="version-input" id="current-version-input" value="v1.3" />
+        </div>
+        <div class="project-info-field">
+          <label>任务</label>
+          <span id="task-count-header" style="font-size:12px; color:var(--text-2);">48个</span>
+        </div>
+        <div class="project-info-field">
+          <label>项目经理</label>
+          <div class="member-search-wrapper">
+            <input type="text" class="pm-input" id="pm-input" value="郭强" 
+                   placeholder="搜索成员" autocomplete="off"
+                   onfocus="openMemberDropdown()" oninput="onPmInputChange()" />
+            <span class="member-search-icon">🔍</span>
+            <div class="member-dropdown" id="member-dropdown">
+              <div class="member-dropdown-search">
+                <input type="text" id="member-search-input" placeholder="输入姓名搜索..." 
+                       oninput="filterMembers(this.value)" />
+              </div>
+              <div class="member-dropdown-list" id="member-dropdown-list">
+                <div class="member-dropdown-loading">加载中...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="header-right">
+    <button class="btn" onclick="saveVersion()">保存版本</button>
+    <button class="btn btn-primary" onclick="submitForApproval()">提交审批</button>
+  </div>
+</div>
+
+<!-- Toolbar -->
+<div class="toolbar">
+  <div class="toolbar-group">
+    <button class="btn btn-sm" onclick="openTemplateModal()">从模板导入</button>
+    <button class="btn btn-sm" onclick="addTask()">+ 新增任务</button>
+  </div>
+  <div class="toolbar-group">
+    <button class="btn btn-sm btn-icon" onclick="zoomIn()" title="放大">+</button>
+    <button class="btn btn-sm btn-icon" onclick="zoomOut()" title="缩小">−</button>
+    <span style="font-size:11px; color:var(--text-3);">缩放</span>
+  </div>
+  <div class="toolbar-group">
+    <button class="btn btn-sm" id="btn-baseline" onclick="toggleBaseline()">显示基线</button>
+    <button class="btn btn-sm" id="btn-dep-lines" onclick="toggleDepLines()">依赖线</button>
+    <button class="btn btn-sm" id="btn-float" onclick="toggleFloat()">浮动时间</button>
+  </div>
+  <div class="toolbar-group">
+    <button class="btn btn-sm btn-primary" onclick="runForwardPass()">&#9881; 运行正向推算</button>
+  </div>
+  <div class="toolbar-group" style="border-right:none; margin-left:auto;">
+    <span style="font-size:11px; color:var(--text-3);">提示：拖拽任务条可调整排程，后置任务自动跟随</span>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="main">
+  <!-- Left: Task List -->
+  <div class="task-panel">
+    <div class="task-panel-header">
+      <span>任务列表</span>
+      <span style="font-size:11px; color:var(--text-3);" id="task-count">48 个任务</span>
+    </div>
+    <div id="task-list"></div>
+  </div>
+
+  <!-- Right: Gantt Chart -->
+  <div class="gantt-panel" id="gantt-panel">
+    <div class="gantt-header" id="gantt-header"></div>
+    <div class="gantt-body" id="gantt-body">
+      <svg class="dep-lines" id="dep-lines" style="display:none;"></svg>
+      <div class="today-line" id="today-line"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Legend -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:var(--primary);"></div>正常任务</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--yellow);"></div>预警（浮动&lt;3天）</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--red);"></div>冲突（浮动&lt;0）</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#90a4ae; opacity:0.4;"></div>基线</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--green); opacity:0.5;"></div>正浮动</div>
+  <div class="legend-item"><div style="width:2px; height:12px; background:var(--primary);"></div>今天</div>
+  <div class="legend-item"><div style="width:2px; height:12px; background:var(--red); opacity:0.4;"></div>约束线(MFO)</div>
+</div>
+
+<!-- Tooltip -->
+<div class="tooltip" id="tooltip"></div>
+
+<!-- Drag Preview -->
+<div class="drag-preview" id="drag-preview"></div>
+
+<!-- Notification -->
+<div class="notification" id="notification">
+  <div class="notification-title" id="notification-title"></div>
+  <div class="notification-body" id="notification-body"></div>
+</div>
+
+<!-- Template Modal -->
+<div class="modal-overlay" id="template-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>从简道云导入项目计划模板</h3>
+      <button class="modal-close" onclick="closeTemplateModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="template-loading" style="text-align:center; padding:40px; color:var(--text-3);">
+        <div style="font-size:24px; margin-bottom:8px;">&#8987;</div>
+        <div>正在从简道云加载模板列表...</div>
+      </div>
+      <div id="template-error" style="display:none; padding:16px; background:#fef2f2; border-radius:var(--r); color:var(--red); font-size:12px;"></div>
+      <div id="template-grid" class="template-grid" style="display:none;"></div>
+      <div id="template-preview" style="display:none; margin-top:16px; padding:12px; background:var(--bg-2); border-radius:var(--r);">
+        <div style="font-size:13px; font-weight:600; margin-bottom:8px;" id="preview-title"></div>
+        <div id="preview-task-list" style="max-height:200px; overflow-y:auto; font-size:12px;"></div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeTemplateModal()">取消</button>
+      <button class="btn btn-primary" onclick="importTemplate()">导入模板并初始化项目</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== 后端 API 集成层 =====
+// 通过 Bridge 后端服务代理简道云 API 调用，API Key 存储在后端环境变量中
+
+class BackendClient {
+  constructor() {
+    this.baseUrl = '/pingankuaiyun-pm/api';
+  }
+
+  async request(endpoint, method = 'GET', body = null) {
+    const url = `${this.baseUrl}${endpoint}`;
+    const options = {
+      method,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    };
+    if (body) {
+      options.body = JSON.stringify(body);
+    }
+    
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Backend API Error:', error);
+      throw error;
+    }
+  }
+
+  // 获取项目列表
+  async getProjects() {
+    return this.request('/projects');
+  }
+
+  // 获取单个项目
+  async getProject(projectId) {
+    return this.request(`/projects/${projectId}`);
+  }
+
+  // 获取 WBS 节点列表
+  async getWBSNodes(projectId) {
+    return this.request(`/wbs/nodes?project_id=${projectId}`);
+  }
+
+  // 更新 WBS 节点
+  async updateWBSNode(nodeId, data) {
+    return this.request(`/wbs/nodes/${nodeId}`, 'PUT', data);
+  }
+
+  // 提交计划（批量更新节点编号）
+  async submitPlan(projectId, nodes) {
+    return this.request('/wbs/submit-plan', 'POST', {
+      project_id: projectId,
+      nodes: nodes
+    });
+  }
+
+  // 获取依赖关系
+  async getDependencies(projectId) {
+    return this.request(`/dependencies?project_id=${projectId}`);
+  }
+
+  // 运行正向推算
+  async forwardPass(projectId) {
+    return this.request('/schedule/forward-pass', 'POST', {
+      project_id: projectId
+    });
+  }
+
+  // 健康检查
+  async healthCheck() {
+    return this.request('/health');
+  }
+}
+
+const apiClient = new BackendClient();
+
+// ===== 全局状态 =====
+const DAY_WIDTH = 36;
+const ROW_HEIGHT = 36;
+
+function getTotalDays() {
+  if (tasks.length === 0) return 220;
+  const maxEnd = Math.max(...tasks.map(t => t.end || 0));
+  // 至少 220 天，且比最远任务多留 30 天余量
+  return Math.max(220, maxEnd + 30);
+}
+
+let tasks = [];
+let dependencies = [];
+let showBaseline = false;
+let showDepLines = false;
+let showFloat = true;
+let selectedTask = null;
+let zoomLevel = 1;
+let dragState = null;
+let currentProjectId = null;
+let collapsedTasks = new Set();
+let visibleTasks = [];
+let taskChildrenMap = {};
+
+function recomputeVisibleTasks() {
+  taskChildrenMap = {};
+  tasks.forEach(t => {
+    if (t.parent) taskChildrenMap[t.parent] = true;
+  });
+  visibleTasks = [];
+  const hiddenBy = {};
+  tasks.forEach(t => {
+    if (t.parent && (hiddenBy[t.parent] || collapsedTasks.has(t.parent))) {
+      hiddenBy[t.id] = true;
+    } else {
+      visibleTasks.push(t);
+    }
+  });
+}
+
+function toggleCollapse(taskId) {
+  if (collapsedTasks.has(taskId)) {
+    collapsedTasks.delete(taskId);
+  } else {
+    collapsedTasks.add(taskId);
+  }
+  recomputeVisibleTasks();
+  renderAll();
+}
+
+// ===== 初始化 =====
+async function init() {
+  try {
+    // 从 URL 参数获取项目 ID
+    const urlParams = new URLSearchParams(window.location.search);
+    currentProjectId = urlParams.get('project_id');
+    
+    if (!currentProjectId) {
+      // 首次打开：空状态，等待用户导入模板
+      tasks = [];
+      dependencies = [];
+    } else {
+      // 从简道云加载数据
+      await loadProjectData(currentProjectId);
+    }
+    
+    recomputeVisibleTasks();
+    renderAll();
+    hideLoading();
+  } catch (error) {
+    console.error('Init error:', error);
+    showNotification('加载失败', '无法加载项目数据，请检查网络连接');
+    hideLoading();
+  }
+}
+
+function loadMockData() {
+  // Mock 数据（与原型一致）
+  tasks = [
+    { id: '1', code: '1', name: '运输许可办理', level: 1, isMilestone: true, duration: 147, start: 0, end: 147, constraint: 'MFO', constraintDate: 147, status: 'normal', parent: null, pert: {o:120, m:145, p:180} },
+    { id: '1.1', code: '1.1', name: '安全报告批准', level: 2, duration: 132, start: 14, end: 146, constraint: 'ASAP', status: 'warning', parent: '1', pert: {o:110, m:130, p:160} },
+    { id: '1.1.1', code: '1.1.1', name: '安全报告采购', level: 3, duration: 16, start: 101, end: 117, constraint: 'ASAP', status: 'delayed', parent: '1.1', pert: {o:8, m:10, p:18} },
+    { id: '1.1.2', code: '1.1.2', name: '安全报告编制', level: 3, duration: 16, start: 117, end: 133, constraint: 'ASAP', status: 'warning', parent: '1.1', pert: {o:12, m:16, p:22} },
+    { id: '1.1.3', code: '1.1.3', name: '政府批复', level: 3, duration: 20, start: 133, end: 153, constraint: 'MFO', constraintDate: 147, status: 'conflict', parent: '1.1', pert: {o:15, m:20, p:28} },
+    { id: '1.2', code: '1.2', name: '运输方案审批', level: 2, duration: 90, start: 30, end: 120, constraint: 'ASAP', status: 'normal', parent: '1', pert: {o:75, m:90, p:110} },
+    { id: '1.2.1', code: '1.2.1', name: '路线勘察', level: 3, duration: 15, start: 30, end: 45, constraint: 'SNET', constraintDate: 30, status: 'normal', parent: '1.2', pert: {o:10, m:15, p:22} },
+    { id: '1.2.2', code: '1.2.2', name: '路线方案编制', level: 3, duration: 20, start: 46, end: 66, constraint: 'ASAP', status: 'normal', parent: '1.2', pert: {o:15, m:20, p:28} },
+    { id: '1.2.3', code: '1.2.3', name: '运输方案评审', level: 3, duration: 25, start: 67, end: 92, constraint: 'ASAP', status: 'normal', parent: '1.2', pert: {o:20, m:25, p:32} },
+    { id: '2', code: '2', name: '资源准备', level: 1, isMilestone: true, duration: 137, start: 30, end: 167, constraint: 'MFO', constraintDate: 167, status: 'normal', parent: null, pert: {o:120, m:135, p:160} },
+    { id: '2.1', code: '2.1', name: '船舶预定', level: 2, duration: 60, start: 60, end: 120, constraint: 'ASAP', status: 'normal', parent: '2', pert: {o:50, m:60, p:75} },
+    { id: '2.2', code: '2.2', name: '吊装设备调配', level: 2, duration: 30, start: 120, end: 150, constraint: 'ASAP', status: 'warning', parent: '2', pert: {o:25, m:30, p:38} },
+    { id: '3', code: '3', name: '运输实施', level: 1, isMilestone: true, duration: 60, start: 152, end: 212, constraint: 'MFO', constraintDate: 212, status: 'normal', parent: null, pert: {o:50, m:60, p:75} },
+    { id: '3.1', code: '3.1', name: '装车发运', level: 2, duration: 10, start: 152, end: 162, constraint: 'ASAP', status: 'normal', parent: '3', pert: {o:7, m:10, p:15} },
+    { id: '3.2', code: '3.2', name: '途中监控', level: 2, duration: 30, start: 163, end: 193, constraint: 'ASAP', status: 'normal', parent: '3', pert: {o:25, m:30, p:38} },
+    { id: '3.3', code: '3.3', name: '到达验收', level: 2, duration: 15, start: 194, end: 209, constraint: 'ASAP', status: 'normal', parent: '3', pert: {o:10, m:15, p:22} },
+  ];
+
+  dependencies = [
+    { from: '1.1.1', to: '1.1.2', type: 'FS', lag: 0 },
+    { from: '1.1.2', to: '1.1.3', type: 'FS', lag: 0 },
+    { from: '1.2.1', to: '1.2.2', type: 'FS', lag: 0 },
+    { from: '1.2.2', to: '1.2.3', type: 'FS', lag: 0 },
+    { from: '1.1.3', to: '2.1', type: 'FS', lag: 0 },
+    { from: '2.1', to: '2.2', type: 'FS', lag: 0 },
+    { from: '1.2.3', to: '3.1', type: 'FS', lag: 0 },
+    { from: '2.2', to: '3.1', type: 'FS', lag: 0 },
+    { from: '3.1', to: '3.2', type: 'FS', lag: 0 },
+    { from: '3.2', to: '3.3', type: 'FS', lag: 0 },
+  ];
+}
+
+async function loadProjectData(projectId) {
+  // 从简道云加载项目数据
+  const projectData = await jdyClient.getProjectData(projectId);
+  const nodesData = await jdyClient.getWBSNodes(projectId);
+  
+  // 转换数据格式
+  tasks = nodesData.data.map(node => ({
+    id: node._id,
+    code: node.data.node_code || '',
+    name: node.data.node_name,
+    level: node.data.node_level,
+    isMilestone: node.data.node_level === '里程碑',
+    duration: node.data.duration,
+    start: calculateDayOffset(node.data.plan_start_date),
+    end: calculateDayOffset(node.data.plan_end_date),
+    constraint: node.data.constraint_type,
+    constraintDate: node.data.constraint_date ? calculateDayOffset(node.data.constraint_date) : null,
+    status: node.data.conflict_status || 'normal',
+    parent: node.data.parent_node,
+    pert: {
+      o: node.data.optimistic_duration || node.data.duration,
+      m: node.data.most_likely_duration || node.data.duration,
+      p: node.data.pessimistic_duration || node.data.duration
+    }
+  }));
+  
+  // 加载依赖关系（从项目依赖关系表）
+  // TODO: 实现依赖关系加载
+}
+
+function calculateDayOffset(dateStr) {
+  if (!dateStr) return 0;
+  const baseDate = new Date(2026, 2, 1); // March 1, 2026
+  const date = new Date(dateStr);
+  return Math.floor((date - baseDate) / (1000 * 60 * 60 * 24));
+}
+
+function hideLoading() {
+  document.getElementById('loading').style.display = 'none';
+}
+
+// ===== 虚拟滚动配置 =====
+const VIRTUAL_SCROLL = {
+  bufferSize: 5,
+  startIndex: 0,
+  endIndex: 0,
+  visibleCount: 30,
+};
+
+function clampVirtualRange() {
+  const total = visibleTasks.length;
+  if (total === 0) {
+    VIRTUAL_SCROLL.startIndex = 0;
+    VIRTUAL_SCROLL.endIndex = 0;
+    return;
+  }
+  VIRTUAL_SCROLL.endIndex = Math.min(total, Math.max(VIRTUAL_SCROLL.endIndex, VIRTUAL_SCROLL.visibleCount));
+  VIRTUAL_SCROLL.startIndex = Math.max(0, Math.min(VIRTUAL_SCROLL.startIndex, total - 1));
+}
+
+function updateVirtualScrollRange(scrollTop, containerHeight) {
+  const total = visibleTasks.length;
+  if (total === 0) return;
+  const startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - VIRTUAL_SCROLL.bufferSize);
+  const visibleCount = Math.ceil(containerHeight / ROW_HEIGHT);
+  const endIndex = Math.min(total, startIndex + visibleCount + VIRTUAL_SCROLL.bufferSize * 2);
+  
+  if (startIndex !== VIRTUAL_SCROLL.startIndex || endIndex !== VIRTUAL_SCROLL.endIndex) {
+    VIRTUAL_SCROLL.startIndex = startIndex;
+    VIRTUAL_SCROLL.endIndex = endIndex;
+    renderTaskList();
+    renderGanttBody();
+  }
+}
+
+// ===== 渲染函数 =====
+function renderTaskList() {
+  const container = document.getElementById('task-list');
+  let html = '';
+  
+  // 空任务列表时显示占位
+  if (tasks.length === 0) {
+    container.innerHTML = '<div style="padding:16px; color:var(--text-3); font-size:13px; text-align:center;">暂无任务，请从简道云导入项目计划模板</div>';
+    document.getElementById('task-count').textContent = '0 个任务';
+    return;
+  }
+  
+  clampVirtualRange();
+  const startIdx = VIRTUAL_SCROLL.startIndex;
+  const endIdx = VIRTUAL_SCROLL.endIndex;
+  
+  // 顶部占位
+  if (startIdx > 0) {
+    html += `<div style="height: ${startIdx * ROW_HEIGHT}px;"></div>`;
+  }
+  
+  for (let i = startIdx; i < endIdx; i++) {
+    const task = visibleTasks[i];
+    if (!task) continue;
+    const indent = (task.level - 1) * 20;
+    const statusClass = task.status === 'delayed' ? 'delayed' : task.status === 'conflict' ? 'conflict' : '';
+    const milestoneClass = task.isMilestone ? 'milestone' : '';
+    const selectedClass = selectedTask === task.id ? 'selected' : '';
+    
+    let statusTag = '';
+    if (task.status === 'delayed') statusTag = '<span class="tag tag-red">延期</span>';
+    else if (task.status === 'conflict') statusTag = '<span class="tag tag-red">冲突</span>';
+    else if (task.status === 'warning') statusTag = '<span class="tag tag-orange">预警</span>';
+    else statusTag = '<span class="tag tag-green">正常</span>';
+    
+    const hasChildren = !!taskChildrenMap[task.id];
+    let toggleIcon = '';
+    if (hasChildren) {
+      toggleIcon = collapsedTasks.has(task.id) ? '▶' : '▼';
+    }
+    
+    const summaryStyle = hasChildren ? 'font-weight:600;' : '';
+    const durationLabel = hasChildren ? `${task.duration}天（汇总）` : `${task.duration}天`;
+    
+    html += `
+      <div class="task-row ${statusClass} ${milestoneClass} ${selectedClass}" 
+           onclick="selectTask('${task.id}')" 
+           data-task-id="${task.id}">
+        <span class="task-indent" style="width:${indent}px;"></span>
+        <span class="task-toggle" onclick="event.stopPropagation(); toggleCollapse('${task.id}')">${toggleIcon}</span>
+        <span class="task-code" style="${summaryStyle}">${task.code}</span>
+        <span class="task-name" style="${summaryStyle}">${task.name}</span><a class="jdy-link" href="javascript:void(0)" onclick="simulateLoopback('${task.name}')" title="在简道云中打开">详情</a>
+        <span class="task-duration" style="${summaryStyle}">${durationLabel}</span>
+        <span class="task-status">${statusTag}</span>
+      </div>
+    `;
+  }
+  
+  // 底部占位
+  const remaining = visibleTasks.length - endIdx;
+  if (remaining > 0) {
+    html += `<div style="height: ${remaining * ROW_HEIGHT}px;"></div>`;
+  }
+  
+  container.innerHTML = html;
+  document.getElementById('task-count').textContent = visibleTasks.length + ' / ' + tasks.length + ' 个任务';
+}
+
+function getProjectStartDate() {
+  return new Date(2026, 5, 1); // June 1, 2026
+}
+
+function renderGanttHeader() {
+  const container = document.getElementById('gantt-header');
+  const totalDays = getTotalDays();
+  const dayW = Math.round(DAY_WIDTH * zoomLevel);
+  const startDate = getProjectStartDate();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Build day info
+  const days = [];
+  const monthGroups = {};
+  for (let i = 0; i < totalDays; i++) {
+    const d = new Date(startDate);
+    d.setDate(d.getDate() + i);
+    const dow = d.getDay();
+    const isWeekend = dow === 0 || dow === 6;
+    const monthKey = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    const monthLabel = d.getFullYear() + '年' + (d.getMonth() + 1) + '月';
+    const isToday = d.getTime() === today.getTime();
+    days.push({ dayNum: d.getDate(), isWeekend, isToday, monthKey, monthLabel });
+    if (!monthGroups[monthKey]) monthGroups[monthKey] = { label: monthLabel, count: 0 };
+    monthGroups[monthKey].count++;
+  }
+
+  // Month row
+  let monthHtml = '';
+  Object.values(monthGroups).forEach(m => {
+    const w = m.count * dayW;
+    monthHtml += `<div class="gantt-header-cell gantt-header-month" style="width:${w}px;">${m.label}</div>`;
+  });
+
+  // Day row
+  let dayHtml = '';
+  days.forEach(d => {
+    let cls = 'gantt-header-cell gantt-header-day';
+    if (d.isWeekend) cls += ' weekend';
+    if (d.isToday) cls += ' today';
+    dayHtml += `<div class="${cls}" style="width:${dayW}px;">${d.dayNum}</div>`;
+  });
+
+  const totalWidth = totalDays * dayW;
+  container.style.minWidth = totalWidth + 'px';
+  container.innerHTML = `<div class="gantt-header-row" style="min-width:${totalWidth}px;">${monthHtml}</div><div class="gantt-header-row" style="min-width:${totalWidth}px;">${dayHtml}</div>`;
+}
+
+function renderGanttBody() {
+  const container = document.getElementById('gantt-body');
+  const totalDays = getTotalDays();
+  const dayW = Math.round(DAY_WIDTH * zoomLevel);
+  container.style.minWidth = (totalDays * dayW) + 'px';
+  
+  // 空任务时清空（但保留 dep-lines 和 today-line 元素）
+  if (visibleTasks.length === 0) {
+    const _svg = document.getElementById('dep-lines');
+    const _tl = document.getElementById('today-line');
+    if (_svg) _svg.parentNode.removeChild(_svg);
+    if (_tl) _tl.parentNode.removeChild(_tl);
+    container.innerHTML = '';
+    if (_svg) { _svg.style.display = 'none'; container.appendChild(_svg); }
+    if (_tl) { _tl.style.display = 'none'; container.appendChild(_tl); }
+    return;
+  }
+  
+  const startDate = getProjectStartDate();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+ 
+  clampVirtualRange();
+  const vTotal = visibleTasks.length;
+ 
+  // Calculate today offset
+  let todayOffset = -1;
+  for (let i = 0; i < totalDays; i++) {
+    const d = new Date(startDate);
+    d.setDate(d.getDate() + i);
+    if (d.getTime() === today.getTime()) { todayOffset = i; break; }
+  }
+ 
+  // Build weekend map for CSS gradient
+  const weekendMap = [];
+  for (let i = 0; i < totalDays; i++) {
+    const d = new Date(startDate);
+    d.setDate(d.getDate() + i);
+    const dow = d.getDay();
+    weekendMap.push(dow === 0 || dow === 6);
+  }
+
+  // Build CSS gradient for weekend shading (replaces 220 DOM cells per row)
+  const gradientStops = [];
+  let inWeekend = false;
+  let weekendStart = -1;
+  for (let i = 0; i <= totalDays; i++) {
+    const isWeekend = i < totalDays ? weekendMap[i] : false;
+    if (isWeekend && !inWeekend) {
+      weekendStart = i;
+      inWeekend = true;
+    } else if (!isWeekend && inWeekend) {
+      const left = weekendStart * dayW;
+      const width = (i - weekendStart) * dayW;
+      gradientStops.push(`rgba(0,0,0,0.03) ${left}px`, `rgba(0,0,0,0.03) ${left + width}px`);
+      inWeekend = false;
+    }
+  }
+  const bgGradient = gradientStops.length > 0 
+    ? `linear-gradient(to right, transparent 0px, ${gradientStops.join(', ')}, transparent ${totalDays * dayW}px)`
+    : 'none';
+
+  const svg = document.getElementById('dep-lines');
+  const todayLine = document.getElementById('today-line');
+  // 先从 DOM 中摘除，避免 innerHTML='' 销毁它们
+  const svgParent = svg ? svg.parentNode : null;
+  const todayParent = todayLine ? todayLine.parentNode : null;
+  if (svg) svgParent.removeChild(svg);
+  if (todayLine) todayParent.removeChild(todayLine);
+  container.innerHTML = '';
+  if (svg) container.appendChild(svg);
+  if (todayLine) container.appendChild(todayLine);
+
+  const startIdx = VIRTUAL_SCROLL.startIndex;
+  const endIdx = VIRTUAL_SCROLL.endIndex;
+
+  // Top spacer for virtual scrolling
+  if (startIdx > 0) {
+    const spacer = document.createElement('div');
+    spacer.style.height = (startIdx * ROW_HEIGHT) + 'px';
+    spacer.style.width = (totalDays * dayW) + 'px';
+    spacer.style.flex = 'none';
+    container.appendChild(spacer);
+  }
+
+  // Row backgrounds using CSS gradient (only visible range)
+  for (let idx = startIdx; idx < endIdx; idx++) {
+    const task = visibleTasks[idx];
+    if (!task) continue;
+    const rowBg = document.createElement('div');
+    rowBg.className = `gantt-row-bg ${task.isMilestone ? 'milestone-row' : ''}`;
+    rowBg.style.height = ROW_HEIGHT + 'px';
+    rowBg.style.width = (totalDays * dayW) + 'px';
+    rowBg.style.flex = 'none';
+    if (bgGradient !== 'none') {
+      rowBg.style.background = bgGradient;
+    }
+    container.appendChild(rowBg);
+  }
+
+  // Bottom spacer for virtual scrolling
+  const remaining = vTotal - endIdx;
+  if (remaining > 0) {
+    const spacer = document.createElement('div');
+    spacer.style.height = (remaining * ROW_HEIGHT) + 'px';
+    spacer.style.width = (totalDays * dayW) + 'px';
+    spacer.style.flex = 'none';
+    container.appendChild(spacer);
+  }
+
+  // Today column highlight (single overlay div instead of per-row cells)
+  if (todayOffset >= 0) {
+    const todayCol = document.createElement('div');
+    todayCol.className = 'gantt-today-col';
+    todayCol.style.left = (todayOffset * dayW) + 'px';
+    todayCol.style.width = dayW + 'px';
+    todayCol.style.height = (vTotal * ROW_HEIGHT) + 'px';
+    container.appendChild(todayCol);
+  }
+
+  const barWrapper = document.createElement('div');
+  barWrapper.className = 'gantt-bar-wrapper';
+  barWrapper.style.height = (vTotal * ROW_HEIGHT) + 'px';
+
+  // Only render bars for visible range
+  for (let idx = startIdx; idx < endIdx; idx++) {
+    const task = visibleTasks[idx];
+    if (!task) continue;
+    const left = task.start * dayW;
+    const width = task.duration * dayW;
+    const top = idx * ROW_HEIGHT;
+
+    if (showBaseline) {
+      const baselineBar = document.createElement('div');
+      baselineBar.className = 'gantt-bar baseline';
+      baselineBar.style.left = (left - 10) + 'px';
+      baselineBar.style.width = (width + 5) + 'px';
+      baselineBar.style.top = (top + 9) + 'px';
+      barWrapper.appendChild(baselineBar);
+    }
+
+    const isSummary = taskChildrenMap[task.id];
+
+    // 汇总节点不在甘特图中渲染条形图，只在左侧显示汇总天数
+    if (!isSummary) {
+      const bar = document.createElement('div');
+      let barClass = 'gantt-bar';
+      if (task.isMilestone) {
+        barClass += ' milestone-bar';
+      } else if (task.status === 'conflict') {
+        barClass += ' conflict-bar';
+      } else if (task.status === 'warning') {
+        barClass += ' warning';
+      } else {
+        barClass += ' normal';
+      }
+
+      bar.className = barClass;
+      bar.style.left = left + 'px';
+      bar.style.top = (top + 6) + 'px';
+      bar.style.width = width + 'px';
+      bar.innerHTML = `
+        <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${task.code} ${task.name}</span><a class="jdy-link" href="javascript:void(0)" onclick="simulateLoopback('${task.name}')" title="在简道云中打开">详情</a>
+        <div class="resize-left"></div>
+        <div class="resize-right"></div>
+      `;
+
+      bar.dataset.taskId = task.id;
+      bar.dataset.idx = idx;
+
+      if (!task.isMilestone) {
+        bar.addEventListener('mousedown', startDrag);
+      }
+
+      bar.addEventListener('mouseenter', (e) => showTooltip(e, task));
+      bar.addEventListener('mouseleave', hideTooltip);
+
+      barWrapper.appendChild(bar);
+    }
+
+    if (showFloat && !task.isMilestone) {
+      const floatDays = task.constraintDate ? task.constraintDate - task.end : null;
+      if (floatDays !== null) {
+        const floatBar = document.createElement('div');
+        floatBar.className = `float-bar ${floatDays >= 0 ? 'positive' : 'negative'}`;
+        if (floatDays >= 0) {
+          floatBar.style.left = (left + width) + 'px';
+          floatBar.style.width = (floatDays * dayW) + 'px';
+        } else {
+          floatBar.style.left = (left + width + floatDays * dayW) + 'px';
+          floatBar.style.width = (Math.abs(floatDays) * dayW) + 'px';
+        }
+        floatBar.style.top = (top + 30) + 'px';
+        barWrapper.appendChild(floatBar);
+      }
+    }
+
+    if (task.constraint === 'MFO' && task.constraintDate) {
+      const marker = document.createElement('div');
+      marker.className = 'constraint-marker';
+      marker.style.left = (task.constraintDate * dayW) + 'px';
+      marker.style.top = (top) + 'px';
+      marker.style.height = ROW_HEIGHT + 'px';
+      barWrapper.appendChild(marker);
+    }
+  }
+
+  container.appendChild(barWrapper);
+
+  // Today line
+  if (todayLine) {
+    if (todayOffset >= 0) {
+      todayLine.style.left = (todayOffset * dayW + dayW / 2) + 'px';
+      todayLine.style.height = (vTotal * ROW_HEIGHT) + 'px';
+      todayLine.style.display = 'block';
+    } else {
+      todayLine.style.display = 'none';
+    }
+  }
+
+  if (showDepLines) {
+    renderDepLines();
+  }
+}
+
+function renderDepLines() {
+  const svg = document.getElementById('dep-lines');
+  if (!svg) return;
+  const dayW = Math.round(DAY_WIDTH * zoomLevel);
+  svg.style.display = 'block';
+  svg.setAttribute('width', 220 * dayW);
+  svg.setAttribute('height', visibleTasks.length * ROW_HEIGHT);
+
+  let lines = '';
+  dependencies.forEach(dep => {
+    const fromIdx = visibleTasks.findIndex(t => t.id === dep.from);
+    const toIdx = visibleTasks.findIndex(t => t.id === dep.to);
+    if (fromIdx === -1 || toIdx === -1) return;
+
+    const fromTask = visibleTasks[fromIdx];
+    const toTask = visibleTasks[toIdx];
+
+    const x1 = (fromTask.start + fromTask.duration) * dayW;
+    const y1 = fromIdx * ROW_HEIGHT + ROW_HEIGHT / 2;
+    const x2 = toTask.start * dayW;
+    const y2 = toIdx * ROW_HEIGHT + ROW_HEIGHT / 2;
+    
+    const midX = x1 + (x2 - x1) / 2;
+    lines += `
+      <path d="M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}" 
+            fill="none" stroke="#90a4ae" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+    `;
+  });
+  
+  svg.innerHTML = `
+    <defs>
+      <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#90a4ae"/>
+      </marker>
+    </defs>
+    ${lines}
+  `;
+}
+
+// ===== 拖拽交互 =====
+function getDescendants(taskId) {
+  const task = tasks.find(t => t.id === taskId);
+  const result = [];
+
+  // 方法1：通过 parent 字段递归查找
+  const children = tasks.filter(t => t.parent === taskId);
+  if (children.length > 0) {
+    children.forEach(c => {
+      result.push(c.id);
+      result.push(...getDescendants(c.id));
+    });
+    return result;
+  }
+
+  // 方法2（兜底）：通过 WBS 编号前缀匹配（如 2.3.4 的后代是 code 以 "2.3.4." 开头的任务）
+  if (task && task.code) {
+    const prefix = task.code + '.';
+    tasks.filter(t => t.code && t.code.startsWith(prefix) && t.id !== taskId)
+         .forEach(t => result.push(t.id));
+  }
+  return result;
+}
+
+function isSummaryTask(taskId) {
+  // 双重判断：parent 字段 或 WBS 编号前缀
+  if (taskChildrenMap[taskId]) return true;
+  const task = tasks.find(t => t.id === taskId);
+  if (task && task.code) {
+    const prefix = task.code + '.';
+    return tasks.some(t => t.code && t.code.startsWith(prefix) && t.id !== taskId);
+  }
+  return false;
+}
+
+function startDrag(e) {
+  if (e.target.classList.contains('resize-left') || e.target.classList.contains('resize-right')) {
+    return;
+  }
+  
+  e.preventDefault();
+  const bar = e.currentTarget;
+  const taskId = bar.dataset.taskId;
+  const task = tasks.find(t => t.id === taskId);
+  const isSummary = isSummaryTask(taskId);
+  const descendants = isSummary ? getDescendants(taskId) : [];
+  
+  console.log('[startDrag]', task.code, task.name, 'isSummary:', isSummary, 'descendants:', descendants.length, 'parent字段统计:', tasks.filter(t=>t.parent).length + '/' + tasks.length);
+  
+  dragState = {
+    taskId: taskId,
+    startX: e.clientX,
+    origLeft: task.start,
+    origEnd: task.end,
+    bar: bar,
+    isSummary: isSummary,
+    descendants: descendants
+  };
+  
+  bar.classList.add('dragging');
+  
+  const preview = document.getElementById('drag-preview');
+  preview.textContent = `${task.code} ${task.name}${isSummary ? '（含' + descendants.length + '个子任务）' : ''}`;
+  preview.style.display = 'block';
+  preview.style.left = e.clientX + 10 + 'px';
+  preview.style.top = e.clientY - 20 + 'px';
+  
+  document.addEventListener('mousemove', onDrag);
+  document.addEventListener('mouseup', endDrag);
+}
+
+function onDrag(e) {
+  if (!dragState) return;
+  
+  const dx = e.clientX - dragState.startX;
+  const dayW = Math.round(DAY_WIDTH * zoomLevel);
+  const daysDelta = Math.round(dx / dayW);
+
+  const task = tasks.find(t => t.id === dragState.taskId);
+  const newStart = dragState.origLeft + daysDelta;
+  const newEnd = newStart + task.duration;
+
+  // 移动被拖拽的条
+  dragState.bar.style.left = (newStart * dayW) + 'px';
+
+  // 如果是汇总任务，联动移动所有子孙任务的条
+  if (dragState.isSummary && dragState.descendants.length > 0) {
+    dragState.descendants.forEach(descId => {
+      const descBar = document.querySelector(`.gantt-bar[data-task-id="${descId}"]`);
+      const descTask = tasks.find(t => t.id === descId);
+      if (descBar && descTask) {
+        const descNewLeft = (descTask.start + daysDelta) * dayW;
+        descBar.style.left = descNewLeft + 'px';
+      }
+    });
+  }
+  
+  const preview = document.getElementById('drag-preview');
+  preview.style.left = e.clientX + 10 + 'px';
+  preview.style.top = e.clientY - 20 + 'px';
+  const suffix = dragState.isSummary ? `（含${dragState.descendants.length}个子任务）` : '';
+  preview.textContent = `${task.code} ${task.name}${suffix} → ${formatDate(newStart)} ~ ${formatDate(newEnd)}`;
+  
+  highlightAffected(dragState.taskId, daysDelta);
+}
+
+function endDrag(e) {
+  if (!dragState) return;
+  
+  const dx = e.clientX - dragState.startX;
+  const dayW = Math.round(DAY_WIDTH * zoomLevel);
+  const daysDelta = Math.round(dx / dayW);
+
+  if (daysDelta !== 0) {
+    const task = tasks.find(t => t.id === dragState.taskId);
+
+    if (dragState.isSummary && dragState.descendants.length > 0) {
+      // 汇总任务：整体平移所有子孙任务
+      dragState.descendants.forEach(descId => {
+        const descTask = tasks.find(t => t.id === descId);
+        if (descTask) {
+          descTask.start += daysDelta;
+          descTask.end += daysDelta;
+        }
+      });
+      // 重新汇总父任务时间
+      recalculateSummaryTasks();
+
+      // 级联更新下游依赖
+      const allMoved = [dragState.taskId, ...dragState.descendants];
+      allMoved.forEach(id => cascadeUpdate(id, daysDelta));
+    } else {
+      // 叶子任务：直接移动
+      task.start = dragState.origLeft + daysDelta;
+      task.end = task.start + task.duration;
+      // 如果有父任务，重新汇总
+      if (task.parent) recalculateSummaryTasks();
+      cascadeUpdate(dragState.taskId, daysDelta);
+    }
+
+    recalculateConflicts();
+    
+    const affected = getAffectedTasks(dragState.taskId);
+    const descCount = dragState.descendants ? dragState.descendants.length : 0;
+    const msg = descCount > 0
+      ? `移动了 ${task.code} ${task.name} ${daysDelta > 0 ? '+' : ''}${daysDelta}天（含${descCount}个子任务），${affected.length} 个后置任务自动跟随`
+      : `移动了 ${task.code} ${task.name} ${daysDelta > 0 ? '+' : ''}${daysDelta}天，${affected.length} 个后置任务自动跟随`;
+    showNotification('排程已更新', msg);
+  }
+  
+  dragState.bar.classList.remove('dragging');
+  document.getElementById('drag-preview').style.display = 'none';
+  
+  document.removeEventListener('mousemove', onDrag);
+  document.removeEventListener('mouseup', endDrag);
+  dragState = null;
+  
+  renderAll();
+}
+
+function cascadeUpdate(taskId, daysDelta) {
+  dependencies.forEach(dep => {
+    if (dep.from === taskId) {
+      const dependent = tasks.find(t => t.id === dep.to);
+      if (dependent) {
+        dependent.start += daysDelta;
+        dependent.end += daysDelta;
+        cascadeUpdate(dep.to, daysDelta);
+      }
+    }
+  });
+}
+
+function highlightAffected(taskId, daysDelta) {
+  document.querySelectorAll('.gantt-bar').forEach(bar => {
+    bar.style.opacity = '1';
+    bar.style.boxShadow = '';
+  });
+  
+  // 高亮下游依赖任务
+  const affected = getAffectedTasks(taskId);
+  affected.forEach(id => {
+    const bar = document.querySelector(`.gantt-bar[data-task-id="${id}"]`);
+    if (bar) {
+      bar.style.opacity = '0.6';
+      bar.style.boxShadow = '0 0 0 2px var(--yellow)';
+    }
+  });
+
+  // 如果是汇总任务，高亮所有子孙任务
+  if (dragState && dragState.isSummary && dragState.descendants.length > 0) {
+    dragState.descendants.forEach(id => {
+      const bar = document.querySelector(`.gantt-bar[data-task-id="${id}"]`);
+      if (bar) {
+        bar.style.opacity = '0.7';
+        bar.style.boxShadow = '0 0 0 2px var(--primary)';
+      }
+    });
+  }
+}
+
+function getAffectedTasks(taskId, visited = new Set()) {
+  if (visited.has(taskId)) return [];
+  visited.add(taskId);
+  
+  let affected = [];
+  dependencies.forEach(dep => {
+    if (dep.from === taskId) {
+      affected.push(dep.to);
+      affected = affected.concat(getAffectedTasks(dep.to, visited));
+    }
+  });
+  return affected;
+}
+
+function recalculateConflicts() {
+  tasks.forEach(task => {
+    if (task.constraintDate) {
+      const floatDays = task.constraintDate - task.end;
+      if (floatDays < 0) {
+        task.status = 'conflict';
+      } else if (floatDays < 3) {
+        task.status = 'warning';
+      } else {
+        task.status = 'normal';
+      }
+    }
+  });
+}
+
+// ===== 辅助函数 =====
+function formatDate(dayOffset) {
+  const baseDate = new Date(2026, 2, 1);
+  baseDate.setDate(baseDate.getDate() + dayOffset);
+  return `${baseDate.getMonth() + 1}/${baseDate.getDate()}`;
+}
+
+function selectTask(taskId) {
+  selectedTask = taskId;
+  renderTaskList();
+}
+
+function showTooltip(e, task) {
+  const tooltip = document.getElementById('tooltip');
+  const pertE = task.pert ? Math.round((task.pert.o + 4 * task.pert.m + task.pert.p) / 6) : task.duration;
+  const pertSigma = task.pert ? Math.round((task.pert.p - task.pert.o) / 6 * 10) / 10 : 0;
+  const floatDays = task.constraintDate ? task.constraintDate - task.end : '-';
+  
+  tooltip.innerHTML = `
+    <strong>${task.code} ${task.name}</strong><br>
+    计划: ${formatDate(task.start)} ~ ${formatDate(task.end)} (${task.duration}天)<br>
+    ${task.constraint ? `约束: ${task.constraint} ${task.constraintDate ? formatDate(task.constraintDate) : ''}` : ''}<br>
+    浮动: ${floatDays}天<br>
+    PERT: E=${pertE}天, σ=${pertSigma}<br>
+    <span style="color:#aaa;">拖拽可调整排程</span>
+  `;
+  
+  tooltip.style.left = e.clientX + 15 + 'px';
+  tooltip.style.top = e.clientY + 15 + 'px';
+  tooltip.classList.add('show');
+}
+
+function hideTooltip() {
+  document.getElementById('tooltip').classList.remove('show');
+}
+
+function showNotification(title, body) {
+  const el = document.getElementById('notification');
+  document.getElementById('notification-title').textContent = title;
+  document.getElementById('notification-body').textContent = body;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function toggleBaseline() {
+  showBaseline = !showBaseline;
+  document.getElementById('btn-baseline').classList.toggle('btn-primary', showBaseline);
+  renderGanttBody();
+}
+
+function toggleDepLines() {
+  showDepLines = !showDepLines;
+  document.getElementById('btn-dep-lines').classList.toggle('btn-primary', showDepLines);
+  if (!showDepLines) {
+    document.getElementById('dep-lines').style.display = 'none';
+  }
+  renderGanttBody();
+}
+
+function toggleFloat() {
+  showFloat = !showFloat;
+  document.getElementById('btn-float').classList.toggle('btn-primary', showFloat);
+  renderGanttBody();
+}
+
+function zoomIn() {
+  zoomLevel = Math.min(zoomLevel + 0.2, 2);
+  renderAll();
+}
+
+function zoomOut() {
+  zoomLevel = Math.max(zoomLevel - 0.2, 0.5);
+  renderAll();
+}
+
+function runForwardPass() {
+  showNotification('正向推算完成', '已计算 48 个节点的推算日期，发现 1 个冲突节点（1.1.3 政府批复）');
+}
+
+// ===== 模板导入（从简道云动态加载）=====
+let loadedTemplates = [];
+let selectedTemplateId = null;
+let selectedTemplateData = null;
+
+async function openTemplateModal() {
+  document.getElementById('template-modal').classList.add('show');
+  document.getElementById('template-loading').style.display = 'block';
+  document.getElementById('template-grid').style.display = 'none';
+  document.getElementById('template-error').style.display = 'none';
+  document.getElementById('template-preview').style.display = 'none';
+  
+  try {
+    const resp = await apiClient.request('/templates');
+    if (resp.success && resp.data.length > 0) {
+      loadedTemplates = resp.data;
+      renderTemplateCards(resp.data);
+    } else {
+      document.getElementById('template-loading').style.display = 'none';
+      document.getElementById('template-error').style.display = 'block';
+      document.getElementById('template-error').innerHTML = 
+        '<strong>简道云中暂无模板数据</strong><br>请先在简道云「项目计划模板」表中创建模板，并在「标准任务清单」和「计划任务依赖关系」表中配置对应的任务和依赖。';
+    }
+  } catch (error) {
+    document.getElementById('template-loading').style.display = 'none';
+    document.getElementById('template-error').style.display = 'block';
+    document.getElementById('template-error').innerHTML = 
+      '<strong>加载失败</strong>: ' + error.message + '<br>请检查 Bridge 后端服务是否正常运行。';
+  }
+}
+
+function renderTemplateCards(templates) {
+  document.getElementById('template-loading').style.display = 'none';
+  const grid = document.getElementById('template-grid');
+  grid.style.display = 'grid';
+  
+  let html = '';
+  templates.forEach((tpl, idx) => {
+    const types = Array.isArray(tpl.project_types) ? tpl.project_types.join(', ') : (tpl.project_types || '通用');
+    const selected = idx === 0 ? 'selected' : '';
+    if (idx === 0) selectedTemplateId = tpl.id;
+    
+    html += `
+      <div class="template-card ${selected}" onclick="selectTemplateCard(this, '${tpl.id}')">
+        <div class="template-card-title">${tpl.name || '未命名模板'}</div>
+        <div class="template-card-desc">${tpl.description || '暂无描述'}</div>
+        <div class="template-card-meta">
+          <span class="tag tag-blue">v${tpl.version || '1.0'}</span>
+          <span>类型: ${types}</span>
+        </div>
+      </div>
+    `;
+  });
+  
+  grid.innerHTML = html;
+  if (templates.length > 0) loadTemplatePreview(templates[0].id);
+}
+
+async function selectTemplateCard(el, templateId) {
+  document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedTemplateId = templateId;
+  await loadTemplatePreview(templateId);
+}
+
+async function loadTemplatePreview(templateId) {
+  const preview = document.getElementById('template-preview');
+  const titleEl = document.getElementById('preview-title');
+  const listEl = document.getElementById('preview-task-list');
+  
+  titleEl.textContent = '加载任务清单...';
+  listEl.innerHTML = '';
+  preview.style.display = 'block';
+  
+  try {
+    const resp = await apiClient.request(`/templates/${templateId}/tasks`);
+    if (resp.success && resp.data.length > 0) {
+      const tpl = loadedTemplates.find(t => t.id === templateId);
+      titleEl.textContent = `${tpl ? tpl.name : '模板'} - ${resp.data.length} 个标准任务`;
+      // 缓存任务数据，供 importTemplate 复用（避免重复 API 调用）
+      selectedTemplateData = { tasks: resp.data, templateId };
+      
+       // 按 WBS 编号排序（自然排序：1.1, 1.2, 1.10 而非 1.1, 1.10, 1.2）
+      const sortedData = [...resp.data].sort((a, b) => {
+        const codeA = (a.code || '').split('.').map(Number);
+        const codeB = (b.code || '').split('.').map(Number);
+        for (let i = 0; i < Math.max(codeA.length, codeB.length); i++) {
+          const na = codeA[i] || 0, nb = codeB[i] || 0;
+          if (na !== nb) return na - nb;
+        }
+        return 0;
+      });
+      
+      let listHtml = '<table style="width:100%; border-collapse:collapse;">';
+      listHtml += '<tr style="background:var(--bg-1);"><th style="padding:4px 8px; text-align:left; font-size:11px; color:var(--text-3); white-space:nowrap;">编号</th><th style="padding:4px 8px; text-align:left; font-size:11px; color:var(--text-3); white-space:nowrap;">任务名称</th><th style="padding:4px 8px; text-align:center; font-size:11px; color:var(--text-3); white-space:nowrap;">任务层级</th><th style="padding:4px 8px; text-align:center; font-size:11px; color:var(--text-3); white-space:nowrap;">最可能工期（天）</th><th style="padding:4px 8px; text-align:center; font-size:11px; color:var(--text-3); white-space:nowrap;">期望工期（天）</th></tr>';
+       sortedData.forEach(t => {
+        const indent = ((t.level || 1) - 1) * 12;
+        const pertE = t.duration_expected || (t.duration_o && t.duration_m && t.duration_p ? Math.round((t.duration_o + 4 * t.duration_m + t.duration_p) / 6) : t.duration_m || '-');
+        listHtml += `<tr style="border-bottom:0.5px solid var(--border-2);">
+          <td style="padding:3px 8px; font-size:11px; color:var(--primary); white-space:nowrap;">${t.code || '-'}</td>
+          <td style="padding:3px 8px; font-size:11px; padding-left:${8 + indent}px;">${t.name || '-'}</td>
+          <td style="padding:3px 8px; font-size:11px; text-align:center;">${t.level || 1}</td>
+          <td style="padding:3px 8px; font-size:11px; text-align:center;">${t.duration_m || '-'}</td>
+          <td style="padding:3px 8px; font-size:11px; text-align:center; color:var(--primary); font-weight:600;">${pertE}</td>
+        </tr>`;
+      });
+      listHtml += '</table>';
+      listEl.innerHTML = listHtml;
+    } else {
+      titleEl.textContent = '该模板暂无标准任务';
+      listEl.innerHTML = '<div style="color:var(--text-3); padding:8px;">请先在简道云「标准任务清单」表中添加任务</div>';
+    }
+  } catch (error) {
+    titleEl.textContent = '加载失败';
+    listEl.innerHTML = '<div style="color:var(--red);">' + error.message + '</div>';
+  }
+}
+
+function closeTemplateModal() {
+  document.getElementById('template-modal').classList.remove('show');
+}
+
+async function importTemplate() {
+  if (!selectedTemplateId) {
+    showNotification('请先选择模板', '请在弹窗中选择一个项目计划模板');
+    return;
+  }
+  closeTemplateModal();
+  
+  try {
+    // 复用已缓存的任务数据（在 loadTemplatePreview 中已加载），避免重复 API 调用
+    let rawTasks;
+    if (selectedTemplateData && selectedTemplateData.templateId === selectedTemplateId && selectedTemplateData.tasks) {
+      rawTasks = selectedTemplateData.tasks;
+    } else {
+      // 如果没有缓存，才调用 API
+      const tasksResp = await apiClient.request(`/templates/${selectedTemplateId}/tasks`);
+      if (!tasksResp.success || !tasksResp.data.length) {
+        showNotification('导入失败', '该模板没有标准任务数据');
+        return;
+      }
+      rawTasks = tasksResp.data;
+    }
+    
+    // 依赖关系只在导入时需要，调用一次
+    const depsResp = await apiClient.request(`/templates/${selectedTemplateId}/dependencies`);
+    const rawDeps = depsResp.success ? depsResp.data : [];
+    
+    // 按 WBS 编号排序（自然排序：1.1, 1.2, 1.10 而非 1.1, 1.10, 1.2）
+    rawTasks.sort((a, b) => {
+      const codeA = (a.code || '').split('.').map(Number);
+      const codeB = (b.code || '').split('.').map(Number);
+      for (let i = 0; i < Math.max(codeA.length, codeB.length); i++) {
+        const na = codeA[i] || 0, nb = codeB[i] || 0;
+        if (na !== nb) return na - nb;
+      }
+      return 0;
+    });
+    
+    // 构建 ID 映射
+    const idMap = {};
+    rawTasks.forEach((t, idx) => { idMap[t.id] = 't' + (idx + 1); });
+    
+    // 构建父子关系
+    const parentMap = {};
+    rawTasks.forEach(t => {
+      if (t.parent_lookup && idMap[t.parent_lookup]) {
+        parentMap[idMap[t.id]] = idMap[t.parent_lookup];
+      } else if (t.parent_code) {
+        const parent = rawTasks.find(p => p.code === t.parent_code);
+        if (parent && idMap[parent.id]) parentMap[idMap[t.id]] = idMap[parent.id];
+      }
+    });
+    
+    // 备用：从 WBS 编号推断父子关系（如 2.1 的父节点是 2，2.3.1 的父节点是 2.3）
+    rawTasks.forEach(t => {
+      const fid = idMap[t.id];
+      if (parentMap[fid]) return; // 已有父节点，跳过
+      
+      const code = t.code || '';
+      const parts = code.split('.');
+      if (parts.length > 1) {
+        // 去掉最后一段，得到父节点的 code
+        const parentCode = parts.slice(0, -1).join('.');
+        const parent = rawTasks.find(p => p.code === parentCode);
+        if (parent && idMap[parent.id]) {
+          parentMap[fid] = idMap[parent.id];
+        }
+      }
+    });
+    
+    // 计算 WBS 编号
+    const wbsCodes = {};
+    const levelCounters = {};
+    rawTasks.forEach(t => {
+      const fid = idMap[t.id];
+      const level = t.level || 1;
+      const parentId = parentMap[fid];
+      if (!levelCounters[level]) levelCounters[level] = {};
+      const parentKey = parentId || 'root';
+      if (!levelCounters[level][parentKey]) levelCounters[level][parentKey] = 0;
+      levelCounters[level][parentKey]++;
+      const seq = levelCounters[level][parentKey];
+      wbsCodes[fid] = (parentId && wbsCodes[parentId]) ? wbsCodes[parentId] + '.' + seq : String(seq);
+    });
+    
+    // 转换为甘特图格式
+    let dayOffset = 0;
+    tasks = rawTasks.map((t, idx) => {
+      const fid = idMap[t.id];
+      const duration = t.duration_expected || t.duration_m || 10;
+      const task = {
+        id: fid,
+        code: wbsCodes[fid] || t.code || String(idx + 1),
+        name: t.name || '未命名任务',
+        level: t.level || 1,
+        isMilestone: (t.node_grade === '里程碑'),
+        duration: Math.round(duration),
+        start: dayOffset,
+        end: dayOffset + Math.round(duration),
+        constraint: 'ASAP',
+        status: 'normal',
+        parent: parentMap[fid] || null,
+        pert: { o: t.duration_o || duration, m: t.duration_m || duration, p: t.duration_p || duration },
+        role: t.role || '',
+        resourceType: t.resource_type || '',
+        jdyId: t.id
+      };
+      // 叶子节点才累加偏移
+      const isLeaf = !rawTasks.some(other => parentMap[idMap[other.id]] === fid);
+      if (isLeaf) dayOffset += Math.round(duration);
+      return task;
+    });
+    
+    // 后处理：基于最终 WBS 编号补全父子关系（解决 WBS 推断在 code 计算前执行的问题）
+    // 多轮扫描，直到不再发现新的父子关系
+    let fixed = 0;
+    let pass = 0;
+    do {
+      fixed = 0;
+      pass++;
+      tasks.forEach(t => {
+        if (!t.parent && t.code) {
+          const parts = t.code.split('.');
+          if (parts.length > 1) {
+            const parentCode = parts.slice(0, -1).join('.');
+            const parent = tasks.find(p => p.code === parentCode && p.id !== t.id);
+            if (parent) {
+              t.parent = parent.id;
+              fixed++;
+            }
+          }
+        }
+      });
+    } while (fixed > 0 && pass < 5);
+
+    // 诊断日志（可删）
+    console.log(`[父子关系] ${tasks.filter(t=>t.parent).length}/${tasks.length} 个任务有父节点`);
+
+    // 转换依赖关系
+    dependencies = [];
+    rawDeps.forEach(d => {
+      const fromTask = tasks.find(t => t.name === d.predecessor_name || t.code === d.predecessor_code || t.jdyId === d.predecessor_task);
+      const toTask = tasks.find(t => t.name === d.current_task_name || t.code === d.current_task_code || t.jdyId === d.current_task);
+      if (fromTask && toTask) {
+        dependencies.push({ from: fromTask.id, to: toTask.id, type: d.dep_type || 'FS', lag: d.lag_days || 0 });
+      }
+    });
+    
+    // 如果依赖为空，按同级兄弟自动生成 FS
+    if (dependencies.length === 0) {
+      const siblings = {};
+      tasks.forEach(t => {
+        const pKey = t.parent || 'root';
+        if (!siblings[pKey]) siblings[pKey] = [];
+        siblings[pKey].push(t);
+      });
+      Object.values(siblings).forEach(group => {
+        for (let i = 0; i < group.length - 1; i++) {
+          dependencies.push({ from: group[i].id, to: group[i + 1].id, type: 'FS', lag: 0 });
+        }
+      });
+    }
+    
+    // 正向推算排程
+    recalculateSchedule();
+    collapsedTasks.clear();
+    recomputeVisibleTasks();
+    renderAll();
+    
+    const tpl = loadedTemplates.find(t => t.id === selectedTemplateId);
+    showNotification('模板导入成功', `已从「${tpl ? tpl.name : '模板'}」导入 ${tasks.length} 个任务和 ${dependencies.length} 条依赖关系。可在甘特图上拖拽调整排程。`);
+  } catch (error) {
+    console.error('Import error:', error);
+    showNotification('导入失败', error.message);
+  }
+}
+
+function recalculateSchedule() {
+  const taskMap = {};
+  tasks.forEach(t => { taskMap[t.id] = t; });
+  const visited = new Set();
+  const sorted = [];
+  function visit(id) {
+    if (visited.has(id)) return;
+    visited.add(id);
+    dependencies.filter(d => d.to === id).forEach(d => visit(d.from));
+    sorted.push(id);
+  }
+  tasks.forEach(t => visit(t.id));
+  sorted.forEach(id => {
+    const task = taskMap[id];
+    if (!task) return;
+    let earliestStart = 0;
+    dependencies.filter(d => d.to === id).forEach(d => {
+      const pred = taskMap[d.from];
+      if (pred) {
+        const lag = d.lag || 0;
+        if (d.type === 'FS') earliestStart = Math.max(earliestStart, pred.end + lag);
+        else if (d.type === 'SS') earliestStart = Math.max(earliestStart, pred.start + lag);
+      }
+    });
+    task.start = earliestStart;
+    task.end = earliestStart + task.duration;
+  });
+  // 叶子任务排完后，自底向上汇总父任务的时间范围
+  recalculateSummaryTasks();
+}
+
+function recalculateSummaryTasks() {
+  const taskMap = {};
+  tasks.forEach(t => { taskMap[t.id] = t; });
+
+  // 构建 children map — 优先用 parent 字段，兜底用 WBS 前缀
+  const childrenOf = {};
+  tasks.forEach(t => {
+    if (t.parent) {
+      if (!childrenOf[t.parent]) childrenOf[t.parent] = [];
+      childrenOf[t.parent].push(t);
+    }
+  });
+
+  // 兜底：如果 parent 字段缺失，用 WBS 编号前缀推断
+  tasks.forEach(t => {
+    if (!t.parent && t.code) {
+      const parts = t.code.split('.');
+      if (parts.length > 1) {
+        const parentCode = parts.slice(0, -1).join('.');
+        const parent = tasks.find(p => p.code === parentCode && p.id !== t.id);
+        if (parent) {
+          t.parent = parent.id;
+          if (!childrenOf[parent.id]) childrenOf[parent.id] = [];
+          if (!childrenOf[parent.id].includes(t)) {
+            childrenOf[parent.id].push(t);
+          }
+        }
+      }
+    }
+  });
+
+  // 标记叶子节点 vs 汇总节点
+  tasks.forEach(t => {
+    t.isSummary = !!(childrenOf[t.id] && childrenOf[t.id].length > 0);
+  });
+
+  // 自底向上递归汇总
+  function rollup(task) {
+    const kids = childrenOf[task.id];
+    if (!kids || kids.length === 0) return;
+    kids.forEach(k => rollup(k));
+    task.start = Math.min(...kids.map(k => k.start));
+    task.end   = Math.max(...kids.map(k => k.end));
+    task.duration = task.end - task.start;
+  }
+
+  // 只对顶层任务调用 rollup（它会递归处理所有后代）
+  const roots = tasks.filter(t => !t.parent);
+  if (roots.length > 0) {
+    roots.forEach(t => rollup(t));
+  } else {
+    // 兜底：所有任务都尝试 rollup
+    tasks.forEach(t => rollup(t));
+  }
+}
+
+function addTask() {
+  showNotification('新增任务', '请在左侧任务列表底部填写新任务信息');
+}
+
+async function saveVersion() {
+  if (tasks.length === 0) {
+    showNotification('无法保存', '没有任务数据');
+    return;
+  }
+  
+  try {
+    showNotification('保存中...', '正在写入简道云，请稍候');
+    
+    const projectName = document.querySelector('.project-title')?.textContent?.trim() || '未命名项目';
+    const projectNumber = 'PRJ-' + Date.now().toString(36).toUpperCase();
+    
+    // Step 1: Create project
+    const projResp = await apiClient.request('/projects', 'POST', {
+      name: projectName,
+      number: projectNumber,
+      status: 'planning'
+    });
+    const projectId = projResp.data?.project_id || projResp.project_id;
+    if (!projectId) throw new Error('创建项目失败: ' + JSON.stringify(projResp));
+    
+    // Step 2: Batch create WBS nodes
+    const nodes = tasks.map(t => ({
+      id: t.id,
+      code: t.code,
+      name: t.name,
+      level: t.level || 1,
+      parent_code: t.parent ? (tasks.find(p => p.id === t.parent)?.code || '') : '',
+      node_grade: t.isMilestone ? '里程碑' : (t.parent ? '汇总' : '普通'),
+      duration_o: t.pert?.o || t.duration,
+      duration_m: t.pert?.m || t.duration,
+      duration_p: t.pert?.p || t.duration,
+      duration_expected: t.duration,
+      role: t.role || '',
+      resource_type: t.resourceType || ''
+    }));
+    
+    const wbsResp = await apiClient.request('/wbs/nodes/batch', 'POST', {
+      project_id: projectId,
+      project_number: projectNumber,
+      project_name: projectName,
+      nodes: nodes
+    });
+    
+    const nodeMap = wbsResp.node_map || {};
+    
+    // Step 3: Batch create dependencies
+    const deps = dependencies.map(d => {
+      const fromTask = tasks.find(t => t.id === d.from);
+      const toTask = tasks.find(t => t.id === d.to);
+      return {
+        predecessor_task: d.from,
+        current_task: d.to,
+        predecessor_code: fromTask?.code || '',
+        predecessor_name: fromTask?.name || '',
+        current_code: toTask?.code || '',
+        current_name: toTask?.name || '',
+        dep_type: d.type || 'FS',
+        lag_days: d.lag || 0
+      };
+    });
+    
+    const depsResp = await apiClient.request('/dependencies/batch', 'POST', {
+      project_id: projectId,
+      project_number: projectNumber,
+      project_name: projectName,
+      node_map: nodeMap,
+      dependencies: deps
+    });
+    
+    showNotification('保存成功', `已写入 ${wbsResp.count || 0} 个任务和 ${depsResp.count || 0} 条依赖关系到简道云`);
+  } catch (error) {
+    console.error('Save error:', error);
+    showNotification('保存失败', error.message);
+  }
+}
+
+function submitForApproval() {
+  showNotification('提交审批', '计划已提交审批，等待部门领导审批');
+}
+
+function renderAll() {
+  renderTaskList();
+  renderGanttHeader();
+  renderGanttBody();
+}
+
+// ===== 虚拟滚动监听 =====
+function setupVirtualScroll() {
+  const taskListContainer = document.querySelector('.task-list');
+  const ganttBody = document.getElementById('gantt-body');
+  
+  if (taskListContainer) {
+    taskListContainer.addEventListener('scroll', () => {
+      updateVirtualScrollRange(taskListContainer.scrollTop, taskListContainer.clientHeight);
+    });
+  }
+  
+  if (ganttBody) {
+    ganttBody.addEventListener('scroll', () => {
+      updateVirtualScrollRange(ganttBody.scrollTop, ganttBody.clientHeight);
+    });
+  }
+}
+
+// ===== 启动 =====
+init();
+setupVirtualScroll();
+
+// Auto-enable some toggles
+showFloat = true;
+document.getElementById('btn-float').classList.add('btn-primary');
+
+// ===== 成员搜索下拉框 =====
+let allMembers = [];
+let filteredMembers = [];
+let memberDropdownOpen = false;
+
+async function loadMembers() {
+  try {
+    const response = await fetch('/pingankuaiyun-pm/api/contacts/search?q=');
+    const result = await response.json();
+    if (result.success) {
+      allMembers = result.data || [];
+      filteredMembers = allMembers.slice(0, 20);
+    }
+  } catch (error) {
+    console.error('Failed to load members:', error);
+    allMembers = [];
+    filteredMembers = [];
+  }
+}
+
+function openMemberDropdown() {
+  const dropdown = document.getElementById('member-dropdown');
+  if (!dropdown) return;
+  
+  if (allMembers.length === 0) {
+    loadMembers().then(() => {
+      renderMemberList();
+      dropdown.classList.add('show');
+      memberDropdownOpen = true;
+    });
+  } else {
+    filteredMembers = allMembers.slice(0, 20);
+    renderMemberList();
+    dropdown.classList.add('show');
+    memberDropdownOpen = true;
+  }
+  
+  // Focus the search input
+  setTimeout(() => {
+    const searchInput = document.getElementById('member-search-input');
+    if (searchInput) searchInput.focus();
+  }, 50);
+}
+
+function closeMemberDropdown() {
+  const dropdown = document.getElementById('member-dropdown');
+  if (dropdown) {
+    dropdown.classList.remove('show');
+    memberDropdownOpen = false;
+  }
+}
+
+function filterMembers(query) {
+  const q = query.trim().toLowerCase();
+  if (!q) {
+    filteredMembers = allMembers.slice(0, 20);
+  } else {
+    filteredMembers = allMembers.filter(m => 
+      (m.name && m.name.toLowerCase().includes(q)) ||
+      (m.username && m.username.toLowerCase().includes(q))
+    ).slice(0, 20);
+  }
+  renderMemberList();
+}
+
+function renderMemberList() {
+  const listEl = document.getElementById('member-dropdown-list');
+  if (!listEl) return;
+  
+  if (filteredMembers.length === 0) {
+    listEl.innerHTML = '<div class="member-dropdown-empty">无匹配成员</div>';
+    return;
+  }
+  
+  listEl.innerHTML = filteredMembers.map(m => {
+    const avatar = m.name ? m.name.charAt(0) : '?';
+    const dept = m.departments && m.departments.length > 0 
+      ? m.departments.map(d => d.name || d).join(', ') 
+      : '';
+    return `
+      <div class="member-dropdown-item" onclick="selectMember('${m.username}', '${m.name}')">
+        <div class="member-avatar">${avatar}</div>
+        <div class="member-info">
+          <div class="member-name">${m.name || m.username}</div>
+          ${dept ? `<div class="member-dept">${dept}</div>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function selectMember(username, name) {
+  const pmInput = document.getElementById('pm-input');
+  if (pmInput) {
+    pmInput.value = name || username;
+  }
+  closeMemberDropdown();
+}
+
+function onPmInputChange() {
+  const pmInput = document.getElementById('pm-input');
+  if (!pmInput) return;
+  
+  const query = pmInput.value.trim();
+  if (query.length > 0) {
+    filterMembers(query);
+    if (!memberDropdownOpen) {
+      openMemberDropdown();
+    }
+  }
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+  const wrapper = document.querySelector('.member-search-wrapper');
+  if (wrapper && !wrapper.contains(e.target)) {
+    closeMemberDropdown();
+  }
+});
+
+// Update task count in header when tasks change
+function updateTaskCountHeader() {
+  const countEl = document.getElementById('task-count-header');
+  if (countEl) {
+    countEl.textContent = tasks.length + '个';
+  }
+}
+
+// Patch renderAll to update header task count
+const originalRenderAll = renderAll;
+renderAll = function() {
+  originalRenderAll();
+  updateTaskCountHeader();
+};
+</script>
+
+<script src="paradigm-f-enhance.js"></script>
+<script>
+// 范式F增强 - 初始化
+document.addEventListener('DOMContentLoaded', function() {
+  renderParadigmFBar(
+    '计划编制',
+    'WBS树 + 模板导入 + 拖拽排序',
+    '简道云原生详情页',
+    '任务属性变更→智能助手→Bridge重算CPM'
+  );
+});
+</script>
+</body>
+</html>
