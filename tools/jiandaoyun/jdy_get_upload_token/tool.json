@@ -1,0 +1,37 @@
+{
+  "name": "jdy_get_upload_token",
+  "display_name": "获取文件上传凭证",
+  "description_zh": "获取向简道云上传文件所需的token和URL",
+  "description": "Get file upload tokens and upload URLs for attaching files to form records. Returns token_and_url_list[] each with 'url' (upload endpoint) and 'token' (upload credential). Each request returns 100 tokens. Tokens and transaction_id are valid for 1 hour. The transaction_id must be the same UUID used when creating/updating the data record. Rate limit: 20/s.",
+  "params": {
+    "app_id": {
+      "type": "string",
+      "description": "应用ID"
+    },
+    "entry_id": {
+      "type": "string",
+      "description": "表单ID"
+    },
+    "transaction_id": {
+      "type": "string",
+      "description": "事务ID（UUID格式，自行生成，后续新建/修改数据时需传入相同值）"
+    }
+  },
+  "api": {
+    "url": "https://api.jiandaoyun.com/api/v5/app/entry/file/get_upload_token",
+    "method": "POST",
+    "headers": {
+      "Authorization": "Bearer ${conn:jiandaoyun.api_key}",
+      "Content-Type": "application/json"
+    }
+  },
+  "requires_connections": [
+    {
+      "category": "jiandaoyun",
+      "fields": [
+        "api_key"
+      ],
+      "required": true
+    }
+  ]
+}
