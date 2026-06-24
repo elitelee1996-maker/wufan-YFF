@@ -1,0 +1,53 @@
+{
+  "name": "jdy_add_corp_user",
+  "display_name": "添加成员",
+  "description_zh": "向企业通讯录添加新成员",
+  "description": "Add a new member to the organization. Required: name, departments (array of dept_no). Optional: username, mobile, email, integrate_id. Returns the created user info. Rate limit: 30/s.",
+  "params": {
+    "name": {
+      "type": "string",
+      "description": "成员昵称（必填）"
+    },
+    "departments": {
+      "type": "array",
+      "description": "所属部门编号列表，如 [1, 3]（必填）"
+    },
+    "username": {
+      "type": "string",
+      "description": "成员编号，不填则自动生成",
+      "default": ""
+    },
+    "mobile": {
+      "type": "string",
+      "description": "手机号（手机号/邮箱至少填一个）",
+      "default": ""
+    },
+    "email": {
+      "type": "string",
+      "description": "邮箱（手机号/邮箱至少填一个）",
+      "default": ""
+    },
+    "integrate_id": {
+      "type": "string",
+      "description": "集成模式关联ID",
+      "default": ""
+    }
+  },
+  "api": {
+    "url": "https://api.jiandaoyun.com/api/v5/corp/user/add",
+    "method": "POST",
+    "headers": {
+      "Authorization": "Bearer ${conn:jiandaoyun.api_key}",
+      "Content-Type": "application/json"
+    }
+  },
+  "requires_connections": [
+    {
+      "category": "jiandaoyun",
+      "fields": [
+        "api_key"
+      ],
+      "required": true
+    }
+  ]
+}
