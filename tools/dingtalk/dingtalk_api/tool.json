@@ -1,0 +1,29 @@
+{
+  "name": "dingtalk_api",
+  "description": "Execute any DingTalk Open API call with automatic access_token management. Agent decides the API path, method, and parameters. Supports all DingTalk v2 APIs.",
+  "display_name": "钉钉API调用",
+  "description_zh": "钉钉开放平台API通用调用工具，自动管理access_token，支持所有v2接口",
+  "params": {
+    "method": {
+      "type": "string",
+      "description": "HTTP method: GET or POST",
+      "default": "POST"
+    },
+    "api_path": {
+      "type": "string",
+      "description": "DingTalk API path, e.g. /topapi/message/corpconversation/asyncsend_v2 or /v1.0/contact/users/me"
+    },
+    "query": {
+      "type": "object",
+      "description": "Query parameters as key-value pairs",
+      "default": {}
+    },
+    "body": {
+      "type": "object",
+      "description": "Request body for POST requests",
+      "default": {}
+    }
+  },
+  "timeout": 30,
+  "retry": 1
+}
