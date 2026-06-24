@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>三个圈层 · 城市房产清爽报告</title>
+
+<!-- ╔══════════════════════════════════════════════════════════════════════╗
+     ║ ⚠⚠⚠ 完全自包含 HTML · 严禁数据外置 (D 死路) ⚠⚠⚠                 ║
+     ╠══════════════════════════════════════════════════════════════════════╣
+     ║ 所有业务数据 inline 在 <script>const D = {...}</script> 里            ║
+     ║ ❌ 严禁 fetch("data.json") / <script src="data.js">                  ║
+     ║ ❌ 严禁产物目录里出现 data.json / data.js 等业务数据文件             ║
+     ║ 原因: 用户双击 HTML 用 file:// 打开, 浏览器禁止跨文件 fetch (CORS)   ║
+     ║       外置 = 双击全屏空白 = 用户觉得"做的不能用"                       ║
+     ║ ✅ 唯一允许的"外部资源" = ECharts / 字体的 https:// CDN               ║
+     ╚══════════════════════════════════════════════════════════════════════╝ -->
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     Luminous Paper · Editorial 样板 · 房产分析数据
+     ════════════════════════════════════════════════════════════════════════
+     ▶ Agent 你应该:
+        1. read 整个文件, 看 6 节布局如何完全不同 + 4 灵魂招牌如何全开
+           (近白 dot-grid 底 / 无阴影 hairline 卡 / 4 套贴纸色 / Inter+思源黑 500-600)
+        2. 抄 <style> 段全部 CSS
+        3. 抄章节模板, 把数据替成你的业务 (数据**必须 inline**, 见上方警告)
+        4. ECharts 全部 spread ...lpEchartsBase, series 一律扁平干净 (无 shadowBlur, 跟 aurora-noir 反差)
+        5. 一次 write 整页 (路径 A) 或一次 execute_python 内构造 (路径 B), 不要分段追加
+     ▶ 哲学: 清爽明亮工程师 SaaS 工作台 — Notion / Linear / Vercel 的克制精确美学
+     ▶ ❌ 决不加阴影 / 衬线字体 / 700 weight 中文 / webgl 动效 (任一都破坏克制感)
+     ════════════════════════════════════════════════════════════════════════ -->
+
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+/* ════════════════════════════════════════════════════════════════════════
+   LUMINOUS PAPER · 主题 tokens (跨 editorial / dashboard 通用)
+   ════════════════════════════════════════════════════════════════════════ */
+:root {
+  --bg-base:#ffffff; --bg-subtle:#f9fafb; --bg-hover:#f3f4f6;
+  --text-1:#111827; --text-2:#374151; --text-3:#6b7280; --text-4:#9ca3af;
+  --border:#e5e7eb; --border-light:#f3f4f6; --border-strong:#d1d5db;
+  --accent:#3b82f6; --accent-soft:#dbeafe; --accent-text:#1d4ed8;
+  --pink:#ec4899; --pink-bg:#fce7f3; --pink-text:#db2777;
+  --purple:#a855f7; --purple-bg:#f3e8ff; --purple-text:#7e22ce;
+  --orange:#f97316; --orange-bg:#ffedd5; --orange-text:#c2410c;
+  --green:#10b981; --green-bg:#dcfce7; --green-text:#15803d;
+  --font-display:'Inter', system-ui, sans-serif;
+  --font-body:'Inter', 'Noto Sans SC', sans-serif;
+  --font-cn:'Noto Sans SC', 'PingFang SC', sans-serif;
+  --font-mono:'JetBrains Mono', monospace;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background-color:var(--bg-base);
+  background-image:radial-gradient(circle, rgba(17,24,39,0.055) 0.6px, transparent 0.6px);
+  background-size:22px 22px;
+  color:var(--text-1); font-family:var(--font-body); font-weight:400; line-height:1.7;
+  -webkit-font-smoothing:antialiased; overflow-x:hidden;
+}
+:lang(zh) { font-family:var(--font-cn); }
+::selection { background:var(--accent-soft); color:var(--accent-text); }
+::-webkit-scrollbar { width:8px; }
+::-webkit-scrollbar-thumb { background:var(--border-strong); border-radius:8px; }
+
+.page { max-width:1240px; margin:0 auto; padding:0 clamp(24px,4vw,56px) clamp(72px,9vw,110px); }
+
+/* Header (无 sticky topbar, 工作台标题就是入口) */
+.lp-header { display:flex; justify-content:space-between; align-items:center; padding:20px 0; margin-bottom:8px; }
+.brand { font-family:var(--font-display); font-weight:600; font-size:15px; color:var(--text-1); display:flex; align-items:center; gap:10px; }
+.brand-mark { width:24px; height:24px; border-radius:7px; background:linear-gradient(135deg, var(--accent), var(--purple)); display:inline-flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:13px; }
+.sync { font-family:var(--font-mono); font-size:11px; color:var(--text-3); display:flex; align-items:center; gap:7px; }
+.sync-dot { width:7px; height:7px; border-radius:50%; background:var(--green); }
+
+/* Hero */
+.hero { padding:clamp(36px,5vw,68px) 0 clamp(36px,5vw,56px); border-bottom:1px solid var(--border); margin-bottom:clamp(48px,6vw,72px); }
+.kicker { font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--accent-text); display:inline-flex; align-items:center; gap:10px; margin-bottom:22px; }
+.kicker::before { content:''; width:24px; height:2px; border-radius:2px; background:var(--accent); }
+.hero-title { font-family:var(--font-cn); font-weight:600; font-size:clamp(2.2rem,5vw,4rem); line-height:1.18; letter-spacing:0.005em; color:var(--text-1); margin-bottom:26px; max-width:20ch; }
+.hero-title em { font-style:normal; color:var(--accent); }
+.hero-sub { font-family:var(--font-cn); font-weight:400; font-size:clamp(1rem,1.5vw,1.25rem); line-height:1.75; color:var(--text-2); max-width:58ch; margin-bottom:32px; }
+.hero-lead { font-family:var(--font-cn); font-weight:400; font-size:1.0625rem; line-height:1.95; color:var(--text-2); max-width:64ch; }
+.hero-lead strong { color:var(--text-1); font-weight:600; }
+.hero-lead em { font-style:normal; color:var(--accent); font-weight:600; }
+/* 蓝色 dropcap (灵魂) */
+.hero-lead::first-letter {
+  float:left; font-family:var(--font-display); font-weight:700;
+  font-size:3.6em; line-height:0.86; color:var(--accent);
+  padding:0.04em 0.14em 0 0; margin:0.05em 0.24em 0 0;
+}
+
+.hero-metrics { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-top:44px; }
+@media (max-width:760px) { .hero-metrics { grid-template-columns:repeat(2,1fr); } }
+.hm { background:var(--bg-base); border:1px solid var(--border); border-radius:12px; padding:22px 20px; }
+.hm-label { font-family:var(--font-mono); font-size:11px; letter-spacing:0.04em; color:var(--text-3); margin-bottom:12px; }
+.hm-value { font-family:var(--font-display); font-weight:700; font-size:2rem; color:var(--text-1); font-variant-numeric:tabular-nums; letter-spacing:-0.02em; line-height:1; }
+.hm-value em { font-style:normal; font-size:0.5em; color:var(--accent); margin-left:3px; }
+.hm-meta { font-family:var(--font-mono); font-size:10px; color:var(--text-4); margin-top:8px; }
+
+/* Section */
+.section { margin-bottom:clamp(56px,7vw,88px); }
+.section-head { margin-bottom:32px; display:flex; justify-content:space-between; align-items:flex-end; gap:24px; flex-wrap:wrap; }
+.section-num { font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--accent-text); margin-bottom:12px; }
+.section-title { font-family:var(--font-cn); font-weight:600; font-size:clamp(1.6rem,3vw,2.4rem); line-height:1.2; letter-spacing:0.005em; color:var(--text-1); max-width:22ch; }
+.section-title em { font-style:normal; color:var(--accent); }
+.section-sub { font-family:var(--font-cn); font-size:14px; color:var(--text-3); max-width:440px; text-align:right; line-height:1.7; }
+.prose { font-family:var(--font-cn); font-size:16px; line-height:1.9; color:var(--text-2); max-width:68ch; }
+.prose strong { color:var(--text-1); font-weight:600; }
+.prose em { font-style:normal; color:var(--accent); font-weight:600; }
+
+/* 无阴影 hairline 卡 (灵魂 #2) */
+.card { background:var(--bg-base); border:1px solid var(--border); border-radius:12px; box-shadow:none; }
+.card:hover { border-color:var(--border-strong); transition:all .15s; }
+
+/* badge (灵魂 #3) */
+.badge { display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; }
+.badge.stuck { background:var(--pink-bg); color:var(--pink-text); }
+.badge.done { background:var(--purple-bg); color:var(--purple-text); }
+.badge.todo { background:var(--orange-bg); color:var(--orange-text); }
+.badge.doing { background:var(--green-bg); color:var(--green-text); }
+.badge.blue { background:var(--accent-soft); color:var(--accent-text); }
+
+/* §01 KPI 阵 */
+.kpi-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+@media (max-width:880px) { .kpi-grid { grid-template-columns:1fr; } }
+.kpi { padding:26px 24px; min-height:162px; display:flex; flex-direction:column; }
+.kpi-label { font-family:var(--font-mono); font-size:11px; letter-spacing:0.04em; color:var(--text-3); }
+.kpi-value { font-family:var(--font-display); font-weight:700; font-size:clamp(2rem,3.2vw,2.8rem); color:var(--text-1); font-variant-numeric:tabular-nums; letter-spacing:-0.02em; margin:18px 0 8px; line-height:1; }
+.kpi-value em { font-style:normal; font-size:0.46em; color:var(--accent); margin-left:3px; }
+.kpi-desc { font-family:var(--font-cn); font-size:13px; color:var(--text-3); line-height:1.6; margin-top:auto; }
+.kpi-desc strong { color:var(--text-2); font-weight:600; }
+
+/* §02 排行 */
+.rank-panel { padding:8px 28px; }
+.rank-row { display:grid; grid-template-columns:36px 1fr auto; align-items:center; gap:18px; padding:16px 0; border-bottom:1px solid var(--border-light); }
+.rank-row:last-child { border-bottom:none; }
+.rank-num { font-family:var(--font-display); font-weight:700; font-size:16px; color:var(--text-4); font-variant-numeric:tabular-nums; }
+.rank-name { font-family:var(--font-cn); font-size:15px; font-weight:500; color:var(--text-1); }
+.rank-name span { font-family:var(--font-mono); font-size:11px; color:var(--text-3); margin-left:10px; font-weight:400; }
+.rank-bar-wrap { display:flex; align-items:center; gap:14px; }
+.rank-bar { width:170px; height:6px; border-radius:999px; background:var(--bg-hover); overflow:hidden; }
+.rank-bar-fill { height:100%; border-radius:999px; background:var(--accent); }
+.rank-val { font-family:var(--font-mono); font-weight:600; font-size:14px; color:var(--text-1); min-width:92px; text-align:right; font-variant-numeric:tabular-nums; }
+@media (max-width:700px) { .rank-bar { width:80px; } }
+
+/* §03 takeaway alert (灵魂招牌) + 引语 */
+.takeaway { display:flex; gap:16px; padding:22px 26px; background:var(--accent-soft); border:1px solid #bfdbfe; border-radius:12px; margin-bottom:32px; }
+.takeaway-icon { flex-shrink:0; width:28px; height:28px; border-radius:8px; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; }
+.takeaway-body { font-family:var(--font-cn); font-size:15px; line-height:1.75; color:var(--text-1); }
+.takeaway-body strong { color:var(--accent-text); font-weight:600; }
+.quote-block { padding:clamp(36px,5vw,60px) 0; text-align:center; }
+.quote-text { font-family:var(--font-cn); font-weight:600; font-size:clamp(1.4rem,3vw,2.4rem); line-height:1.4; color:var(--text-1); max-width:24ch; margin:0 auto; }
+.quote-text em { font-style:normal; color:var(--accent); }
+.quote-attr { font-family:var(--font-mono); font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-3); margin-top:24px; }
+
+/* §04 + §05 chart grid */
+.chart-grid-12 { display:grid; grid-template-columns:2fr 1fr; gap:16px; margin-bottom:16px; }
+.chart-grid-22 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+@media (max-width:880px) { .chart-grid-12, .chart-grid-22 { grid-template-columns:1fr; } }
+.chart-card { padding:24px; }
+.chart-hd { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px; gap:12px; }
+.chart-title { font-family:var(--font-cn); font-weight:600; font-size:16px; color:var(--text-1); }
+.chart-title em { font-style:normal; color:var(--accent); }
+.chart-meta { font-family:var(--font-mono); font-size:10px; letter-spacing:0.04em; color:var(--text-3); white-space:nowrap; }
+.chart-host { width:100%; height:300px; }
+.chart-host.tall { height:360px; }
+
+/* §06 结语 + 3 列短评 */
+.coda { text-align:center; padding:clamp(48px,7vw,90px) 0 clamp(32px,4vw,48px); }
+.coda-text { font-family:var(--font-cn); font-weight:600; font-size:clamp(1.6rem,3.6vw,2.8rem); line-height:1.3; max-width:24ch; margin:0 auto; color:var(--text-1); }
+.coda-text em { font-style:normal; color:var(--accent); }
+.coda-attr { font-family:var(--font-mono); font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-3); margin-top:24px; }
+.essays { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:12px; overflow:hidden; margin-top:8px; }
+@media (max-width:800px) { .essays { grid-template-columns:1fr; } }
+.essay { background:var(--bg-base); padding:26px 24px; }
+.essay-kicker { font-family:var(--font-mono); font-size:10px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent-text); margin-bottom:14px; }
+.essay-title { font-family:var(--font-cn); font-weight:600; font-size:18px; line-height:1.35; color:var(--text-1); margin-bottom:12px; }
+.essay-title em { font-style:normal; color:var(--accent); }
+.essay-lede { font-family:var(--font-cn); font-size:13.5px; line-height:1.75; color:var(--text-2); }
+.essay-lede em { font-style:normal; color:var(--accent); font-weight:600; }
+
+.footer { display:flex; justify-content:space-between; align-items:center; padding-top:28px; border-top:1px solid var(--border); font-family:var(--font-mono); font-size:10px; letter-spacing:0.06em; color:var(--text-3); flex-wrap:wrap; gap:12px; }
+.footer-brand { font-family:var(--font-display); font-weight:600; font-size:13px; color:var(--text-1); }
+</style>
+</head>
+<body>
+
+<main class="page">
+
+  <!-- ════════════ Header ════════════ -->
+  <header class="lp-header">
+    <div class="brand"><span class="brand-mark">城</span>城市观察 · Urban Signals</div>
+    <div class="sync"><span class="sync-dot"></span>同步中 · 2026 年度报告</div>
+  </header>
+
+  <!-- ════════════ Hero ════════════ -->
+  <section class="hero">
+    <div class="kicker">年度专题 · 居住分层</div>
+    <h1 class="hero-title">三个圈层, 一座城市的 <em>分层折叠</em></h1>
+    <p class="hero-sub">面积、装修、朝向看似独立, 实则都是圈层选择的投影. 一份 100 套样本的微观研究, 揭示城市房产已完成结构性分化.</p>
+    <p class="hero-lead">本报告基于 100 套房产样本的微观分析, 发现城市房产市场已完成不可逆的<strong>三层结构</strong>: 普通小区 33 万均价层、高档小区 68 万改善层、豪华小区 153 万圈层层. 三层之间不仅是价格梯度, 而是<em>客户画像、产品定义、销售逻辑</em>的完全分化. 通常被认为"独立变量"的<em>朝向</em>跟<em>装修</em>, 实际上只是圈层选择的投影 — 它们在三层之间分配的方式, 才是城市房产市场分层的真正密码.</p>
+
+    <div class="hero-metrics">
+      <div class="hm"><div class="hm-label">价格跨度</div><div class="hm-value">9.1<em>x</em></div><div class="hm-meta">最高 ÷ 最低</div></div>
+      <div class="hm"><div class="hm-label">南向溢价</div><div class="hm-value">+199<em>%</em></div><div class="hm-meta">南向 vs 北向</div></div>
+      <div class="hm"><div class="hm-label">豪华占值</div><div class="hm-value">47<em>%</em></div><div class="hm-meta">市值占比</div></div>
+      <div class="hm"><div class="hm-label">样本数</div><div class="hm-value">100<em>套</em></div><div class="hm-meta">2009–2022</div></div>
+    </div>
+  </section>
+
+  <!-- ════════════ §01 三圈层 KPI 阵 ════════════ -->
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <div class="section-num">01 · The Three Strata</div>
+        <h2 class="section-title">三个圈层, <em>三种语法</em></h2>
+      </div>
+      <div class="section-sub">100 套样本拆解出三层圈层. 不只是价格, 是客户画像的完全分化.</div>
+    </div>
+    <div class="kpi-grid">
+      <div class="card kpi">
+        <div class="kpi-label">普通小区 · 33 万层</div>
+        <div class="kpi-value">¥33<em>万</em></div>
+        <div class="kpi-desc">45 套 · 刚需主力 · <strong>毛坯/简装为主</strong> <span class="badge todo">占比 45%</span></div>
+      </div>
+      <div class="card kpi">
+        <div class="kpi-label">高档小区 · 68 万层</div>
+        <div class="kpi-value">¥68<em>万</em></div>
+        <div class="kpi-desc">34 套 · 改善客户 · <strong>精装率提升</strong> <span class="badge doing">占比 34%</span></div>
+      </div>
+      <div class="card kpi">
+        <div class="kpi-label">豪华小区 · 153 万层</div>
+        <div class="kpi-value">¥153<em>万</em></div>
+        <div class="kpi-desc">21 套 · 圈层资格 · <strong>占 47% 市值</strong> <span class="badge done">利润核心</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════ §02 单价排行 ════════════ -->
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <div class="section-num">02 · Top Unit Prices</div>
+        <h2 class="section-title">单价 TOP 6, <em>六种生活想象</em></h2>
+      </div>
+      <div class="section-sub">单价最高的 6 套, 全部南向豪华小区 — 圈层、朝向、装修的"组合拳".</div>
+    </div>
+    <div class="card rank-panel" id="rank-list"></div>
+  </section>
+
+  <!-- ════════════ §03 takeaway + 引语 ════════════ -->
+  <section class="section">
+    <div class="takeaway">
+      <div class="takeaway-icon">!</div>
+      <div class="takeaway-body">关键发现 — 朝向不是物理变量, 是<strong>社会学变量</strong>. 豪华小区南向比例 76%, 普通小区只有 31%. 你以为在为"光"付费, 实际在为"圈层"付费.</div>
+    </div>
+    <div class="quote-block">
+      <p class="quote-text">朝向贵的不是 30 分钟日照,<br>是开发商把你跟有钱人<em>分到了同一栋楼</em>.</p>
+      <div class="quote-attr">— 城市观察 · 首席分析师</div>
+    </div>
+  </section>
+
+  <!-- ════════════ §04 多维交叉 (scatter + radar) ════════════ -->
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <div class="section-num">04 · Cross Analysis</div>
+        <h2 class="section-title">面积 × 单价, <em>看见叠加效应</em></h2>
+      </div>
+      <div class="section-sub">三圈层价格带几乎无重叠. 雷达图下豪华小区六维全面领先.</div>
+    </div>
+    <div class="chart-grid-12">
+      <div class="card chart-card">
+        <div class="chart-hd"><div class="chart-title">面积 × 单价 · <em>三圈层分色</em></div><div class="chart-meta">Scatter</div></div>
+        <div class="chart-host tall" id="chart-scatter"></div>
+      </div>
+      <div class="card chart-card">
+        <div class="chart-hd"><div class="chart-title">朝向占比</div><div class="chart-meta">Donut</div></div>
+        <div class="chart-host tall" id="chart-orient"></div>
+      </div>
+    </div>
+    <div class="chart-grid-22">
+      <div class="card chart-card">
+        <div class="chart-hd"><div class="chart-title">装修 × 圈层 · <em>叠加占比</em></div><div class="chart-meta">Stacked Bar</div></div>
+        <div class="chart-host" id="chart-deco"></div>
+      </div>
+      <div class="card chart-card">
+        <div class="chart-hd"><div class="chart-title">三圈层 · <em>6 维特征</em></div><div class="chart-meta">Radar</div></div>
+        <div class="chart-host" id="chart-radar"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════ §05 时间杠杆 (line+area) + 深度分布 (heatmap+treemap) ════════════ -->
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <div class="section-num">05 · The Time Premium</div>
+        <h2 class="section-title">十四年, <em>四代房子</em></h2>
+      </div>
+      <div class="section-sub">2020 后建成均价 122 万, 2009-12 建成 48 万 — 2.5 倍差. 房龄是时代红利指数.</div>
+    </div>
+    <div class="card chart-card" style="margin-bottom:16px;">
+      <div class="chart-hd"><div class="chart-title">四代房屋 · <em>均价 + 单价</em>双线时序</div><div class="chart-meta">Line + Area</div></div>
+      <div class="chart-host tall" id="chart-timeline"></div>
+    </div>
+    <div class="chart-grid-22">
+      <div class="card chart-card">
+        <div class="chart-hd"><div class="chart-title">朝向 × 装修 · <em>分布密度</em></div><div class="chart-meta">Heatmap</div></div>
+        <div class="chart-host" id="chart-heatmap"></div>
+      </div>
+      <div class="card chart-card">
+        <div class="chart-hd"><div class="chart-title">圈层 → 户型 · <em>层级占比</em></div><div class="chart-meta">Treemap</div></div>
+        <div class="chart-host" id="chart-treemap"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════ §06 结语 + 3 列短评 ════════════ -->
+  <section class="section">
+    <div class="coda">
+      <div class="section-num" style="text-align:center;">06 · The Verdict</div>
+      <p class="coda-text">城市不是一个市场,<br>是<em>三个完全不同的故事</em>同时在写.</p>
+      <div class="coda-attr">— 城市观察 · 2026 年度报告</div>
+    </div>
+    <div class="essays">
+      <div class="essay">
+        <div class="essay-kicker">A · 装修</div>
+        <h3 class="essay-title">不是预算, 是<em>开发商配给</em></h3>
+        <p class="essay-lede">装修等级 ≠ 装修预算, 是<em>开发商精装标配级别</em>. 用装修筛客户, 先用小区类型过滤.</p>
+      </div>
+      <div class="essay">
+        <div class="essay-kicker">B · 房龄</div>
+        <h3 class="essay-title">不是老化, 是<em>时代红利</em></h3>
+        <p class="essay-lede">房龄被当作老化扣分项, 实际是<em>时代红利指数</em>. 2010 年前的房子常自带学区 / 地段.</p>
+      </div>
+      <div class="essay">
+        <div class="essay-kicker">C · 叠加</div>
+        <h3 class="essay-title">单变量都是<em>陷阱</em></h3>
+        <p class="essay-lede">豪华 + 南向 + 豪装 = 152 万均值的<em>组合拳</em>. 单变量分析必然漏掉真高净值客户.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════ Footer ════════════ -->
+  <footer class="footer">
+    <div class="footer-brand">城市观察 · Urban Signals</div>
+    <div>2026 年度报告 · 100 套样本研究</div>
+    <div>Luminous Paper · 晨光纸笺</div>
+  </footer>
+
+</main>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     JavaScript · ECharts (luminous-paper 5 色 + 全扁平干净, 无 shadowBlur)
+     ════════════════════════════════════════════════════════════════════════ -->
+<script>
+const lpEchartsBase = {
+  color: ['#3b82f6','#10b981','#a855f7','#f97316','#ec4899'],
+  textStyle: { color:'#111827', fontFamily:"'Inter','Noto Sans SC',sans-serif" },
+  backgroundColor: 'transparent',
+  grid: { left:'6%', right:'4%', top:'16%', bottom:'12%', containLabel:true },
+  tooltip: {
+    trigger:'axis', backgroundColor:'rgba(255,255,255,0.98)', borderColor:'#e5e7eb', borderWidth:1, padding:[10,14],
+    textStyle:{color:'#111827',fontSize:12,fontFamily:"'Inter',sans-serif"},
+    extraCssText:'box-shadow:0 10px 15px -3px rgb(0 0 0 / 0.10), 0 4px 6px -4px rgb(0 0 0 / 0.05);border-radius:8px;',
+    axisPointer:{type:'line',lineStyle:{color:'#3b82f6',type:'dashed',width:1,opacity:0.5}}
+  },
+  legend: { top:4, right:8, textStyle:{color:'#6b7280',fontSize:12}, icon:'circle', itemWidth:8, itemHeight:8, itemGap:16 },
+  xAxis: { type:'category', axisLine:{lineStyle:{color:'#e5e7eb'}}, axisTick:{show:false}, axisLabel:{color:'#6b7280',fontSize:11,margin:10}, splitLine:{show:false} },
+  yAxis: { type:'value', axisLine:{show:false}, axisTick:{show:false}, axisLabel:{color:'#6b7280',fontSize:11,fontFamily:'JetBrains Mono'}, splitLine:{lineStyle:{color:'#f3f4f6',type:'dashed'}} }
+};
+function safeRender(name, fn) { try { fn(); } catch (e) { console.warn('[chart]', name, e); } }
+
+// §02 单价排行 (DOM, 蓝进度条)
+(function renderRank() {
+  const data = [
+    { name:'外滩源 · 静安寺', meta:'H030 · 201㎡ · 5室', val:10432, pct:1.0 },
+    { name:'陆家嘴 · 浦东', meta:'H012 · 198㎡ · 5室', val:10482, pct:0.98 },
+    { name:'武康路 · 徐汇', meta:'H024 · 168㎡ · 4室', val:10083, pct:0.92 },
+    { name:'佘山 · 松江', meta:'H018 · 176㎡ · 4室', val:9975, pct:0.88 },
+    { name:'愚园路 · 静安', meta:'H008 · 157㎡ · 4室', val:9529, pct:0.84 },
+    { name:'复兴中路 · 黄浦', meta:'H005 · 146㎡ · 4室', val:9440, pct:0.82 }
+  ];
+  const el = document.getElementById('rank-list'); if (!el) return;
+  el.innerHTML = data.map((d, i) => `
+    <div class="rank-row">
+      <div class="rank-num">${String(i+1).padStart(2,'0')}</div>
+      <div class="rank-name">${d.name}<span>${d.meta}</span></div>
+      <div class="rank-bar-wrap"><div class="rank-bar"><div class="rank-bar-fill" style="width:${(d.pct*100).toFixed(0)}%"></div></div><div class="rank-val">¥${d.val.toLocaleString()}/㎡</div></div>
+    </div>`).join('');
+})();
+
+// §04 散点
+safeRender('scatter', () => {
+  const el = document.getElementById('chart-scatter'); if (!el) return;
+  const ch = echarts.init(el);
+  const C = { '普通小区':'#3b82f6', '高档小区':'#10b981', '豪华小区':'#a855f7' };
+  function gen(n, ar, ur) { const o=[]; for(let i=0;i<n;i++) o.push([Math.round(ar[0]+Math.random()*(ar[1]-ar[0])),Math.round(ur[0]+Math.random()*(ur[1]-ur[0]))]); return o; }
+  const sets = { '普通小区':gen(45,[55,95],[3300,5500]), '高档小区':gen(34,[85,135],[5200,7800]), '豪华小区':gen(21,[130,210],[7500,10500]) };
+  ch.setOption({ ...lpEchartsBase, legend:{...lpEchartsBase.legend,data:Object.keys(sets)}, tooltip:{...lpEchartsBase.tooltip,trigger:'item',formatter:p=>`面积 ${p.data[0]}㎡<br/>单价 ¥${p.data[1].toLocaleString()}/㎡`}, xAxis:{...lpEchartsBase.xAxis,type:'value',name:'面积 ㎡',nameTextStyle:{color:'#6b7280',fontSize:10},nameLocation:'middle',nameGap:30}, yAxis:{...lpEchartsBase.yAxis,name:'单价 ¥/㎡',nameTextStyle:{color:'#6b7280',fontSize:10},nameLocation:'middle',nameGap:54}, grid:{left:66,right:24,top:46,bottom:50,containLabel:false}, series:Object.entries(sets).map(([t,d])=>({name:t,type:'scatter',symbolSize:11,data:d,itemStyle:{color:C[t],opacity:0.85}})) });
+  new ResizeObserver(()=>ch.resize()).observe(el);
+});
+
+// §04 朝向 donut (白描边)
+safeRender('orient', () => {
+  const el = document.getElementById('chart-orient'); if (!el) return;
+  const ch = echarts.init(el);
+  const C = ['#3b82f6','#a855f7','#10b981','#f97316'];
+  ch.setOption({ ...lpEchartsBase, legend:{...lpEchartsBase.legend,orient:'vertical',right:0,top:'middle',itemGap:12}, tooltip:{...lpEchartsBase.tooltip,trigger:'item',formatter:'{b}: {c} 套 ({d}%)'}, series:[{type:'pie',radius:['52%','78%'],center:['38%','50%'],data:[{name:'南',value:51},{name:'西',value:19},{name:'东',value:15},{name:'北',value:15}].map((d,i)=>({...d,itemStyle:{color:C[i],borderColor:'#fff',borderWidth:4,borderRadius:4}})),label:{show:true,formatter:'{b}\n{d}%',fontSize:11,color:'#374151'}}] });
+  new ResizeObserver(()=>ch.resize()).observe(el);
+});
+
+// §04 装修 × 圈层 堆叠柱 (圆角顶, 无 glow)
+safeRender('deco', () => {
+  const el = document.getElementById('chart-deco'); if (!el) return;
+  const ch = echarts.init(el);
+  function bar(name, data, color, top) { return { name, type:'bar', stack:'g', barWidth:30, itemStyle:{color,borderRadius:top?[4,4,0,0]:[0,0,0,0]}, data }; }
+  ch.setOption({ ...lpEchartsBase, legend:{...lpEchartsBase.legend,data:['普通小区','高档小区','豪华小区'],top:0}, grid:{left:46,right:20,top:40,bottom:30,containLabel:true}, xAxis:{...lpEchartsBase.xAxis,data:['毛坯','简装','精装','豪装']}, yAxis:{...lpEchartsBase.yAxis,name:'套数',nameTextStyle:{color:'#6b7280',fontSize:10}}, series:[bar('普通小区',[14,18,11,2],'#3b82f6',false),bar('高档小区',[0,6,18,10],'#10b981',false),bar('豪华小区',[0,0,4,17],'#a855f7',true)] });
+  new ResizeObserver(()=>ch.resize()).observe(el);
+});
+
+// §04 三圈层 6 维雷达 (浅 area)
+safeRender('radar', () => {
+  const el = document.getElementById('chart-radar'); if (!el) return;
+  const ch = echarts.init(el);
+  const C = { '普通小区':'#3b82f6', '高档小区':'#10b981', '豪华小区':'#a855f7' };
+  ch.setOption({ textStyle:lpEchartsBase.textStyle, backgroundColor:'transparent', legend:{data:Object.keys(C),bottom:0,textStyle:{color:'#6b7280',fontSize:10}}, tooltip:{trigger:'item'}, radar:{ indicator:[{name:'面积',max:200},{name:'总价',max:200},{name:'楼龄',max:20},{name:'户型',max:150},{name:'地铁',max:100},{name:'学区',max:100}], center:['50%','50%'], radius:'62%', axisName:{color:'#6b7280',fontSize:9}, splitArea:{areaStyle:{color:['#fafafa','#f3f4f6']}}, splitLine:{lineStyle:{color:'#e5e7eb'}}, axisLine:{lineStyle:{color:'#e5e7eb'}} }, series:[{type:'radar',data:[
+    {name:'普通小区',value:[75,33,14,78,65,70],itemStyle:{color:C['普通小区']},areaStyle:{color:'rgba(59,130,246,0.10)'},lineStyle:{color:C['普通小区'],width:1.8}},
+    {name:'高档小区',value:[105,65,11,110,80,85],itemStyle:{color:C['高档小区']},areaStyle:{color:'rgba(16,185,129,0.10)'},lineStyle:{color:C['高档小区'],width:1.8}},
+    {name:'豪华小区',value:[170,152,8,140,90,95],itemStyle:{color:C['豪华小区']},areaStyle:{color:'rgba(168,85,247,0.14)'},lineStyle:{color:C['豪华小区'],width:2}}
+  ]}] });
+  new ResizeObserver(()=>ch.resize()).observe(el);
+});
+
+// §05 四代时序 line+area (浅蓝渐变, 无 glow)
+safeRender('timeline', () => {
+  const el = document.getElementById('chart-timeline'); if (!el) return;
+  const ch = echarts.init(el);
+  ch.setOption({ ...lpEchartsBase, legend:{...lpEchartsBase.legend,data:['均价 (万)','单价 (元/㎡)'],top:4}, tooltip:{...lpEchartsBase.tooltip,trigger:'axis'}, grid:{left:56,right:56,top:46,bottom:36,containLabel:true}, xAxis:{...lpEchartsBase.xAxis,data:['2009–12','2013–16','2017–19','2020–22']}, yAxis:[{...lpEchartsBase.yAxis,name:'均价 万',nameTextStyle:{color:'#6b7280',fontSize:10}},{...lpEchartsBase.yAxis,name:'单价 ¥/㎡',position:'right',nameTextStyle:{color:'#6b7280',fontSize:10}}], series:[
+    { name:'均价 (万)', type:'line', smooth:true, symbol:'circle', symbolSize:7, data:[48,62,89,122], yAxisIndex:0, lineStyle:{color:'#3b82f6',width:2.4}, itemStyle:{color:'#3b82f6',borderColor:'#fff',borderWidth:2}, areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(59,130,246,0.18)'},{offset:1,color:'rgba(59,130,246,0)'}]}} },
+    { name:'单价 (元/㎡)', type:'line', smooth:true, symbol:'circle', symbolSize:6, data:[4200,5600,7100,9300], yAxisIndex:1, lineStyle:{color:'#10b981',width:1.8}, itemStyle:{color:'#10b981',borderColor:'#fff',borderWidth:2} }
+  ] });
+  new ResizeObserver(()=>ch.resize()).observe(el);
+});
+
+// §05 朝向 × 装修 heatmap (蓝梯度)
+safeRender('heatmap', () => {
+  const el = document.getElementById('chart-heatmap'); if (!el) return;
+  const ch = echarts.init(el);
+  const xC = ['毛坯','简装','精装','豪装'], yC = ['南','东','西','北'];
+  const raw = [[0,0,5],[1,0,12],[2,0,17],[3,0,17],[0,1,3],[1,1,4],[2,1,5],[3,1,3],[0,2,4],[1,2,5],[2,2,7],[3,2,3],[0,3,5],[1,3,5],[2,3,3],[3,3,2]];
+  ch.setOption({ textStyle:lpEchartsBase.textStyle, backgroundColor:'transparent', tooltip:{...lpEchartsBase.tooltip,position:'top',formatter:p=>`${yC[p.data[1]]}向 × ${xC[p.data[0]]}<br/><strong>${p.data[2]} 套</strong>`}, grid:{left:54,right:50,top:18,bottom:50,containLabel:false}, xAxis:{type:'category',data:xC,splitArea:{show:true},axisTick:{show:false},axisLabel:{color:'#6b7280',fontSize:11},axisLine:{lineStyle:{color:'#e5e7eb'}}}, yAxis:{type:'category',data:yC,splitArea:{show:true},axisTick:{show:false},axisLabel:{color:'#6b7280',fontSize:11},axisLine:{lineStyle:{color:'#e5e7eb'}}}, visualMap:{min:0,max:17,calculable:true,orient:'horizontal',left:'center',bottom:4,textStyle:{color:'#6b7280',fontSize:10},inRange:{color:['#eff6ff','#93c5fd','#3b82f6']}}, series:[{type:'heatmap',data:raw,label:{show:true,color:'#111827',fontSize:11,formatter:p=>p.data[2]||''},itemStyle:{borderColor:'#fff',borderWidth:2}}] });
+  new ResizeObserver(()=>ch.resize()).observe(el);
+});
+
+// §05 圈层 → 户型 treemap (5 色)
+safeRender('treemap', () => {
+  const el = document.getElementById('chart-treemap'); if (!el) return;
+  const ch = echarts.init(el);
+  const C = { '普通小区':'#3b82f6', '高档小区':'#10b981', '豪华小区':'#a855f7' };
+  ch.setOption({ textStyle:lpEchartsBase.textStyle, backgroundColor:'transparent', tooltip:{...lpEchartsBase.tooltip,formatter:p=>`${p.name}<br/><strong>${p.value} 套</strong>`}, series:[{type:'treemap',roam:false,nodeClick:false,breadcrumb:{show:false},data:[
+    {name:'普通小区',value:45,itemStyle:{color:C['普通小区']},children:[{name:'普通·1-2室',value:19},{name:'普通·3室',value:20},{name:'普通·4-5室',value:6}]},
+    {name:'高档小区',value:34,itemStyle:{color:C['高档小区']},children:[{name:'高档·2室',value:8},{name:'高档·3室',value:20},{name:'高档·4-5室',value:6}]},
+    {name:'豪华小区',value:21,itemStyle:{color:C['豪华小区']},children:[{name:'豪华·3室',value:4},{name:'豪华·4室',value:9},{name:'豪华·5室',value:8}]}
+  ],levels:[{itemStyle:{borderColor:'#fff',borderWidth:3,gapWidth:3}},{itemStyle:{borderColor:'rgba(255,255,255,0.7)',borderWidth:1.5,gapWidth:1.5}}],label:{show:true,color:'#fff',fontSize:10,fontFamily:'Inter',formatter:'{b}\n{c}'}}] });
+  new ResizeObserver(()=>ch.resize()).observe(el);
+});
+</script>
+</body>
+</html>
