@@ -1,0 +1,58 @@
+{
+  "name": "jdy_list_data",
+  "display_name": "查询多条数据",
+  "description_zh": "按条件查询表单多条数据，支持分页和筛选。设 limit=100 且不传 data_id 时自动全量分页拉取。",
+  "description": "Query multiple data records from a form. Supports pagination via data_id cursor (pass last record's _id), field selection, and filter conditions. Returns data[] array and total_returned count. Each record includes _id, appId, entryId, creator, createTime, updateTime, and all field values. Max 100 records per call in single mode. **Auto-pagination mode**: when limit=100 and data_id is empty, automatically fetches ALL pages until exhausted and returns the complete record list — use this for deduplication or full-table scans. Filter methods: eq/ne/in/nin/empty/not_empty/range/like/gt/lt/all/verified/unverified. Rate limit: 30/s.",
+  "params": {
+    "app_id": {
+      "type": "string",
+      "description": "应用ID"
+    },
+    "entry_id": {
+      "type": "string",
+      "description": "表单ID"
+    },
+    "data_id": {
+      "type": "string",
+      "description": "分页游标：上次查询最后一条记录的_id，首次查询留空。自动分页模式下无需传此参数。",
+      "default": ""
+    },
+    "limit": {
+      "type": "integer",
+      "description": "查询条数 1-100，默认10。设为100且不传data_id时触发自动全量分页模式，一次性返回所有数据。",
+      "default": 10
+    },
+    "fields": {
+      "type": "array",
+      "description": "需要返回的字段名列表，不传则返回全部字段。建议只传需要的字段以提升速度。",
+      "default": []
+    },
+    "filter": {
+      "type": "object",
+      "description": "筛选器，格式：{\"rel\":\"and\",\"cond\":[{\"field\":\"字段名\",\"type\":\"字段类型\",\"method\":\"eq\",\"value\":[\"值\"]}]}",
+      "default": {}
+    },
+    "max_records": {
+      "type": "integer",
+      "description": "自动分页模式下最多拉取的记录总数，0表示不限制（全量）。大表建议设置上限避免超时。",
+      "default": 0
+    }
+  },
+  "api": {
+    "url": "https://api.jiandaoyun.com/api/v5/app/entry/data/list",
+    "method": "POST",
+    "headers": {
+      "Authorization": "Bearer ${conn:jiandaoyun.api_key}",
+      "Content-Type": "application/json"
+    }
+  },
+  "requires_connections": [
+    {
+      "category": "jiandaoyun",
+      "fields": [
+        "api_key"
+      ],
+      "required": true
+    }
+  ]
+}
