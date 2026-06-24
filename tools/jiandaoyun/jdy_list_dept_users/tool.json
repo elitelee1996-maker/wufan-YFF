@@ -1,0 +1,34 @@
+{
+  "name": "jdy_list_dept_users",
+  "display_name": "获取部门成员",
+  "description_zh": "获取指定部门下的所有成员，支持递归获取子部门成员",
+  "description": "List members in a department. Set has_child=true to recursively include all sub-department members. Returns users[] each with username, name, departments, type, status, integrate_id. Rate limit: 10/s.",
+  "params": {
+    "dept_no": {
+      "type": "integer",
+      "description": "部门编号（根部门编号为1）"
+    },
+    "has_child": {
+      "type": "boolean",
+      "description": "是否递归获取子部门成员，默认false",
+      "default": false
+    }
+  },
+  "api": {
+    "url": "https://api.jiandaoyun.com/api/v5/corp/department/user/list",
+    "method": "POST",
+    "headers": {
+      "Authorization": "Bearer ${conn:jiandaoyun.api_key}",
+      "Content-Type": "application/json"
+    }
+  },
+  "requires_connections": [
+    {
+      "category": "jiandaoyun",
+      "fields": [
+        "api_key"
+      ],
+      "required": true
+    }
+  ]
+}
