@@ -1,0 +1,34 @@
+{
+  "name": "jdy_end_flow_instance",
+  "display_name": "终止流程实例",
+  "description_zh": "终止一个流程实例",
+  "description": "Terminate/end a workflow instance. Requires instance_id. Optional: username (operator). Rate limit: 20/s.",
+  "params": {
+    "instance_id": {
+      "type": "string",
+      "description": "流程实例ID，即数据的_id（必填）"
+    },
+    "username": {
+      "type": "string",
+      "description": "操作人username（可选）",
+      "default": ""
+    }
+  },
+  "api": {
+    "url": "https://api.jiandaoyun.com/api/v1/workflow/instance/close",
+    "method": "POST",
+    "headers": {
+      "Authorization": "Bearer ${conn:jiandaoyun.api_key}",
+      "Content-Type": "application/json"
+    }
+  },
+  "requires_connections": [
+    {
+      "category": "jiandaoyun",
+      "fields": [
+        "api_key"
+      ],
+      "required": true
+    }
+  ]
+}
