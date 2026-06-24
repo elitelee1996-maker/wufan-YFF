@@ -1,0 +1,38 @@
+{
+  "name": "dingtalk_send_message",
+  "description": "Send text or markdown message to a DingTalk group via robot webhook. Supports keyword security and sign verification. Returns send result.",
+  "display_name": "钉钉推送消息",
+  "description_zh": "通过钉钉机器人Webhook推送消息到群聊，支持文本和Markdown格式",
+  "params": {
+    "webhook_url": {
+      "type": "string",
+      "description": "Full webhook URL from DingTalk robot, e.g. https://oapi.dingtalk.com/robot/send?access_token=xxx"
+    },
+    "msg_type": {
+      "type": "string",
+      "description": "Message type: text or markdown",
+      "default": "markdown"
+    },
+    "content": {
+      "type": "string",
+      "description": "Message content. For text type: plain text string. For markdown type: markdown formatted string with title on first line."
+    },
+    "title": {
+      "type": "string",
+      "description": "Message title (required for markdown type, optional for text)",
+      "default": ""
+    },
+    "at_mobiles": {
+      "type": "array",
+      "description": "List of phone numbers to @mention, e.g. ['138xxxx', '139xxxx']",
+      "default": []
+    },
+    "at_all": {
+      "type": "boolean",
+      "description": "Whether to @all members in the group",
+      "default": false
+    }
+  },
+  "timeout": 30,
+  "retry": 1
+}
