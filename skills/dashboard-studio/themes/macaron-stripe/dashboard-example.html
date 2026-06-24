@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>房产分析 · 马卡龙条纹工作台</title>
+
+<!-- ╔══════════════════════════════════════════════════════════════════════╗
+     ║ ⚠⚠⚠ 完全自包含 HTML · 严禁数据外置 (D 死路) ⚠⚠⚠                 ║
+     ╠══════════════════════════════════════════════════════════════════════╣
+     ║ 所有业务数据 inline 在 <script>const D = {...}</script> 里            ║
+     ║ ❌ 严禁 fetch("data.json") / <script src="data.js">                  ║
+     ║ ❌ 严禁产物目录里出现 data.json / data.js 等业务数据文件             ║
+     ║ 原因: 用户双击 HTML 用 file:// 打开, 浏览器禁止跨文件 fetch (CORS)   ║
+     ║ ✅ 唯一允许的"外部资源" = ECharts / 字体的 https:// CDN               ║
+     ╚══════════════════════════════════════════════════════════════════════╝ -->
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     Macaron Stripe · Dashboard 样板 · 房产分析数据
+     ════════════════════════════════════════════════════════════════════════
+     ▶ Agent 你应该:
+        1. read 整个文件, 看 5 件套结构 + KPI 含 1 张近黑反差卡 + 斜条纹纹理 + 大软圆角
+        2. 抄 <style> 段全部 CSS (含 .stripe / .dot-tex 纹理)
+        3. 把 D / D.rows 替成你的业务数据 (数据**必须 inline**, 见上方警告)
+        4. ECharts 全部 spread ...msEchartsBase, 至少 1 个 chart 用 decal 斜纹柱 (灵魂)
+        5. 一次 write 整页 (路径 A) 或一次 execute_python 内构造 (路径 B), 不要分段追加
+     ▶ ❌ 决不漏: 斜条纹纹理 / 近黑反差卡 / 超大软圆角 + 圆形 icon; 色块上必放深色字
+     ════════════════════════════════════════════════════════════════════════ -->
+
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ════════════════════════════════════════════════════════════════════════
+   MACARON STRIPE · 主题 tokens (跟 editorial 共用)
+   ════════════════════════════════════════════════════════════════════════ */
+:root {
+  --bg-page:#E4EAE4; --bg-card:#FFFFFF; --bg-black:#1C1C1E; --bg-soft:#EEF2EE;
+  --mint:#A8E6A0; --mint-deep:#7DD87A; --mint-bg:#D7F2D3;
+  --lav:#B0A4F5; --lav-deep:#9B8AF0; --lav-bg:#E3DEFB;
+  --peach:#F5C99B; --peach-bg:#FBE8D3;
+  --ink:#1C1C1E; --ink-soft:#5A5A5E; --ink-faint:#9A9AA0;
+  --hair:rgba(28,28,30,0.08); --hair-d:rgba(28,28,30,0.14);
+  --font-display:'Poppins','Inter',sans-serif;
+  --font-body:'Inter','Noto Sans SC',sans-serif;
+  --font-cn:'Noto Sans SC','PingFang SC',sans-serif;
+  --r-card:28px; --r-block:18px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg-page); color:var(--ink); font-family:var(--font-body); font-weight:400; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
+:lang(zh) { font-family:var(--font-cn); }
+::selection { background:var(--lav); color:#fff; }
+::-webkit-scrollbar { width:8px; height:8px; }
+::-webkit-scrollbar-thumb { background:rgba(28,28,30,0.18); border-radius:8px; }
+
+/* 纹理 (灵魂) */
+.stripe { background-image:repeating-linear-gradient(-45deg, rgba(28,28,30,0.15) 0, rgba(28,28,30,0.15) 2px, transparent 2px, transparent 7px); }
+.stripe-light { background-image:repeating-linear-gradient(-45deg, rgba(255,255,255,0.22) 0, rgba(255,255,255,0.22) 2px, transparent 2px, transparent 7px); }
+.dot-tex { background-image:radial-gradient(circle, rgba(28,28,30,0.16) 1.2px, transparent 1.2px); background-size:9px 9px; }
+
+.dash { max-width:1480px; margin:0 auto; padding:clamp(20px,3vw,32px) clamp(16px,2.5vw,32px) 64px; }
+
+/* Header */
+.ms-header { display:flex; justify-content:space-between; align-items:center; padding:8px 0 22px; }
+.brand { font-family:var(--font-display); font-weight:700; font-size:16px; color:var(--ink); display:flex; align-items:center; gap:10px; }
+.brand-mark { width:30px; height:30px; border-radius:50%; background:var(--mint); display:inline-flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; color:var(--ink); }
+.header-right { display:flex; align-items:center; gap:12px; }
+.header-meta { font-family:var(--font-body); font-size:12px; color:var(--ink-soft); }
+.icon-btn { width:38px; height:38px; border-radius:50%; background:var(--bg-card); border:1px solid var(--hair); display:inline-flex; align-items:center; justify-content:center; color:var(--ink); font-size:15px; cursor:pointer; }
+
+/* Title bar + 周期 pill */
+.title-bar { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:24px; gap:20px; flex-wrap:wrap; }
+.title-bar h1 { font-family:var(--font-cn); font-weight:700; font-size:clamp(1.5rem,2.6vw,2.1rem); color:var(--ink); margin-bottom:6px; }
+.title-bar p { font-family:var(--font-cn); font-size:13px; color:var(--ink-soft); }
+.segmented { display:flex; gap:6px; }
+.seg { padding:8px 16px; border:1px solid var(--hair); background:var(--bg-card); font-family:var(--font-cn); font-size:12.5px; font-weight:500; color:var(--ink-soft); border-radius:999px; cursor:pointer; transition:all .15s; white-space:nowrap; }
+.seg:hover { border-color:var(--lav); color:var(--ink); }
+.seg.on { background:var(--ink); border-color:var(--ink); color:#fff; }
+
+/* 卡 */
+.card { background:var(--bg-card); border:1px solid var(--hair); border-radius:var(--r-card); }
+
+/* KPI 阵 (含 1 张近黑反差卡) */
+.kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:20px; }
+@media (max-width:1080px) { .kpi-row { grid-template-columns:repeat(2,1fr); } }
+.kpi { border-radius:var(--r-card); padding:24px 26px; min-height:144px; display:flex; flex-direction:column; position:relative; overflow:hidden; }
+.kpi.mint { background:var(--mint); } .kpi.lav { background:var(--lav); } .kpi.dark { background:var(--bg-black); } .kpi.white { background:var(--bg-card); border:1px solid var(--hair); }
+.kpi-tex { position:absolute; right:0; bottom:0; width:96px; height:96px; opacity:0.5; }
+.kpi-label { font-family:var(--font-body); font-size:12.5px; font-weight:600; position:relative; z-index:1; }
+.kpi.dark .kpi-label { color:rgba(255,255,255,0.6); } .kpi:not(.dark) .kpi-label { color:var(--ink-soft); }
+.kpi-value { font-family:var(--font-display); font-weight:700; font-size:clamp(1.8rem,2.8vw,2.4rem); letter-spacing:-0.03em; line-height:1; margin:16px 0 4px; font-variant-numeric:tabular-nums; position:relative; z-index:1; }
+.kpi.dark .kpi-value { color:#fff; } .kpi:not(.dark) .kpi-value { color:var(--ink); }
+.kpi-value em { font-style:normal; font-size:0.42em; opacity:0.6; margin-left:3px; }
+.kpi-bottom { margin-top:auto; display:flex; justify-content:space-between; align-items:center; gap:8px; position:relative; z-index:1; }
+.kpi-meta { font-family:var(--font-cn); font-size:12px; }
+.kpi.dark .kpi-meta { color:rgba(255,255,255,0.5); } .kpi:not(.dark) .kpi-meta { color:var(--ink-faint); }
+.kpi-pill { font-family:var(--font-display); font-size:11px; font-weight:600; padding:3px 10px; border-radius:999px; background:rgba(28,28,30,0.12); }
+.kpi.dark .kpi-pill { background:rgba(255,255,255,0.15); color:#fff; } .kpi:not(.dark) .kpi-pill { color:var(--ink); }
+
+/* 全局筛选 */
+.filter-bar { display:flex; gap:18px; align-items:center; padding:16px 24px; margin-bottom:20px; flex-wrap:wrap; }
+.filter-label { font-family:var(--font-display); font-size:11px; font-weight:600; letter-spacing:0.04em; color:var(--ink-soft); }
+.filter-groups { display:flex; gap:18px; align-items:center; flex-wrap:wrap; flex:1; }
+.filter-group { display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+.filter-group-label { font-family:var(--font-cn); font-size:12px; color:var(--ink-soft); margin-right:2px; }
+.pill { padding:5px 13px; border:1px solid var(--hair); background:var(--bg-soft); font-family:var(--font-cn); font-size:12px; color:var(--ink-soft); border-radius:999px; cursor:pointer; transition:all .15s; white-space:nowrap; }
+.pill:hover { border-color:var(--lav); color:var(--ink); }
+.pill.on { background:var(--lav); border-color:var(--lav); color:var(--ink); font-weight:600; }
+.filter-sum { font-family:var(--font-display); font-size:12px; color:var(--ink-soft); display:flex; align-items:center; gap:12px; white-space:nowrap; }
+.filter-sum .num { font-weight:700; font-size:18px; color:var(--ink); }
+.filter-reset { font-family:var(--font-cn); font-size:12px; color:var(--ink-soft); background:transparent; border:none; cursor:pointer; padding:4px 12px; border-radius:999px; transition:all .15s; }
+.filter-reset:hover { color:var(--ink); background:var(--lav-bg); }
+
+/* Panel grid */
+.panel-grid { display:grid; grid-template-columns:repeat(12,1fr); gap:16px; margin-bottom:16px; }
+.panel { padding:24px; display:flex; flex-direction:column; min-height:200px; }
+.panel.c8 { grid-column:span 8; } .panel.c6 { grid-column:span 6; } .panel.c4 { grid-column:span 4; }
+@media (max-width:1080px) { .panel-grid { grid-template-columns:1fr; } .panel.c8,.panel.c6,.panel.c4 { grid-column:span 1; } }
+.panel-hd { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:14px; gap:12px; }
+.panel-title { font-family:var(--font-cn); font-weight:600; font-size:15px; color:var(--ink); }
+.panel-title em { font-style:normal; color:var(--lav-deep); }
+.panel-meta { font-family:var(--font-body); font-size:11px; color:var(--ink-faint); white-space:nowrap; }
+/* ⚠ chart-host 必须固定 height (不能用 flex:1) — flex:1 在不定高 panel 里配合 ECharts resize 会无限膨胀高度 */
+.chart-host { width:100%; height:300px; }
+
+/* 明细表 */
+.table-panel { padding:24px; }
+.table-hd { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:16px; flex-wrap:wrap; }
+.table-title { font-family:var(--font-cn); font-weight:600; font-size:15px; color:var(--ink); }
+.table-title em { font-style:normal; color:var(--lav-deep); }
+.table-search { padding:8px 16px; border:1px solid var(--hair); background:var(--bg-soft); font-family:var(--font-cn); font-size:12.5px; color:var(--ink); border-radius:999px; width:280px; max-width:100%; }
+.table-search:focus { outline:none; border-color:var(--lav); }
+.table-hint { font-family:var(--font-body); font-size:11px; color:var(--ink-faint); margin-left:auto; }
+.data-table { width:100%; border-collapse:collapse; font-size:13px; font-family:var(--font-cn); }
+.data-table thead th { font-family:var(--font-display); font-size:11px; font-weight:600; color:var(--ink-soft); text-align:left; padding:10px 12px; border-bottom:1px solid var(--hair); cursor:pointer; white-space:nowrap; }
+.data-table thead th:hover { color:var(--ink); }
+.data-table thead th.asc::after { content:' ↑'; } .data-table thead th.desc::after { content:' ↓'; }
+.data-table tbody tr { border-bottom:1px solid var(--hair); cursor:pointer; transition:background .12s; }
+.data-table tbody tr:hover { background:var(--bg-soft); }
+.data-table tbody td { padding:12px; color:var(--ink-soft); }
+.data-table .t-num { font-family:var(--font-display); font-weight:600; color:var(--ink); text-align:right; font-variant-numeric:tabular-nums; }
+.data-table .t-id { font-family:var(--font-body); font-size:11px; color:var(--ink-faint); }
+.tag { display:inline-block; padding:3px 10px; border-radius:999px; font-family:var(--font-cn); font-size:11px; font-weight:600; }
+.tag.common { background:var(--mint-bg); color:#3a7a34; }
+.tag.premium { background:var(--lav-bg); color:#6a5acc; }
+.tag.luxury { background:rgba(28,28,30,0.1); color:var(--ink); }
+.pager { display:flex; justify-content:center; align-items:center; gap:18px; margin-top:18px; font-family:var(--font-display); font-size:12px; color:var(--ink-soft); }
+.pager button { background:var(--bg-soft); border:1px solid var(--hair); color:var(--ink); padding:6px 16px; border-radius:999px; font-family:inherit; font-size:inherit; cursor:pointer; transition:all .15s; }
+.pager button:hover:not(:disabled) { background:var(--lav); border-color:var(--lav); }
+.pager button:disabled { opacity:0.4; cursor:not-allowed; }
+
+/* 下钻抽屉 */
+.drawer { position:fixed; top:0; right:0; width:500px; max-width:92vw; height:100vh; background:var(--bg-card); border-left:1px solid var(--hair); box-shadow:-16px 0 40px rgba(28,28,30,0.12); transform:translateX(100%); transition:transform .32s cubic-bezier(0.16,1,0.3,1); z-index:100; display:flex; flex-direction:column; }
+.drawer.open { transform:translateX(0); }
+.drawer-hd { padding:26px 30px 18px; border-bottom:1px solid var(--hair); display:flex; justify-content:space-between; align-items:baseline; gap:16px; }
+.drawer-id { font-family:var(--font-body); font-size:11px; color:var(--ink-faint); margin-right:10px; }
+.drawer-name { font-family:var(--font-cn); font-weight:600; font-size:16px; color:var(--ink); }
+.drawer-close { width:34px; height:34px; border-radius:50%; background:var(--bg-soft); border:none; font-size:18px; color:var(--ink-soft); cursor:pointer; }
+.drawer-close:hover { background:var(--lav-bg); color:var(--ink); }
+.drawer-body { flex:1; overflow-y:auto; padding:24px 30px; }
+.drawer-price { font-family:var(--font-display); font-weight:700; font-size:48px; color:var(--ink); letter-spacing:-0.03em; line-height:1; margin-bottom:6px; font-variant-numeric:tabular-nums; }
+.drawer-price-meta { font-family:var(--font-body); font-size:12px; color:var(--ink-soft); margin-bottom:26px; }
+.field-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:28px; }
+.field { padding:16px; background:var(--bg-soft); border-radius:16px; }
+.field-label { font-family:var(--font-body); font-size:11px; color:var(--ink-faint); margin-bottom:6px; }
+.field-value { font-family:var(--font-cn); font-weight:600; font-size:16px; color:var(--ink); }
+.drawer-section-title { font-family:var(--font-cn); font-weight:600; font-size:14px; color:var(--ink); margin-bottom:12px; }
+.drawer-mask { position:fixed; inset:0; background:rgba(28,28,30,0.30); opacity:0; pointer-events:none; transition:opacity .32s; z-index:99; }
+.drawer-mask.open { opacity:1; pointer-events:auto; }
+
+.dash-footer { margin-top:30px; padding-top:18px; border-top:1px solid var(--hair); display:flex; justify-content:space-between; font-family:var(--font-body); font-size:11px; color:var(--ink-faint); }
+</style>
+</head>
+<body>
+
+<div class="dash">
+
+  <header class="ms-header">
+    <div class="brand"><span class="brand-mark">城</span>城市观察 · Urban Signals</div>
+    <div class="header-right"><span class="header-meta">2026-05-29</span></div>
+  </header>
+
+  <div class="title-bar">
+    <div>
+      <h1>房产分析工作台</h1>
+      <p>100 套微观样本 · 自助探索三圈层结构 / 朝向 / 装修 / 房龄</p>
+    </div>
+    <div class="segmented">
+      <button class="seg on" onclick="setSeg('all',this)">全样本</button>
+      <button class="seg" onclick="setSeg('luxury',this)">仅豪华</button>
+      <button class="seg" onclick="setSeg('south',this)">仅南向</button>
+    </div>
+  </div>
+
+  <!-- KPI 4 张 (含 1 张近黑反差卡) -->
+  <section class="kpi-row">
+    <div class="kpi mint"><div class="kpi-tex dot-tex"></div><div class="kpi-label">平均房价</div><div class="kpi-value" data-kpi="avg_price">¥74.6<em>万</em></div><div class="kpi-bottom"><span class="kpi-meta">中位 ¥57 万</span><span class="kpi-pill">↑ 31%</span></div></div>
+    <div class="kpi lav"><div class="kpi-tex dot-tex"></div><div class="kpi-label">平均单价</div><div class="kpi-value" data-kpi="unit_price">¥6,000<em>/㎡</em></div><div class="kpi-bottom"><span class="kpi-meta">P90 ¥10,432</span><span class="kpi-pill">跨 2.8x</span></div></div>
+    <div class="kpi dark"><div class="kpi-tex stripe-light"></div><div class="kpi-label">南向占比</div><div class="kpi-value" data-kpi="south">51<em>%</em></div><div class="kpi-bottom"><span class="kpi-meta">南/西/东/北</span><span class="kpi-pill">主导</span></div></div>
+    <div class="kpi white"><div class="kpi-tex dot-tex"></div><div class="kpi-label">豪华占比</div><div class="kpi-value" data-kpi="luxury">21<em>套</em></div><div class="kpi-bottom"><span class="kpi-meta">占 47% 市值</span><span class="kpi-pill">利润核心</span></div></div>
+  </section>
+
+  <!-- 全局筛选 -->
+  <section class="card filter-bar">
+    <span class="filter-label">筛选维度</span>
+    <div class="filter-groups" id="filter-groups"></div>
+    <div class="filter-sum"><span class="num" id="filter-count">100</span><span>套匹配</span><button class="filter-reset" onclick="resetFilters()">重置</button></div>
+  </section>
+
+  <!-- Panel grid 1 -->
+  <section class="panel-grid">
+    <div class="card panel c8" style="min-height:360px;"><div class="panel-hd"><div class="panel-title">面积 × 单价 · <em>三圈层分色</em></div><div class="panel-meta">散点</div></div><div class="chart-host" id="chart-scatter"></div></div>
+    <div class="card panel c4"><div class="panel-hd"><div class="panel-title">单价<em>区间</em> · 条纹柱</div><div class="panel-meta">柱 · 斜纹</div></div><div class="chart-host" id="chart-dist"></div></div>
+  </section>
+
+  <!-- Panel grid 2 -->
+  <section class="panel-grid">
+    <div class="card panel c4"><div class="panel-hd"><div class="panel-title">朝向<em>分布</em></div><div class="panel-meta">环图</div></div><div class="chart-host" id="chart-orient"></div></div>
+    <div class="card panel c4"><div class="panel-hd"><div class="panel-title">装修<em>等级</em></div><div class="panel-meta">环图</div></div><div class="chart-host" id="chart-deco"></div></div>
+    <div class="card panel c4"><div class="panel-hd"><div class="panel-title">三圈层 · <em>6 维</em></div><div class="panel-meta">雷达</div></div><div class="chart-host" id="chart-radar"></div></div>
+  </section>
+
+  <!-- Panel grid 3 -->
+  <section class="panel-grid">
+    <div class="card panel c8"><div class="panel-hd"><div class="panel-title">朝向 × 装修 · <em>分布密度</em></div><div class="panel-meta">热力</div></div><div class="chart-host" id="chart-heatmap" style="height:280px;"></div></div>
+    <div class="card panel c4"><div class="panel-hd"><div class="panel-title">圈层 → 户型</div><div class="panel-meta">矩形树图</div></div><div class="chart-host" id="chart-treemap" style="height:280px;"></div></div>
+  </section>
+
+  <!-- 明细表 -->
+  <section class="card table-panel">
+    <div class="table-hd">
+      <div class="table-title">房源<em>明细</em> · 100 套全样本</div>
+      <input type="text" class="table-search" placeholder="搜索 编号 / 朝向 / 装修..." oninput="onSearch(this.value)">
+      <span class="table-hint">点行 → 详情</span>
+    </div>
+    <table class="data-table"><thead><tr id="thead"></tr></thead><tbody id="tbody"></tbody></table>
+    <div class="pager"><button onclick="setPage(page-1)" id="prev">← 上一页</button><span id="page-info">1 / 5</span><button onclick="setPage(page+1)" id="next">下一页 →</button></div>
+  </section>
+
+  <footer class="dash-footer">
+    <div>城市观察 · 房产分析工作台 · 100 套样本</div>
+    <div>Macaron Stripe · 马卡龙条纹</div>
+  </footer>
+</div>
+
+<!-- 下钻抽屉 -->
+<aside class="drawer" id="drawer">
+  <div class="drawer-hd"><div><span class="drawer-id" id="d-id">H001</span><span class="drawer-name" id="d-name">100㎡ · 3室 · 精装</span></div><button class="drawer-close" onclick="closeDrawer()">×</button></div>
+  <div class="drawer-body">
+    <div class="drawer-price" id="d-price">¥60 万</div>
+    <div class="drawer-price-meta" id="d-price-meta">¥6,000/㎡ · 楼龄 5 年</div>
+    <div class="field-grid" id="d-fields"></div>
+    <div class="drawer-section-title">本套 vs 同类型均值</div>
+    <div id="d-mini" style="height:240px;"></div>
+  </div>
+</aside>
+<div class="drawer-mask" id="drawer-mask" onclick="closeDrawer()"></div>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     JavaScript · ECharts (macaron-stripe 6 色 + 1 个 decal 斜纹柱)
+     ════════════════════════════════════════════════════════════════════════ -->
+<script>
+const msEchartsBase = {
+  color: ['#A8E6A0','#B0A4F5','#1C1C1E','#7DD87A','#9B8AF0','#F5C99B'],
+  textStyle: { color:'#1C1C1E', fontFamily:"'Poppins','Inter','Noto Sans SC',sans-serif" },
+  backgroundColor: 'transparent',
+  tooltip: { trigger:'axis', backgroundColor:'rgba(28,28,30,0.92)', borderColor:'rgba(255,255,255,0.1)', borderWidth:1, padding:[10,14], textStyle:{color:'#fff',fontSize:12,fontFamily:"'Inter',sans-serif"}, extraCssText:'border-radius:14px;box-shadow:0 8px 24px rgba(28,28,30,0.2);', axisPointer:{type:'line',lineStyle:{color:'#1C1C1E',type:'dashed',width:1,opacity:0.4}} },
+  legend: { textStyle:{color:'#5A5A5E',fontSize:12}, icon:'circle', itemWidth:8, itemHeight:8, itemGap:16 },
+  xAxis: { type:'category', axisLine:{lineStyle:{color:'rgba(28,28,30,0.12)'}}, axisTick:{show:false}, axisLabel:{color:'#5A5A5E',fontSize:11,margin:10}, splitLine:{show:false} },
+  yAxis: { type:'value', axisLine:{show:false}, axisTick:{show:false}, axisLabel:{color:'#5A5A5E',fontSize:11}, splitLine:{lineStyle:{color:'rgba(28,28,30,0.07)',type:'dashed'}} }
+};
+
+// ════════════ 数据 (D 内嵌 · 100 套房产样本) ════════════
+const D = (function () {
+  const DEC=['毛坯','简装修','精装修','豪华装修'], ORI=['南','北','东','西'], TYP=['普通小区','高档小区','豪华小区'];
+  const seed=(i)=>{let s=(i+17)*9301+49297;return ()=>(s=(s*9301+49297)%233280)/233280;};
+  const rows=Array.from({length:100},(_,i)=>{
+    const r=seed(i);
+    const type=r()<0.45?'普通小区':(r()<0.79?'高档小区':'豪华小区');
+    let area,unit;
+    if(type==='普通小区'){area=55+r()*45;unit=3500+r()*2200;}
+    else if(type==='高档小区'){area=80+r()*60;unit=5200+r()*2800;}
+    else{area=130+r()*80;unit=7800+r()*2800;}
+    area=Math.round(area);unit=Math.round(unit);
+    const price=area*unit, rooms=Math.min(5,Math.max(1,Math.round(area/35))), bath=Math.min(2,Math.max(1,Math.round(rooms/2)));
+    const tf=6+Math.floor(r()*26), floor=1+Math.floor(r()*tf);
+    const year=type==='豪华小区'?2014+Math.floor(r()*9):type==='高档小区'?2011+Math.floor(r()*11):2009+Math.floor(r()*13);
+    let orient;
+    if(type==='豪华小区') orient=r()<0.76?'南':(r()<0.85?'东':(r()<0.92?'西':'北'));
+    else if(type==='高档小区') orient=r()<0.55?'南':(r()<0.72?'东':(r()<0.85?'西':'北'));
+    else orient=r()<0.31?'南':(r()<0.51?'东':(r()<0.72?'西':'北'));
+    const dec=type==='豪华小区'?(r()<0.6?'豪华装修':'精装修'):type==='高档小区'?(r()<0.5?'精装修':'简装修'):(r()<0.55?'简装修':(r()<0.85?'毛坯':'精装修'));
+    return { id:'H'+String(i+1).padStart(3,'0'), area, unit, price, rooms, bath, floor, total_floor:tf, year, orient, decoration:dec, type, subway:+(0.3+r()*2.5).toFixed(1), school:+(0.5+r()*2.8).toFixed(1), mall:+(0.4+r()*2).toFixed(1) };
+  });
+  return { rows, facets:{ decoration:DEC, orient:ORI, type:TYP, rooms:[1,2,3,4,5] } };
+})();
+
+const state = { filters:{decoration:null,orient:null,type:null,rooms:null}, search:'', page:0, pageSize:20, sort:{key:null,dir:1} };
+let page = 0;
+const charts = {};
+function safeRender(name, fn) { try { fn(); } catch (e) { console.warn('[chart]', name, e); } }
+
+function renderFilters() {
+  const g=document.getElementById('filter-groups');
+  const L={decoration:'装修',orient:'朝向',type:'小区',rooms:'房间'};
+  g.innerHTML=Object.entries(D.facets).map(([k,opts])=>`
+    <div class="filter-group"><span class="filter-group-label">${L[k]}</span>
+      <button class="pill ${state.filters[k]===null?'on':''}" onclick="setFilter('${k}',null)">全部</button>
+      ${opts.map(o=>`<button class="pill ${state.filters[k]===o?'on':''}" onclick="setFilter('${k}',${typeof o==='number'?o:`'${o}'`})">${typeof o==='number'?o+'室':o}</button>`).join('')}
+    </div>`).join('');
+}
+function setFilter(k,v){ state.filters[k]=v; state.page=0; render(); }
+function setSeg(s, btn){ document.querySelectorAll('.seg').forEach(b=>b.classList.remove('on')); btn.classList.add('on'); Object.keys(state.filters).forEach(k=>state.filters[k]=null); if(s==='luxury')state.filters.type='豪华小区'; if(s==='south')state.filters.orient='南'; state.page=0; render(); }
+function resetFilters(){ Object.keys(state.filters).forEach(k=>state.filters[k]=null); state.search=''; document.querySelector('.table-search').value=''; state.page=0; render(); }
+function onSearch(q){ state.search=q.trim().toLowerCase(); state.page=0; render(); }
+function applyFilters(){
+  return D.rows.filter(r=>{
+    for(const[k,v]of Object.entries(state.filters)){ if(v!==null&&r[k]!==v) return false; }
+    if(state.search){ const h=`${r.id} ${r.orient} ${r.decoration} ${r.type}`.toLowerCase(); if(!h.includes(state.search)) return false; }
+    return true;
+  });
+}
+function render(){
+  const f=applyFilters();
+  document.getElementById('filter-count').textContent=f.length;
+  renderFilters(); renderKPI(f); renderCharts(f); renderTable(f);
+}
+function renderKPI(rows){
+  if(!rows.length){ document.querySelectorAll('[data-kpi]').forEach(e=>e.innerHTML='— <em>无</em>'); return; }
+  const n=rows.length, avg=k=>rows.reduce((s,r)=>s+r[k],0)/n;
+  document.querySelector('[data-kpi="avg_price"]').innerHTML='¥'+(avg('price')/10000).toFixed(1)+'<em>万</em>';
+  document.querySelector('[data-kpi="unit_price"]').innerHTML='¥'+Math.round(avg('price')/avg('area')).toLocaleString()+'<em>/㎡</em>';
+  document.querySelector('[data-kpi="south"]').innerHTML=Math.round(rows.filter(r=>r.orient==='南').length/n*100)+'<em>%</em>';
+  document.querySelector('[data-kpi="luxury"]').innerHTML=rows.filter(r=>r.type==='豪华小区').length+'<em>套</em>';
+}
+function renderCharts(rows){ renderScatter(rows); renderDist(rows); renderOrient(rows); renderDeco(rows); renderRadar(rows); renderHeatmap(rows); renderTreemap(rows); }
+
+function renderScatter(rows){ safeRender('scatter',()=>{
+  const el=document.getElementById('chart-scatter'); if(!charts.scatter)charts.scatter=echarts.init(el);
+  const C={'普通小区':'#A8E6A0','高档小区':'#B0A4F5','豪华小区':'#1C1C1E'};
+  const series=['普通小区','高档小区','豪华小区'].map(t=>({ name:t, type:'scatter', symbolSize:12, data:rows.filter(r=>r.type===t).map(r=>[r.area,r.unit]), itemStyle:{color:C[t],opacity:0.9,borderColor:'#fff',borderWidth:1} }));
+  charts.scatter.setOption({ ...msEchartsBase, legend:{...msEchartsBase.legend,data:['普通小区','高档小区','豪华小区'],top:4,right:8}, tooltip:{...msEchartsBase.tooltip,trigger:'item',formatter:p=>`面积 ${p.data[0]}㎡<br/>单价 ¥${p.data[1].toLocaleString()}/㎡`}, xAxis:{...msEchartsBase.xAxis,type:'value',name:'面积 ㎡',nameTextStyle:{color:'#9A9AA0',fontSize:10},nameLocation:'middle',nameGap:30}, yAxis:{...msEchartsBase.yAxis,name:'单价 ¥/㎡',nameTextStyle:{color:'#9A9AA0',fontSize:10},nameLocation:'middle',nameGap:54}, grid:{left:66,right:24,top:46,bottom:50,containLabel:false}, series });
+  new ResizeObserver(()=>charts.scatter.resize()).observe(el);
+});}
+
+// ⭐ decal 斜纹柱 (灵魂技法)
+function renderDist(rows){ safeRender('dist',()=>{
+  const el=document.getElementById('chart-dist'); if(!charts.dist)charts.dist=echarts.init(el);
+  const bins=[{l:'<40万',m:400000},{l:'40-70',m:700000},{l:'70-100',m:1000000},{l:'100-150',m:1500000},{l:'>150',m:Infinity}];
+  let prev=0; const cnt=bins.map(b=>{const c=rows.filter(r=>r.price>=prev&&r.price<b.m).length;prev=b.m;return c;});
+  charts.dist.setOption({ ...msEchartsBase, legend:{show:false}, tooltip:{...msEchartsBase.tooltip,formatter:p=>`${p[0].name}: ${p[0].value} 套`}, xAxis:{...msEchartsBase.xAxis,data:bins.map(b=>b.l)}, yAxis:{...msEchartsBase.yAxis}, grid:{left:36,right:16,top:18,bottom:36,containLabel:true}, series:[{type:'bar',barWidth:'54%',data:cnt,itemStyle:{color:'#A8E6A0',borderRadius:[10,10,0,0],decal:{symbol:'rect',dashArrayX:[1,0],dashArrayY:[3,6],rotation:-Math.PI/4,color:'rgba(28,28,30,0.16)'}}}] });
+  new ResizeObserver(()=>charts.dist.resize()).observe(el);
+});}
+
+function renderOrient(rows){ safeRender('orient',()=>{
+  const el=document.getElementById('chart-orient'); if(!charts.orient)charts.orient=echarts.init(el);
+  const C=['#A8E6A0','#B0A4F5','#7DD87A','#F5C99B'];
+  const data=['南','西','东','北'].map((o,i)=>({name:o,value:rows.filter(r=>r.orient===o).length,itemStyle:{color:C[i],borderColor:'#fff',borderWidth:5,borderRadius:6}}));
+  charts.orient.setOption({ ...msEchartsBase, legend:{...msEchartsBase.legend,orient:'vertical',right:0,top:'middle',itemGap:10}, tooltip:{...msEchartsBase.tooltip,trigger:'item',formatter:'{b}: {c} 套 ({d}%)'}, series:[{type:'pie',radius:['52%','78%'],center:['38%','50%'],data,label:{show:true,formatter:'{b}\n{d}%',fontSize:11,color:'#5A5A5E'}}] });
+  new ResizeObserver(()=>charts.orient.resize()).observe(el);
+});}
+
+function renderDeco(rows){ safeRender('deco',()=>{
+  const el=document.getElementById('chart-deco'); if(!charts.deco)charts.deco=echarts.init(el);
+  const C=['#C9CDC9','#A8E6A0','#B0A4F5','#1C1C1E'];
+  const data=['毛坯','简装修','精装修','豪华装修'].map((d,i)=>({name:d,value:rows.filter(r=>r.decoration===d).length,itemStyle:{color:C[i],borderColor:'#fff',borderWidth:5,borderRadius:6}}));
+  charts.deco.setOption({ ...msEchartsBase, legend:{...msEchartsBase.legend,orient:'vertical',right:0,top:'middle',itemGap:10}, tooltip:{...msEchartsBase.tooltip,trigger:'item',formatter:'{b}: {c} 套 ({d}%)'}, series:[{type:'pie',radius:['52%','78%'],center:['38%','50%'],data,label:{show:true,formatter:'{b}\n{d}%',fontSize:11,color:'#5A5A5E'}}] });
+  new ResizeObserver(()=>charts.deco.resize()).observe(el);
+});}
+
+function renderRadar(rows){ safeRender('radar',()=>{
+  const el=document.getElementById('chart-radar'); if(!charts.radar)charts.radar=echarts.init(el);
+  const avgBy=(rs,k)=>rs.length?rs.reduce((s,r)=>s+r[k],0)/rs.length:0;
+  const C={'普通小区':'#7DD87A','高档小区':'#9B8AF0','豪华小区':'#1C1C1E'};
+  const data=['普通小区','高档小区','豪华小区'].map(t=>{ const rs=rows.filter(r=>r.type===t); return { name:t, value:[avgBy(rs,'area'),avgBy(rs,'price')/10000,(2026-avgBy(rs,'year')),avgBy(rs,'rooms')*30,(1-avgBy(rs,'subway')/3)*100,(1-avgBy(rs,'school')/3)*100], itemStyle:{color:C[t]}, areaStyle:{color:t==='普通小区'?'rgba(168,230,160,0.25)':t==='高档小区'?'rgba(176,164,245,0.25)':'rgba(28,28,30,0.10)'}, lineStyle:{color:C[t],width:2} }; });
+  charts.radar.setOption({ textStyle:msEchartsBase.textStyle, backgroundColor:'transparent', legend:{data:['普通小区','高档小区','豪华小区'],bottom:0,textStyle:{color:'#5A5A5E',fontSize:10}}, tooltip:{trigger:'item'}, radar:{ indicator:[{name:'面积',max:200},{name:'总价',max:200},{name:'楼龄',max:20},{name:'户型',max:150},{name:'地铁',max:100},{name:'学区',max:100}], center:['50%','48%'], radius:'58%', axisName:{color:'#5A5A5E',fontSize:9}, splitArea:{areaStyle:{color:['rgba(168,230,160,0.06)','rgba(176,164,245,0.05)']}}, splitLine:{lineStyle:{color:'rgba(28,28,30,0.1)'}}, axisLine:{lineStyle:{color:'rgba(28,28,30,0.12)'}} }, series:[{type:'radar',data}] });
+  new ResizeObserver(()=>charts.radar.resize()).observe(el);
+});}
+
+function renderHeatmap(rows){ safeRender('heatmap',()=>{
+  const el=document.getElementById('chart-heatmap'); if(!charts.heatmap)charts.heatmap=echarts.init(el);
+  const xC=['毛坯','简装修','精装修','豪华装修'], yC=['南','东','西','北'], raw=[];
+  yC.forEach((y,yi)=>xC.forEach((x,xi)=>raw.push([xi,yi,rows.filter(r=>r.orient===y&&r.decoration===x).length])));
+  const max=Math.max(1,...raw.map(p=>p[2]));
+  charts.heatmap.setOption({ textStyle:msEchartsBase.textStyle, backgroundColor:'transparent', tooltip:{...msEchartsBase.tooltip,position:'top',formatter:p=>`${yC[p.data[1]]}向 × ${xC[p.data[0]]}<br/>${p.data[2]} 套`}, grid:{left:60,right:50,top:18,bottom:50,containLabel:false}, xAxis:{type:'category',data:xC,splitArea:{show:true},axisTick:{show:false},axisLabel:{color:'#5A5A5E',fontSize:11},axisLine:{lineStyle:{color:'rgba(28,28,30,0.12)'}}}, yAxis:{type:'category',data:yC,splitArea:{show:true},axisTick:{show:false},axisLabel:{color:'#5A5A5E',fontSize:11},axisLine:{lineStyle:{color:'rgba(28,28,30,0.12)'}}}, visualMap:{min:0,max,calculable:true,orient:'horizontal',left:'center',bottom:4,textStyle:{color:'#5A5A5E',fontSize:10},inRange:{color:['#EEF6EC','#A8E6A0','#7DD87A']}}, series:[{type:'heatmap',data:raw,label:{show:true,color:'#1C1C1E',fontSize:11,formatter:p=>p.data[2]||''},itemStyle:{borderColor:'#fff',borderWidth:3,borderRadius:4}}] });
+  new ResizeObserver(()=>charts.heatmap.resize()).observe(el);
+});}
+
+function renderTreemap(rows){ safeRender('treemap',()=>{
+  const el=document.getElementById('chart-treemap'); if(!charts.treemap)charts.treemap=echarts.init(el);
+  const C={'普通小区':'#A8E6A0','高档小区':'#B0A4F5','豪华小区':'#1C1C1E'};
+  function bucket(rs){const b={'1-2室':0,'3室':0,'4-5室':0};rs.forEach(r=>{if(r.rooms<=2)b['1-2室']++;else if(r.rooms===3)b['3室']++;else b['4-5室']++;});return b;}
+  const data=['普通小区','高档小区','豪华小区'].map(t=>{const rs=rows.filter(r=>r.type===t),b=bucket(rs);return {name:t,value:rs.length,itemStyle:{color:C[t]},children:Object.entries(b).filter(([_,v])=>v>0).map(([k,v])=>({name:`${t.replace('小区','')}·${k}`,value:v}))};});
+  charts.treemap.setOption({ textStyle:msEchartsBase.textStyle, backgroundColor:'transparent', tooltip:{...msEchartsBase.tooltip,formatter:p=>`${p.name}<br/>${p.value} 套`}, series:[{type:'treemap',roam:false,nodeClick:false,breadcrumb:{show:false},data,levels:[{itemStyle:{borderColor:'#E4EAE4',borderWidth:4,gapWidth:4,borderRadius:8}},{itemStyle:{borderColor:'rgba(255,255,255,0.6)',borderWidth:2,gapWidth:2,borderRadius:4}}],label:{show:true,color:'#1C1C1E',fontSize:10,formatter:'{b}\n{c}'}}] });
+  new ResizeObserver(()=>charts.treemap.resize()).observe(el);
+});}
+
+// 明细表
+const COLS=[{k:'id',l:'编号',c:'t-id'},{k:'area',l:'面积',c:'t-num'},{k:'rooms',l:'户型'},{k:'floor',l:'楼层'},{k:'year',l:'年份'},{k:'decoration',l:'装修'},{k:'orient',l:'朝向'},{k:'type',l:'类型'},{k:'price',l:'总价',c:'t-num'}];
+const TAG={'普通小区':'common','高档小区':'premium','豪华小区':'luxury'};
+function renderTable(rows){
+  let s=[...rows];
+  if(state.sort.key){ s.sort((a,b)=>{const av=a[state.sort.key],bv=b[state.sort.key];return av<bv?-state.sort.dir:av>bv?state.sort.dir:0;}); }
+  const head=document.getElementById('thead');
+  if(!head.children.length) head.innerHTML=COLS.map(c=>`<th onclick="onSort('${c.k}')" data-col="${c.k}">${c.l}</th>`).join('');
+  head.querySelectorAll('th').forEach(th=>{th.classList.remove('asc','desc');if(th.dataset.col===state.sort.key)th.classList.add(state.sort.dir===1?'asc':'desc');});
+  const start=state.page*state.pageSize, slice=s.slice(start,start+state.pageSize), tp=Math.max(1,Math.ceil(s.length/state.pageSize));
+  const tb=document.getElementById('tbody');
+  tb.innerHTML=slice.length?slice.map((r,i)=>`<tr onclick="openDrawer(${start+i})"><td class="t-id">${r.id}</td><td class="t-num">${r.area}</td><td>${r.rooms}室${r.bath}卫</td><td>${r.floor}/${r.total_floor}</td><td>${r.year}</td><td>${r.decoration}</td><td>${r.orient}</td><td><span class="tag ${TAG[r.type]}">${r.type}</span></td><td class="t-num">${(r.price/10000).toFixed(0)} 万</td></tr>`).join(''):`<tr><td colspan="${COLS.length}" style="text-align:center;padding:40px;color:var(--ink-faint);">无匹配数据</td></tr>`;
+  document.getElementById('page-info').textContent=`${state.page+1} / ${tp}`;
+  document.getElementById('prev').disabled=state.page===0;
+  document.getElementById('next').disabled=state.page>=tp-1;
+  window.__rows=s;
+}
+function onSort(k){ if(state.sort.key===k)state.sort.dir*=-1;else{state.sort.key=k;state.sort.dir=1;} renderTable(applyFilters()); }
+function setPage(p){ const f=applyFilters(),tp=Math.ceil(f.length/state.pageSize); state.page=Math.max(0,Math.min(tp-1,p)); page=state.page; renderTable(f); }
+
+function openDrawer(idx){
+  const r=window.__rows[idx]; if(!r) return;
+  document.getElementById('d-id').textContent=r.id;
+  document.getElementById('d-name').textContent=`${r.area}㎡ · ${r.rooms}室${r.bath}卫 · ${r.decoration}`;
+  document.getElementById('d-price').innerHTML='¥'+(r.price/10000).toFixed(0)+' 万';
+  document.getElementById('d-price-meta').textContent=`¥${Math.round(r.price/r.area).toLocaleString()}/㎡ · 楼龄 ${2026-r.year} 年`;
+  document.getElementById('d-fields').innerHTML=[['面积',r.area+' ㎡'],['户型',r.rooms+'室'+r.bath+'卫'],['楼层',r.floor+' / '+r.total_floor],['年份',r.year],['朝向',r.orient],['类型',r.type],['地铁',r.subway+' km'],['学校',r.school+' km']].map(([l,v])=>`<div class="field"><div class="field-label">${l}</div><div class="field-value">${v}</div></div>`).join('');
+  safeRender('mini',()=>{
+    const el=document.getElementById('d-mini'); const same=D.rows.filter(x=>x.type===r.type); const avg=k=>same.reduce((s,x)=>s+x[k],0)/same.length;
+    const ch=echarts.init(el);
+    ch.setOption({ textStyle:msEchartsBase.textStyle, backgroundColor:'transparent', legend:{data:['当前房源','同类型均值'],bottom:0,textStyle:{color:'#5A5A5E',fontSize:10}}, tooltip:{trigger:'item'}, radar:{ indicator:[{name:'面积',max:200},{name:'总价',max:200},{name:'楼龄',max:20},{name:'便利',max:5}], center:['50%','52%'], radius:'58%', axisName:{color:'#5A5A5E',fontSize:9}, splitArea:{areaStyle:{color:['rgba(168,230,160,0.06)','rgba(176,164,245,0.05)']}}, splitLine:{lineStyle:{color:'rgba(28,28,30,0.1)'}}, axisLine:{lineStyle:{color:'rgba(28,28,30,0.12)'}} }, series:[{type:'radar',data:[ {name:'当前房源',value:[r.area,r.price/10000,2026-r.year,5-(r.subway+r.school+r.mall)],itemStyle:{color:'#9B8AF0'},areaStyle:{color:'rgba(176,164,245,0.25)'},lineStyle:{color:'#9B8AF0',width:2}}, {name:'同类型均值',value:[avg('area'),avg('price')/10000,2026-avg('year'),5-(avg('subway')+avg('school')+avg('mall'))],itemStyle:{color:'#7DD87A'},areaStyle:{color:'rgba(168,230,160,0.2)'},lineStyle:{color:'#7DD87A',width:2}} ]}] });
+  });
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawer-mask').classList.add('open');
+}
+function closeDrawer(){ document.getElementById('drawer').classList.remove('open'); document.getElementById('drawer-mask').classList.remove('open'); }
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer();});
+
+renderFilters(); render();
+</script>
+</body>
+</html>
