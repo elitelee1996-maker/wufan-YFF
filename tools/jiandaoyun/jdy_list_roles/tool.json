@@ -1,0 +1,45 @@
+{
+  "name": "jdy_list_roles",
+  "display_name": "列出角色",
+  "description_zh": "列出企业内所有角色",
+  "description": "List all roles in the organization. Returns roles[] with role_no, group_no, name, type (0=regular, 2=external), status, integrate_id. Supports filtering by has_internal (self-built roles) and has_sync (synced roles). Rate limit: 30/s.",
+  "params": {
+    "skip": {
+      "type": "integer",
+      "description": "偏移量，默认0",
+      "default": 0
+    },
+    "limit": {
+      "type": "integer",
+      "description": "每页条数，默认1",
+      "default": 20
+    },
+    "has_internal": {
+      "type": "boolean",
+      "description": "是否包含自建角色，默认true",
+      "default": true
+    },
+    "has_sync": {
+      "type": "boolean",
+      "description": "是否包含集成角色，默认true",
+      "default": true
+    }
+  },
+  "api": {
+    "url": "https://api.jiandaoyun.com/api/v5/corp/role/list",
+    "method": "POST",
+    "headers": {
+      "Authorization": "Bearer ${conn:jiandaoyun.api_key}",
+      "Content-Type": "application/json"
+    }
+  },
+  "requires_connections": [
+    {
+      "category": "jiandaoyun",
+      "fields": [
+        "api_key"
+      ],
+      "required": true
+    }
+  ]
+}
