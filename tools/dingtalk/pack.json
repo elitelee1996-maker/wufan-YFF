@@ -1,0 +1,9 @@
+{
+  "name": "dingtalk",
+  "display_name": "钉钉",
+  "description": "钉钉开放平台工具集，支持消息推送和API调用",
+  "secrets": [
+    { "key": "DINGTALK_APP_KEY", "scope": "team", "label": "钉钉 AppKey (Client ID)" },
+    { "key": "DINGTALK_APP_SECRET", "scope": "team", "label": "钉钉 AppSecret (Client Secret)" }
+  ]
+}
