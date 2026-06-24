@@ -1,0 +1,42 @@
+{
+  "name": "jdy_submit_flow_task",
+  "display_name": "流程待办提交",
+  "description_zh": "提交（审批通过）一个流程待办任务",
+  "description": "Submit/approve a pending workflow task. Requires username, instance_id (same as data_id), and task_id. Returns {status:'success'} or error. Rate limit: 20/s.",
+  "params": {
+    "username": {
+      "type": "string",
+      "description": "操作人username（成员编号）"
+    },
+    "instance_id": {
+      "type": "string",
+      "description": "流程实例ID（同data_id）"
+    },
+    "task_id": {
+      "type": "string",
+      "description": "任务ID（需要和username一一对应）"
+    },
+    "comment": {
+      "type": "string",
+      "description": "审批意见（可选）",
+      "default": ""
+    }
+  },
+  "api": {
+    "url": "https://api.jiandaoyun.com/api/v1/workflow/task/approve",
+    "method": "POST",
+    "headers": {
+      "Authorization": "Bearer ${conn:jiandaoyun.api_key}",
+      "Content-Type": "application/json"
+    }
+  },
+  "requires_connections": [
+    {
+      "category": "jiandaoyun",
+      "fields": [
+        "api_key"
+      ],
+      "required": true
+    }
+  ]
+}
