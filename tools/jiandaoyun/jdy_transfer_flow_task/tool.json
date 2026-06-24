@@ -1,0 +1,46 @@
+{
+  "name": "jdy_transfer_flow_task",
+  "display_name": "流程待办转交",
+  "description_zh": "转交一个流程待办任务给其他成员",
+  "description": "Transfer a pending workflow task to another user. Requires username, instance_id (same as data_id), task_id, and target_username. Rate limit: 20/s.",
+  "params": {
+    "username": {
+      "type": "string",
+      "description": "当前操作人username（必填）"
+    },
+    "instance_id": {
+      "type": "string",
+      "description": "流程实例ID，即数据的_id（必填）"
+    },
+    "task_id": {
+      "type": "string",
+      "description": "待办任务ID（必填）"
+    },
+    "target_username": {
+      "type": "string",
+      "description": "转交目标人username（必填）"
+    },
+    "comment": {
+      "type": "string",
+      "description": "转交说明（可选）",
+      "default": ""
+    }
+  },
+  "api": {
+    "url": "https://api.jiandaoyun.com/api/v1/workflow/task/transfer",
+    "method": "POST",
+    "headers": {
+      "Authorization": "Bearer ${conn:jiandaoyun.api_key}",
+      "Content-Type": "application/json"
+    }
+  },
+  "requires_connections": [
+    {
+      "category": "jiandaoyun",
+      "fields": [
+        "api_key"
+      ],
+      "required": true
+    }
+  ]
+}
