@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>居住的三种姿态 · 城市观察年度刊</title>
+
+<!-- ╔══════════════════════════════════════════════════════════════════════╗
+     ║ ⚠⚠⚠ 完全自包含 HTML · 严禁数据外置 (D 死路) ⚠⚠⚠                 ║
+     ╠══════════════════════════════════════════════════════════════════════╣
+     ║ 所有业务数据 inline 在 <script>const D = {...}</script> 里            ║
+     ║ ❌ 严禁 fetch("data.json") / <script src="data.js">                  ║
+     ║ ❌ 严禁产物目录里出现 data.json / data.js 等业务数据文件             ║
+     ║ 原因: 用户双击 HTML 用 file:// 打开, 浏览器禁止跨文件 fetch (CORS)   ║
+     ║       外置 = 双击全屏空白 = 用户觉得"做的不能用"                       ║
+     ║ ✅ 唯一允许的"外部资源" = ECharts / 字体的 https:// CDN               ║
+     ╚══════════════════════════════════════════════════════════════════════╝ -->
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     Rose Press · Editorial 样板 · 房产分析数据
+     ════════════════════════════════════════════════════════════════════════
+     ▶ Agent 你应该:
+        1. read 整个文件, 看 6 节布局如何**完全不同** + em / polaroid / pull-quote / mag-cover 4 灵魂招牌如何全开
+        2. 抄 <style> 段全部 CSS
+        3. 抄章节模板, 把数据替成你的业务 (数据**必须 inline**, 见上方警告)
+        4. **关键判断词都用 <em> 包**, 让玫红 italic em 在整页频繁出现 (这才是杂志感)
+        5. ECharts 全部 spread ...rpEchartsBase
+        6. 一次 write 整页 (路径 A) 或一次 execute_python 内构造 (路径 B), 不要分段追加
+     ▶ 哲学: 杂志主编的克制与挑衅, 跟 graphic-press / blue-consulting 完全不同 — 这是 Vogue
+     ════════════════════════════════════════════════════════════════════════ -->
+
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ════════════════════════════════════════════════════════════════════════
+   ROSE PRESS · 主题 tokens (跨 editorial / dashboard 通用)
+   ════════════════════════════════════════════════════════════════════════ */
+:root {
+  --bg-page:        #F2EBDD;
+  --bg-elevated:    #FFFCF5;
+  --bg-card:        rgba(255, 252, 245, 0.85);
+  --bg-blackcard:   #101010;
+
+  --text-primary:   #0F0F0F;
+  --text-secondary: #5A5246;
+  --text-muted:     #8A8275;
+  --text-faint:     #A89E8E;
+  --text-on-black:  #F2EBDD;
+
+  --accent-magenta:      #E13B7A;
+  --accent-magenta-soft: #c12d68;
+  --accent-magenta-bg:   rgba(225, 59, 122, 0.08);
+  --accent-magenta-glow: rgba(225, 59, 122, 0.18);
+  --accent: #E13B7A;
+
+  --accent-purple:  #A48CD9;
+  --accent-orange:  #E5722A;
+  --accent-green:   #3F7E45;
+  --accent-blue:    #5B8DEE;
+
+  --border-subtle:  rgba(15, 15, 15, 0.06);
+  --border-default: rgba(15, 15, 15, 0.12);
+  --border-strong:  rgba(15, 15, 15, 0.20);
+
+  --radius-sm:   8px;
+  --radius-md:   16px;
+  --radius-lg:   28px;
+  --radius-xl:   40px;
+  --radius-2xl:  64px;
+
+  --shadow-sm:        0 2px 6px rgba(15, 15, 15, 0.06);
+  --shadow-md:        0 6px 24px rgba(15, 15, 15, 0.08);
+  --shadow-lg:        0 14px 48px rgba(15, 15, 15, 0.12);
+  --shadow-polaroid:  0 4px 16px rgba(15, 15, 15, 0.10), 0 1px 2px rgba(15, 15, 15, 0.08);
+  --shadow-card-strong: 0 0 0 1px rgba(15, 15, 15, 0.06), 0 8px 32px rgba(15, 15, 15, 0.10);
+
+  --font-display:   'Cormorant Garamond', 'Noto Serif SC', serif;
+  --font-body:      'Inter', 'Noto Sans SC', sans-serif;
+  --font-mono:      'JetBrains Mono', monospace;
+  --font-cn-hero:   'Noto Serif SC', serif;
+  --font-cn-body:   'Noto Sans SC', sans-serif;
+}
+
+* { box-sizing: border-box; }
+html { margin: 0; min-height: 100vh; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   ⭐ 灵魂背景: 浅粉雾染 mesh (4 层 radial gradient, 玫红主导)
+   跟 graphic-press 的米黄+纹理 / blue-consulting 的纯深蓝 完全不同
+   ════════════════════════════════════════════════════════════════════════ */
+body {
+  margin: 0;
+  background-color: var(--bg-page);
+  background-image:
+    radial-gradient(at 20% 30%, rgba(225, 59, 122, 0.14) 0%, transparent 50%),
+    radial-gradient(at 80% 20%, rgba(164, 140, 217, 0.10) 0%, transparent 50%),
+    radial-gradient(at 40% 80%, rgba(229, 114, 42, 0.08) 0%, transparent 50%),
+    radial-gradient(at 90% 70%, rgba(63, 126, 69, 0.06) 0%, transparent 50%);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+::selection { background: var(--accent-magenta); color: white; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   ⭐ 灵魂招牌 #1: em 自动 Cormorant italic + 玫红 (整套主题最强视觉指纹)
+   关键判断词都用 <em> 包, 自动获得玫红 italic 杂志感重音
+   ════════════════════════════════════════════════════════════════════════ */
+em, .rp-em {
+  font-family: var(--font-display);
+  font-style: italic;
+  color: var(--accent-magenta);
+  font-weight: 500;
+}
+em:where(:lang(zh)), .rp-em:where(:lang(zh)) {
+  font-family: var(--font-cn-hero);
+  font-style: normal;
+  font-weight: 600;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   主容器 (单栏 1320px 杂志宽)
+   ════════════════════════════════════════════════════════════════════════ */
+.rp-page {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: clamp(48px, 6vw, 80px) clamp(28px, 5vw, 64px) clamp(80px, 10vw, 140px);
+  position: relative;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   Masthead 杂志刊头 (灵魂锚点: brand + 期号 + 时间 + 编辑)
+   ════════════════════════════════════════════════════════════════════════ */
+.rp-masthead {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border-strong);
+  margin-bottom: clamp(56px, 8vw, 96px);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.rp-mast-brand {
+  font-family: var(--font-display);
+  font-size: 24px; font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+  text-transform: none;
+}
+.rp-mast-brand em {
+  font-style: italic; color: var(--accent-magenta); font-weight: 500;
+}
+.rp-mast-meta { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+.rp-mast-meta span { white-space: nowrap; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   Hero (kicker + 大字 italic 主标 + 副标 + dropcap lead)
+   ════════════════════════════════════════════════════════════════════════ */
+.rp-hero {
+  padding-bottom: clamp(48px, 6vw, 80px);
+  border-bottom: 1px solid var(--border-default);
+  margin-bottom: clamp(64px, 8vw, 112px);
+  position: relative;
+}
+.rp-kicker {
+  font-family: var(--font-mono);
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.20em; text-transform: uppercase;
+  color: var(--accent-magenta);
+  margin-bottom: 28px;
+  display: inline-flex; align-items: center; gap: 12px;
+}
+.rp-kicker:where(:lang(zh)) {
+  font-family: var(--font-cn-body); letter-spacing: 0.06em;
+  text-transform: none; font-weight: 500;
+}
+.rp-kicker::before { content: '—'; color: var(--text-muted); }
+
+.rp-title {
+  font-family: var(--font-cn-hero);
+  font-size: clamp(2.4rem, 6vw, 5.5rem);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: 0.005em;
+  color: var(--text-primary);
+  margin: 0 0 32px;
+  max-width: 18ch;
+}
+.rp-title em {
+  font-style: normal;
+  font-family: var(--font-cn-hero);
+  color: var(--accent-magenta);
+  font-weight: 600;
+}
+.rp-subtitle {
+  font-family: var(--font-cn-body);
+  font-size: clamp(1.05rem, 1.6vw, 1.4rem);
+  font-weight: 400;
+  line-height: 1.75;
+  color: var(--text-secondary);
+  max-width: 56ch;
+  margin-bottom: 36px;
+}
+.rp-lead {
+  font-family: var(--font-cn-body);
+  font-size: 1.0625rem;
+  line-height: 1.88;
+  letter-spacing: 0.015em;
+  color: var(--text-primary);
+  max-width: 64ch;
+}
+.rp-lead em {
+  font-style: normal;
+  font-family: var(--font-cn-hero);
+  color: var(--accent-magenta);
+  font-weight: 600;
+}
+/* ⭐ dropcap (玫红衬线大字, 占据 3 行) */
+.rp-lead::first-letter {
+  float: left;
+  font-family: var(--font-cn-hero);
+  font-style: normal;
+  font-weight: 600;
+  font-size: 4.6em;
+  line-height: 0.86;
+  color: var(--accent-magenta);
+  padding: 0 0.06em 0 0;
+  margin: 0.06em 0.28em 0 0;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   Section 通用 (杂志感: 大留白 + 极薄 hairline)
+   ════════════════════════════════════════════════════════════════════════ */
+.rp-section { margin-bottom: clamp(64px, 8vw, 112px); position: relative; }
+.rp-section-head {
+  display: flex; justify-content: space-between; align-items: end;
+  border-bottom: 1px solid var(--border-strong);
+  padding-bottom: 14px; margin-bottom: 40px;
+  gap: 24px; flex-wrap: wrap;
+}
+.rp-section-num {
+  font-family: var(--font-mono);
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.20em; text-transform: uppercase;
+  color: var(--accent-magenta);
+  margin-bottom: 8px;
+}
+.rp-section-title {
+  font-family: var(--font-cn-hero);
+  font-size: clamp(1.8rem, 3.2vw, 2.8rem);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: 0.005em;
+  color: var(--text-primary);
+  margin: 0;
+  max-width: 22ch;
+}
+.rp-section-title em {
+  font-style: normal; color: var(--accent-magenta);
+  font-family: var(--font-cn-hero); font-weight: 600;
+}
+.rp-section-sub {
+  font-family: var(--font-cn-body);
+  font-size: 13px;
+  color: var(--text-muted);
+  max-width: 480px;
+  text-align: right;
+  line-height: 1.65;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   §01 · KPI 6 张混搭 (rose-press 灵魂铁律: 1 黑底 hero + 1 玫红 accent + 4 白卡)
+   ════════════════════════════════════════════════════════════════════════ */
+.rp-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 18px;
+}
+@media (max-width: 1080px) {
+  .rp-kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .rp-kpi-card.is-hero { grid-column: span 3; }
+}
+@media (max-width: 720px) {
+  .rp-kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .rp-kpi-card.is-hero { grid-column: span 2; }
+}
+.rp-kpi-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 0.5px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 26px 24px 22px;
+  min-height: 180px;
+  display: flex; flex-direction: column; justify-content: space-between;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+}
+.rp-kpi-card.is-hero {
+  grid-column: span 2;
+  background: var(--bg-blackcard);
+  color: var(--text-on-black);
+  border: none;
+  border-radius: var(--radius-xl);
+  padding: 32px 28px;
+}
+.rp-kpi-card.is-accent {
+  background: linear-gradient(135deg, var(--accent-magenta), var(--accent-magenta-soft));
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-xl);
+  padding: 32px 28px;
+}
+.rp-kpi-label {
+  font-family: var(--font-cn-body);
+  font-size: 12px; font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+.rp-kpi-card.is-hero .rp-kpi-label { color: rgba(242, 235, 221, 0.6); }
+.rp-kpi-card.is-accent .rp-kpi-label { color: rgba(255, 255, 255, 0.72); }
+.rp-kpi-value {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.7rem, 3vw, 3.2rem);
+  letter-spacing: -0.025em; line-height: 1;
+  margin: 16px 0 8px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+.rp-kpi-card.is-hero .rp-kpi-value,
+.rp-kpi-card.is-accent .rp-kpi-value { color: #fff; }
+.rp-kpi-card.is-hero .rp-kpi-value { font-size: clamp(2.4rem, 4vw, 4rem); }
+.rp-kpi-value em {
+  font-style: italic;
+  color: var(--accent-magenta);
+  font-size: 0.55em;
+  margin-left: 6px;
+  letter-spacing: 0;
+}
+.rp-kpi-card.is-hero .rp-kpi-value em,
+.rp-kpi-card.is-accent .rp-kpi-value em { color: rgba(255,255,255,0.7); }
+.rp-kpi-desc {
+  font-family: var(--font-cn-body);
+  font-size: 12.5px; line-height: 1.55;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+.rp-kpi-card.is-hero .rp-kpi-desc { color: rgba(255,255,255,0.6); }
+.rp-kpi-card.is-accent .rp-kpi-desc { color: rgba(255,255,255,0.72); }
+.rp-kpi-delta {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+  padding: 3px 9px; border-radius: 999px;
+  background: rgba(63, 126, 69, 0.12); color: #3F7E45;
+  display: inline-block; margin-top: 8px;
+}
+.rp-kpi-card.is-hero .rp-kpi-delta,
+.rp-kpi-card.is-accent .rp-kpi-delta {
+  background: rgba(255,255,255,0.18); color: rgba(255,255,255,0.92);
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   §02 · Polaroid 拍立得网格 (⭐ 灵魂招牌 #2, editorial 独家)
+   微旋 ±1.5°, hover 校正归零, 给杂志版面物感
+   ════════════════════════════════════════════════════════════════════════ */
+.rp-polaroid-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 36px 28px;
+  padding: 24px 0;
+}
+@media (max-width: 980px) { .rp-polaroid-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .rp-polaroid-grid { grid-template-columns: 1fr; gap: 28px; } }
+
+.rp-polaroid {
+  background: var(--bg-elevated);
+  padding: 16px 16px 24px 16px;
+  box-shadow: var(--shadow-polaroid);
+  transition: transform 400ms cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  position: relative;
+}
+.rp-polaroid:nth-of-type(odd)  { transform: rotate( 1.1deg); }
+.rp-polaroid:nth-of-type(even) { transform: rotate(-1.4deg); }
+.rp-polaroid:nth-of-type(3n)   { transform: rotate( 0.6deg); }
+.rp-polaroid:hover { transform: rotate(0) scale(1.03); z-index: 5; }
+
+.rp-polaroid-image {
+  width: 100%; aspect-ratio: 4 / 3;
+  background: linear-gradient(135deg, #f5e8dc 0%, #efd5c8 100%);
+  border-radius: 4px;
+  margin-bottom: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 3.8rem;
+  color: var(--accent-magenta);
+  opacity: 0.78;
+  position: relative;
+  overflow: hidden;
+}
+.rp-polaroid-image::before {
+  content: ''; position: absolute; inset: 0;
+  background:
+    radial-gradient(at 30% 40%, rgba(225,59,122,0.12) 0%, transparent 50%),
+    radial-gradient(at 70% 70%, rgba(164,140,217,0.10) 0%, transparent 50%);
+}
+.rp-polaroid-image > * { position: relative; z-index: 1; }
+.rp-polaroid-num {
+  font-family: var(--font-mono);
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.20em; text-transform: uppercase;
+  color: var(--accent-magenta);
+  margin-bottom: 6px;
+}
+.rp-polaroid-name {
+  font-family: var(--font-cn-hero);
+  font-size: 16px; font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 6px; line-height: 1.3;
+}
+.rp-polaroid-meta {
+  font-family: var(--font-cn-body);
+  font-size: 12px; color: var(--text-muted);
+  margin-bottom: 10px; line-height: 1.5;
+}
+.rp-polaroid-price {
+  font-family: var(--font-display); font-style: italic;
+  font-size: 22px; font-weight: 500;
+  color: var(--accent-magenta);
+  border-top: 0.5px solid var(--border-subtle);
+  padding-top: 10px; margin-top: auto;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   §03 · ⭐ pull-quote 整页大字 italic 玫红 (灵魂招牌 #3)
+   杂志感重音, 章节之间打"重击"
+   ════════════════════════════════════════════════════════════════════════ */
+.rp-pull-quote {
+  padding: clamp(48px, 8vw, 96px) clamp(24px, 5vw, 48px);
+  margin: clamp(40px, 6vw, 80px) 0;
+  font-family: var(--font-cn-hero);
+  font-size: clamp(1.6rem, 3.8vw, 3.6rem);
+  font-weight: 500;
+  line-height: 1.28;
+  text-align: center;
+  color: var(--text-primary);
+  letter-spacing: 0.005em;
+  border-top: 0.5px solid var(--border-strong);
+  border-bottom: 0.5px solid var(--border-strong);
+  position: relative;
+}
+.rp-pull-quote em {
+  font-style: normal;
+  font-family: var(--font-cn-hero);
+  color: var(--accent-magenta);
+  font-weight: 600;
+  background: linear-gradient(180deg, transparent 60%, rgba(225, 59, 122, 0.18) 60%, rgba(225, 59, 122, 0.18) 92%, transparent 92%);
+  padding: 0 0.08em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+.rp-pull-quote-attr {
+  margin-top: 32px;
+  font-family: var(--font-mono);
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.20em; text-transform: uppercase;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   §04 · Chart Grid (1 大 + 2 小, 玫红主调)
+   ════════════════════════════════════════════════════════════════════════ */
+.rp-chart-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+@media (max-width: 1080px) { .rp-chart-grid { grid-template-columns: 1fr; } }
+.rp-chart-col { display: grid; gap: 20px; }
+.rp-chart-grid-22 {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+  margin-top: 20px;
+}
+@media (max-width: 1080px) { .rp-chart-grid-22 { grid-template-columns: 1fr; } }
+.rp-panel {
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  border: 0.5px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+}
+.rp-panel-hd {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-bottom: 16px; gap: 12px;
+}
+.rp-panel-title {
+  font-family: var(--font-cn-hero);
+  font-size: 18px; font-weight: 600;
+  color: var(--text-primary);
+  margin: 0; line-height: 1.3;
+}
+.rp-panel-title em {
+  font-style: normal; color: var(--accent-magenta);
+  font-family: var(--font-cn-hero); font-weight: 600;
+}
+.rp-panel-meta {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--text-muted);
+  letter-spacing: 0.10em; text-transform: uppercase;
+  white-space: nowrap;
+}
+.rp-chart-host { width: 100%; height: 280px; }
+.rp-chart-host.is-tall { height: 380px; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   §05 · ⭐ Magazine cover 大圆角刊封卡 (灵魂招牌 #4) + Essays 3 列
+   ════════════════════════════════════════════════════════════════════════ */
+.rp-mag-cover {
+  background: var(--bg-elevated);
+  border-radius: var(--radius-2xl);
+  padding: clamp(40px, 6vw, 72px);
+  box-shadow: var(--shadow-card-strong);
+  position: relative;
+  overflow: hidden;
+}
+.rp-mag-cover::before {
+  content: ''; position: absolute;
+  top: -80px; right: -80px;
+  width: 360px; height: 360px;
+  background: radial-gradient(circle, rgba(225, 59, 122, 0.18) 0%, transparent 70%);
+  pointer-events: none;
+}
+.rp-mag-kicker {
+  font-family: var(--font-mono);
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--accent-magenta);
+  margin-bottom: 24px;
+}
+.rp-mag-title {
+  font-family: var(--font-cn-hero);
+  font-size: clamp(2rem, 4.5vw, 4rem);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: 0.005em;
+  color: var(--text-primary);
+  margin: 0 0 28px;
+  max-width: 16ch;
+}
+.rp-mag-title em { font-style: normal; color: var(--accent-magenta); font-family: var(--font-cn-hero); font-weight: 600; }
+.rp-mag-prose {
+  font-family: var(--font-cn-body);
+  font-size: 16px; line-height: 1.85;
+  color: var(--text-secondary);
+  max-width: 56ch;
+  margin-bottom: 36px;
+}
+.rp-mag-prose em { font-style: normal; color: var(--accent-magenta); font-family: var(--font-cn-hero); font-weight: 600; }
+
+.rp-essays-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  padding-top: 36px;
+  margin-top: 36px;
+  border-top: 1px solid var(--border-default);
+}
+@media (max-width: 800px) { .rp-essays-grid { grid-template-columns: 1fr; gap: 28px; } }
+.rp-essay {
+  padding-right: 28px;
+  border-right: 0.5px solid var(--border-subtle);
+}
+.rp-essay:last-child { border-right: none; padding-right: 0; }
+@media (max-width: 800px) { .rp-essay { padding-right: 0; border-right: none; border-bottom: 0.5px solid var(--border-subtle); padding-bottom: 28px; } .rp-essay:last-child { border-bottom: none; } }
+.rp-essay-kicker {
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.20em; text-transform: uppercase;
+  color: var(--accent-magenta);
+  margin-bottom: 16px;
+}
+.rp-essay-title {
+  font-family: var(--font-cn-hero);
+  font-size: 22px; font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: 0.005em;
+  color: var(--text-primary);
+  margin: 0 0 14px;
+}
+.rp-essay-title em { font-style: normal; color: var(--accent-magenta); font-family: var(--font-cn-hero); font-weight: 600; }
+.rp-essay-lede {
+  font-family: var(--font-cn-body);
+  font-size: 13.5px; line-height: 1.75;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+.rp-essay-lede em { font-style: normal; color: var(--accent-magenta); font-family: var(--font-cn-hero); font-weight: 600; }
+.rp-essay-byline {
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--text-muted);
+  border-top: 0.5px solid var(--border-subtle);
+  padding-top: 12px;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   §06 · Timeline 黑底重音节 (反差 ending)
+   ════════════════════════════════════════════════════════════════════════ */
+.rp-timeline {
+  background: var(--bg-blackcard);
+  color: var(--text-on-black);
+  border-radius: var(--radius-xl);
+  padding: clamp(40px, 5vw, 56px);
+}
+.rp-timeline-kicker {
+  font-family: var(--font-mono);
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.20em; text-transform: uppercase;
+  color: var(--accent-magenta);
+  margin-bottom: 12px;
+}
+.rp-timeline-head {
+  font-family: var(--font-cn-hero);
+  font-size: clamp(1.6rem, 2.6vw, 2.2rem);
+  font-weight: 600; line-height: 1.18;
+  color: var(--text-on-black);
+  margin: 0 0 36px;
+  max-width: 24ch;
+}
+.rp-timeline-head em { font-style: normal; color: var(--accent-magenta); font-family: var(--font-cn-hero); font-weight: 600; }
+.rp-timeline-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+.rp-timeline-event {
+  display: grid; grid-template-columns: 140px 1fr 100px;
+  gap: 32px; padding: 24px 0;
+  border-bottom: 0.5px dashed rgba(255, 255, 255, 0.18);
+  align-items: baseline;
+}
+.rp-timeline-event:last-child { border-bottom: none; }
+.rp-timeline-date {
+  font-family: var(--font-mono);
+  font-size: 12px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--accent-magenta);
+}
+.rp-timeline-body {
+  font-family: var(--font-cn-body);
+  font-size: 14.5px; line-height: 1.7;
+  color: rgba(255, 255, 255, 0.85);
+}
+.rp-timeline-body strong { color: #fff; font-weight: 600; }
+.rp-timeline-body em { font-style: normal; color: var(--accent-magenta); font-family: var(--font-cn-hero); font-weight: 600; }
+.rp-timeline-num {
+  font-family: var(--font-display); font-style: italic;
+  font-size: 28px; font-weight: 500;
+  color: var(--accent-magenta);
+  text-align: right;
+}
+@media (max-width: 720px) {
+  .rp-timeline-event { grid-template-columns: 1fr; gap: 8px; }
+  .rp-timeline-num { text-align: left; }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   Coda 收尾节
+   ════════════════════════════════════════════════════════════════════════ */
+.rp-coda {
+  text-align: center;
+  padding: clamp(64px, 8vw, 112px) 0 clamp(48px, 6vw, 80px);
+}
+.rp-coda-quote {
+  font-family: var(--font-cn-hero);
+  font-size: clamp(1.4rem, 2.6vw, 2.2rem);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.005em;
+  color: var(--text-primary);
+  max-width: 32ch;
+  margin: 0 auto 24px;
+}
+.rp-coda-quote em { font-style: normal; color: var(--accent-magenta); font-family: var(--font-cn-hero); font-weight: 600; }
+.rp-coda-attr {
+  font-family: var(--font-mono);
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.20em; text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.rp-footer {
+  margin-top: 80px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-default);
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.rp-footer .rp-footer-brand {
+  font-family: var(--font-display);
+  font-size: 14px; font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+  text-transform: none;
+}
+.rp-footer .rp-footer-brand em {
+  font-style: italic; color: var(--accent-magenta); font-weight: 500;
+}
+
+/* ⭐ 超大幽灵装饰 (Cormorant italic, 玫红极淡, 给章节加纵深) */
+.rp-ghost-num {
+  position: absolute;
+  right: 0; top: -40px;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: clamp(8rem, 16vw, 14rem);
+  color: var(--accent-magenta);
+  opacity: 0.07;
+  line-height: 0.85;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+</style>
+</head>
+<body>
+
+<main class="rp-page">
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       MASTHEAD 杂志刊头 (灵魂锚点)
+       ════════════════════════════════════════════════════════════════════════ -->
+  <header class="rp-masthead">
+    <div class="rp-mast-brand">城市观察 <em>·</em> URBAN QUARTERLY</div>
+    <div class="rp-mast-meta">
+      <span>VOL. XII · ISSUE 04</span>
+      <span>2026 年度刊</span>
+      <span>编辑部 · 城市观察组</span>
+    </div>
+  </header>
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       HERO (kicker + 大字 italic 主标 + 副标 + dropcap lead)
+       ════════════════════════════════════════════════════════════════════════ -->
+  <section class="rp-hero">
+    <div class="rp-kicker">年度专题 · 居住美学</div>
+    <h1 class="rp-title">居住的<em>三种姿态</em>, 一座城市的<em>分层折叠</em></h1>
+    <p class="rp-subtitle">100 套房子的微观分析, 我们发现城市不是一个市场, 而是三种完全不同的"居住语法"已经悄悄成型.</p>
+    <p class="rp-lead">本年度刊基于 100 套房产样本的微观研究, 揭示一个让所有人意外的事实: 城市房产市场已完成不可逆的<em>三层结构</em> — 普通小区 33 万、高档小区 68 万、豪华小区 153 万, 三层之间不是价格梯度, 是<em>客户画像、产品定义、销售逻辑</em>的完全分化. 通常被认为"独立变量"的<em>朝向</em>跟<em>装修</em>, 实际上只是圈层选择的"投影变量" — 它们在三层之间分配的方式, 才是城市房产市场分层的真正密码.</p>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       §01 · 三个圈层 (KPI 6 张混搭: 1 黑底 hero + 1 玫红 accent + 4 白卡)
+       ════════════════════════════════════════════════════════════════════════ -->
+  <section class="rp-section">
+    <div class="rp-ghost-num">01</div>
+    <div class="rp-section-head">
+      <div>
+        <div class="rp-section-num">01 · The Three Strata</div>
+        <h2 class="rp-section-title">三个圈层, <em>三种语法</em></h2>
+      </div>
+      <div class="rp-section-sub">100 套样本拆解出三层圈层: 普通 / 高档 / 豪华. 不只是价格, 是<em>客户画像</em>的完全分化.</div>
+    </div>
+
+    <div class="rp-kpi-grid">
+      <!-- 1. 黑底 hero — 主指标 (跨 2 列) -->
+      <div class="rp-kpi-card is-hero">
+        <div class="rp-kpi-label">价格跨度 (最高 ÷ 最低)</div>
+        <div class="rp-kpi-value">9.1<em>倍</em></div>
+        <div>
+          <div class="rp-kpi-desc">23 万 → 210 万, 同一座城市</div>
+          <span class="rp-kpi-delta">↑ 远超装修溢价</span>
+        </div>
+      </div>
+
+      <!-- 2. 玫红 accent — 突破指标 -->
+      <div class="rp-kpi-card is-accent">
+        <div class="rp-kpi-label">南向溢价</div>
+        <div class="rp-kpi-value">+199<em>%</em></div>
+        <div>
+          <div class="rp-kpi-desc">南向 vs 北向</div>
+          <span class="rp-kpi-delta">↑ 主导朝向</span>
+        </div>
+      </div>
+
+      <!-- 3-6. 普通白卡 -->
+      <div class="rp-kpi-card">
+        <div class="rp-kpi-label">平均房价</div>
+        <div class="rp-kpi-value">¥74.6<em>万</em></div>
+        <div>
+          <div class="rp-kpi-desc">中位 ¥57 万</div>
+          <span class="rp-kpi-delta">↑ 31%</span>
+        </div>
+      </div>
+      <div class="rp-kpi-card">
+        <div class="rp-kpi-label">平均单价</div>
+        <div class="rp-kpi-value">¥6,000<em>/㎡</em></div>
+        <div>
+          <div class="rp-kpi-desc">P10 ¥3,728 → P90 ¥10,432</div>
+          <span class="rp-kpi-delta">P10-P90 跨 2.8x</span>
+        </div>
+      </div>
+      <div class="rp-kpi-card">
+        <div class="rp-kpi-label">豪华占比</div>
+        <div class="rp-kpi-value">21<em>套</em></div>
+        <div>
+          <div class="rp-kpi-desc">占 47% 总市值</div>
+          <span class="rp-kpi-delta">利润核心</span>
+        </div>
+      </div>
+      <div class="rp-kpi-card">
+        <div class="rp-kpi-label">装修跨度</div>
+        <div class="rp-kpi-value">5.7<em>倍</em></div>
+        <div>
+          <div class="rp-kpi-desc">毛坯 → 豪装</div>
+          <span class="rp-kpi-delta">投影变量</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       §02 · Polaroid 拍立得排版 (⭐ editorial 灵魂招牌 #2)
+       6 套豪华房产, 像 Vogue 的摄影集
+       ════════════════════════════════════════════════════════════════════════ -->
+  <section class="rp-section">
+    <div class="rp-ghost-num">02</div>
+    <div class="rp-section-head">
+      <div>
+        <div class="rp-section-num">02 · The Top Six</div>
+        <h2 class="rp-section-title">六套豪华公寓, <em>六种生活想象</em></h2>
+      </div>
+      <div class="rp-section-sub">单价 TOP 6 不是简单的"贵", 是<em>六种完全不同的居住语法</em>的极致呈现.</div>
+    </div>
+
+    <div class="rp-polaroid-grid">
+      <div class="rp-polaroid">
+        <div class="rp-polaroid-image">01</div>
+        <div class="rp-polaroid-num">H030 · 江景大平层</div>
+        <div class="rp-polaroid-name">外滩源 · 静安寺</div>
+        <div class="rp-polaroid-meta">201.3 ㎡ · 5 室 2 卫 · 18/32F · 南向</div>
+        <div class="rp-polaroid-price">¥210<em> 万 · ¥10,432/㎡</em></div>
+      </div>
+      <div class="rp-polaroid">
+        <div class="rp-polaroid-image">02</div>
+        <div class="rp-polaroid-num">H012 · 河畔豪宅</div>
+        <div class="rp-polaroid-name">陆家嘴 · 浦东</div>
+        <div class="rp-polaroid-meta">198.5 ㎡ · 5 室 2 卫 · 22/26F · 南向</div>
+        <div class="rp-polaroid-price">¥198<em> 万 · ¥9,975/㎡</em></div>
+      </div>
+      <div class="rp-polaroid">
+        <div class="rp-polaroid-image">03</div>
+        <div class="rp-polaroid-num">H024 · 树荫复式</div>
+        <div class="rp-polaroid-name">武康路 · 徐汇</div>
+        <div class="rp-polaroid-meta">167.9 ㎡ · 4 室 2 卫 · 8/12F · 南向</div>
+        <div class="rp-polaroid-price">¥176<em> 万 · ¥10,482/㎡</em></div>
+      </div>
+      <div class="rp-polaroid">
+        <div class="rp-polaroid-image">04</div>
+        <div class="rp-polaroid-num">H018 · 山景大宅</div>
+        <div class="rp-polaroid-name">佘山 · 松江</div>
+        <div class="rp-polaroid-meta">176.3 ㎡ · 4 室 2 卫 · 5/8F · 南向</div>
+        <div class="rp-polaroid-price">¥168<em> 万 · ¥9,529/㎡</em></div>
+      </div>
+      <div class="rp-polaroid">
+        <div class="rp-polaroid-image">05</div>
+        <div class="rp-polaroid-num">H008 · 园林洋房</div>
+        <div class="rp-polaroid-name">愚园路 · 静安</div>
+        <div class="rp-polaroid-meta">156.7 ㎡ · 4 室 2 卫 · 6/10F · 南向</div>
+        <div class="rp-polaroid-price">¥158<em> 万 · ¥10,083/㎡</em></div>
+      </div>
+      <div class="rp-polaroid">
+        <div class="rp-polaroid-image">06</div>
+        <div class="rp-polaroid-num">H005 · 经典 Art Deco</div>
+        <div class="rp-polaroid-name">复兴中路 · 黄浦</div>
+        <div class="rp-polaroid-meta">145.6 ㎡ · 4 室 2 卫 · 10/14F · 南向</div>
+        <div class="rp-polaroid-price">¥152<em> 万 · ¥10,440/㎡</em></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       §03 · ⭐ Pull-quote 整页大字 italic 玫红 (灵魂招牌 #3)
+       章节之间打"重击"
+       ════════════════════════════════════════════════════════════════════════ -->
+  <blockquote class="rp-pull-quote">
+    我们以为买房在选<em>房子</em>,<br>
+    其实在选<em>住进哪个圈层的资格</em>.
+    <div class="rp-pull-quote-attr">— 城市观察 · 2026 年度刊</div>
+  </blockquote>
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       §04 · 多维交叉 (1 大 + 2 小 chart, 玫红主调)
+       ════════════════════════════════════════════════════════════════════════ -->
+  <section class="rp-section">
+    <div class="rp-ghost-num">03</div>
+    <div class="rp-section-head">
+      <div>
+        <div class="rp-section-num">03 · The Geometry of Price</div>
+        <h2 class="rp-section-title">价格的<em>几何学</em></h2>
+      </div>
+      <div class="rp-section-sub">从单价分布到房龄拉锯, 三张图看清<em>定价的真实坐标系</em>.</div>
+    </div>
+
+    <div class="rp-chart-grid">
+      <div class="rp-panel">
+        <div class="rp-panel-hd">
+          <div class="rp-panel-title">面积 × 单价 · <em>三圈层分色</em></div>
+          <div class="rp-panel-meta">散点图</div>
+        </div>
+        <div class="rp-chart-host is-tall" id="chart-scatter"></div>
+      </div>
+
+      <div class="rp-chart-col">
+        <div class="rp-panel">
+          <div class="rp-panel-hd">
+            <div class="rp-panel-title">朝向占比</div>
+            <div class="rp-panel-meta">环图</div>
+          </div>
+          <div class="rp-chart-host" id="chart-orient"></div>
+        </div>
+        <div class="rp-panel">
+          <div class="rp-panel-hd">
+            <div class="rp-panel-title">单价区间分布</div>
+            <div class="rp-panel-meta">柱状</div>
+          </div>
+          <div class="rp-chart-host" id="chart-price-dist"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rp-chart-grid-22">
+      <div class="rp-panel">
+        <div class="rp-panel-hd">
+          <div class="rp-panel-title">三圈层 · <em>6 维特征</em></div>
+          <div class="rp-panel-meta">雷达图</div>
+        </div>
+        <div class="rp-chart-host" id="chart-radar"></div>
+      </div>
+      <div class="rp-panel">
+        <div class="rp-panel-hd">
+          <div class="rp-panel-title">四代房屋 · <em>均价 + 单价</em></div>
+          <div class="rp-panel-meta">折线 · 面积图</div>
+        </div>
+        <div class="rp-chart-host" id="chart-timeline"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       §05 · ⭐ Magazine cover 大圆角刊封 (灵魂招牌 #4) + Essays 3 列
+       ════════════════════════════════════════════════════════════════════════ -->
+  <section class="rp-section">
+    <div class="rp-mag-cover">
+      <div class="rp-mag-kicker">04 · The Counterintuitive Truth</div>
+      <h2 class="rp-mag-title">朝向不是<em>采光</em>, 是<em>圈层资格</em></h2>
+      <p class="rp-mag-prose">直觉以为"南向贵, 是因为采光好". 数据真相却是: <em>开发商把好朝向留给了豪华小区</em>. 在豪华小区里, 南向比例 76%; 在普通小区里, 南向比例只有 31%. 你以为你在为"光"付费, 实际上你在为"圈层"付费. 朝向不是物理变量, 是社会学变量.</p>
+
+      <div class="rp-essays-grid">
+        <div class="rp-essay">
+          <div class="rp-essay-kicker">A · 装修</div>
+          <h3 class="rp-essay-title">不是预算, 是<em>开发商配给</em></h3>
+          <p class="rp-essay-lede">装修等级 ≠ 装修预算, 是<em>开发商精装标配级别</em>. 用装修筛客户, 先用小区类型过滤, 否则你筛到的不是客户, 是被开发商分类好的样本.</p>
+          <div class="rp-essay-byline">By · 城市研究组</div>
+        </div>
+        <div class="rp-essay">
+          <div class="rp-essay-kicker">B · 房龄</div>
+          <h3 class="rp-essay-title">不是老化, 是<em>时代红利</em></h3>
+          <p class="rp-essay-lede">房龄在二手房产品里被当作老化扣分项, 实际是<em>时代红利指数</em>. 2010 年前的房子常常自带学区 / 地段 / 大产权, 应作为圈层标签核心.</p>
+          <div class="rp-essay-byline">By · 城市研究组</div>
+        </div>
+        <div class="rp-essay">
+          <div class="rp-essay-kicker">C · 叠加</div>
+          <h3 class="rp-essay-title">单变量都是<em>陷阱</em></h3>
+          <p class="rp-essay-lede">豪华小区 + 南向 + 豪装 = 152 万均值的"<em>组合拳</em>". 单变量分析必然漏掉真高净值客户. 三个"中等"维度的叠加, 往往强于一个"顶级"维度.</p>
+          <div class="rp-essay-byline">By · 城市研究组</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       §06 · Timeline 黑底重音 (反差 ending)
+       ════════════════════════════════════════════════════════════════════════ -->
+  <section class="rp-section">
+    <div class="rp-ghost-num">05</div>
+    <div class="rp-section-head">
+      <div>
+        <div class="rp-section-num">05 · A Decade in Strata</div>
+        <h2 class="rp-section-title">十四年, <em>四代房子</em>, 四种时代</h2>
+      </div>
+      <div class="rp-section-sub">2009 → 2022, 每隔三四年一代房子. 一代有一代的<em>设计语言</em>.</div>
+    </div>
+
+    <div class="rp-timeline">
+      <div class="rp-timeline-kicker">Generations · 城市居住的时代切片</div>
+      <h3 class="rp-timeline-head">同一座城市的<em>四代房子</em>, 像四个时代的居住宣言</h3>
+
+      <div class="rp-timeline-list">
+        <div class="rp-timeline-event">
+          <div class="rp-timeline-date">2009–2012</div>
+          <div class="rp-timeline-body"><strong>第一代 · 量级扩张</strong>. 改革开放后房地产<em>跑马圈地</em>的尾声. 户型偏大, 普通装修, 重数量轻品质. <strong>样本占比 26%</strong>, 均价 ¥49 万.</div>
+          <div class="rp-timeline-num">26<em>%</em></div>
+        </div>
+        <div class="rp-timeline-event">
+          <div class="rp-timeline-date">2013–2016</div>
+          <div class="rp-timeline-body"><strong>第二代 · 改善崛起</strong>. 一二线限购出台, 投资客退场, "改善型"需求成主流. 精装比例首次过半, <em>第一次出现"产品力"概念</em>. <strong>样本占比 32%</strong>, 均价 ¥68 万.</div>
+          <div class="rp-timeline-num">32<em>%</em></div>
+        </div>
+        <div class="rp-timeline-event">
+          <div class="rp-timeline-date">2017–2019</div>
+          <div class="rp-timeline-body"><strong>第三代 · 极致分化</strong>. 房住不炒后, 豪华品类正式独立成市. 大平层 + 智能家居 + 物业 IP 化, <em>圈层符号正式诞生</em>. <strong>样本占比 28%</strong>, 均价 ¥98 万.</div>
+          <div class="rp-timeline-num">28<em>%</em></div>
+        </div>
+        <div class="rp-timeline-event">
+          <div class="rp-timeline-date">2020–2022</div>
+          <div class="rp-timeline-body"><strong>第四代 · 居家觉醒</strong>. 疫情把"家"还原成生活的<em>真正主场</em>. 工作区 / 健身区 / 阳台菜园成为标配, 改善型房改善的不是面积, 是<em>生活半径</em>. <strong>样本占比 14%</strong>, 均价 ¥125 万.</div>
+          <div class="rp-timeline-num">14<em>%</em></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       §05B · 深度分布 (heatmap + treemap, chart 多样性必备)
+       ════════════════════════════════════════════════════════════════════════ -->
+  <section class="rp-section">
+    <div class="rp-ghost-num">06</div>
+    <div class="rp-section-head">
+      <div>
+        <div class="rp-section-num">05B · The Hidden Map</div>
+        <h2 class="rp-section-title">朝向 × 装修, <em>另一张分层地图</em></h2>
+      </div>
+      <div class="rp-section-sub">同样数据, 换种图表就能看出新故事 — <em>热力图</em>揭示组合密度, <em>矩形树图</em>把圈层→户型层级摊开.</div>
+    </div>
+
+    <div class="rp-chart-grid-22">
+      <div class="rp-panel">
+        <div class="rp-panel-hd">
+          <div class="rp-panel-title">朝向 × 装修 · <em>分布密度</em></div>
+          <div class="rp-panel-meta">热力图</div>
+        </div>
+        <div class="rp-chart-host" id="chart-heatmap"></div>
+      </div>
+      <div class="rp-panel">
+        <div class="rp-panel-hd">
+          <div class="rp-panel-title">圈层 → 户型 · <em>层级占比</em></div>
+          <div class="rp-panel-meta">矩形树图</div>
+        </div>
+        <div class="rp-chart-host" id="chart-treemap"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       Coda 收尾节
+       ════════════════════════════════════════════════════════════════════════ -->
+  <section class="rp-coda">
+    <p class="rp-coda-quote">城市不是一个市场,<br>是<em>三个完全不同的故事</em>同时在写.</p>
+    <p class="rp-coda-attr">— FIN · 城市观察 · 2026 年度刊</p>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       Footer
+       ════════════════════════════════════════════════════════════════════════ -->
+  <footer class="rp-footer">
+    <div class="rp-footer-brand">城市观察 <em>·</em> Urban Quarterly</div>
+    <div>VOL. XII · ISSUE 04 · 100 套样本研究</div>
+    <div>Rose Press · 玫红报刊</div>
+  </footer>
+</main>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     JavaScript · ECharts (rose-press 5 色 + 玫红主调)
+     ════════════════════════════════════════════════════════════════════════ -->
+<script>
+
+// ⭐ rose-press · ECharts base (5 色 series + 玫红 axisPointer + 极薄网格)
+const rpEchartsBase = {
+  color: ['#E13B7A', '#A48CD9', '#E5722A', '#3F7E45', '#5B8DEE', '#c12d68'],
+  textStyle: { fontFamily: "'Inter', 'Noto Sans SC', sans-serif", color: '#0F0F0F' },
+  backgroundColor: 'transparent',
+  grid: { left: '6%', right: '4%', top: '14%', bottom: '12%', containLabel: true },
+  tooltip: {
+    trigger: 'axis',
+    backgroundColor: 'rgba(255, 252, 245, 0.98)',
+    borderColor: 'rgba(15,15,15,0.12)', borderWidth: 1,
+    padding: [10, 14],
+    textStyle: { color: '#0F0F0F', fontSize: 12, fontFamily: "'Inter', 'Noto Sans SC', sans-serif" },
+    extraCssText: 'box-shadow: 0 8px 32px rgba(15,15,15,0.12); border-radius: 12px;',
+    axisPointer: { type: 'line', lineStyle: { color: '#E13B7A', type: 'dashed', width: 1, opacity: 0.5 } }
+  },
+  legend: {
+    top: 4, right: 8,
+    textStyle: { color: '#8A8275', fontSize: 12, fontFamily: "'Inter', 'Noto Sans SC', sans-serif" },
+    icon: 'circle', itemWidth: 8, itemHeight: 8, itemGap: 18
+  },
+  xAxis: {
+    type: 'category',
+    axisLine: { lineStyle: { color: 'rgba(15,15,15,0.12)' } },
+    axisTick: { show: false },
+    axisLabel: { color: '#8A8275', fontSize: 11, fontFamily: 'JetBrains Mono, monospace', margin: 10 },
+    splitLine: { show: false }
+  },
+  yAxis: {
+    type: 'value',
+    axisLine: { show: false }, axisTick: { show: false },
+    axisLabel: { color: '#8A8275', fontSize: 11, fontFamily: 'JetBrains Mono, monospace' },
+    splitLine: { lineStyle: { color: 'rgba(15,15,15,0.08)', type: 'dashed' } }
+  }
+};
+
+function safeRender(name, fn) { try { fn(); } catch (e) { console.warn('[render]', name, e); } }
+
+// §04 散点 (玫红主 + 三色分类)
+safeRender('chart-scatter', () => {
+  const el = document.getElementById('chart-scatter');
+  const ch = echarts.init(el);
+  const TYPE_COLOR = { '普通小区': '#5B8DEE', '高档小区': '#A48CD9', '豪华小区': '#E13B7A' };
+  // 模拟 100 套样本数据
+  function gen(type, n, areaR, unitR) {
+    return Array.from({length: n}, () => {
+      const a = areaR[0] + Math.random() * (areaR[1] - areaR[0]);
+      const u = unitR[0] + Math.random() * (unitR[1] - unitR[0]);
+      return [Math.round(a), Math.round(u)];
+    });
+  }
+  const data = {
+    '普通小区': gen('普通小区', 45, [55, 95], [3500, 5500]),
+    '高档小区': gen('高档小区', 34, [85, 135], [5500, 8000]),
+    '豪华小区': gen('豪华小区', 21, [130, 210], [8000, 10500])
+  };
+  const series = Object.entries(data).map(([t, d]) => ({
+    name: t, type: 'scatter', symbolSize: 12,
+    data: d,
+    itemStyle: { color: TYPE_COLOR[t], opacity: 0.85, borderColor: '#FFFCF5', borderWidth: 1 }
+  }));
+  ch.setOption({
+    ...rpEchartsBase,
+    legend: { ...rpEchartsBase.legend, data: ['普通小区', '高档小区', '豪华小区'] },
+    tooltip: { ...rpEchartsBase.tooltip, trigger: 'item', formatter: p => `面积 ${p.data[0]} ㎡<br/>单价 ¥${p.data[1].toLocaleString()}/㎡` },
+    xAxis: { ...rpEchartsBase.xAxis, type: 'value', name: '面积 ㎡', nameTextStyle: { color: '#8A8275', fontSize: 10 }, nameLocation: 'middle', nameGap: 32 },
+    yAxis: { ...rpEchartsBase.yAxis, name: '单价 ¥/㎡', nameTextStyle: { color: '#8A8275', fontSize: 10 }, nameLocation: 'middle', nameGap: 50 },
+    grid: { left: 70, right: 30, top: 50, bottom: 60, containLabel: false },
+    series
+  });
+  new ResizeObserver(() => ch.resize()).observe(el);
+});
+
+// §04 朝向 donut (5 色循环 + 白色描边 + 内圆角)
+safeRender('chart-orient', () => {
+  const el = document.getElementById('chart-orient');
+  const ch = echarts.init(el);
+  ch.setOption({
+    ...rpEchartsBase,
+    legend: { ...rpEchartsBase.legend, orient: 'vertical', right: 0, top: 'middle', itemGap: 12 },
+    tooltip: { ...rpEchartsBase.tooltip, trigger: 'item', formatter: '{b}: {c} 套 ({d}%)' },
+    series: [{
+      type: 'pie', radius: ['52%', '78%'], center: ['38%', '50%'],
+      data: [
+        { name: '南', value: 51, itemStyle: { color: '#E13B7A', borderColor: '#FFFCF5', borderWidth: 4, borderRadius: 4 } },
+        { name: '西', value: 19, itemStyle: { color: '#A48CD9', borderColor: '#FFFCF5', borderWidth: 4, borderRadius: 4 } },
+        { name: '东', value: 15, itemStyle: { color: '#E5722A', borderColor: '#FFFCF5', borderWidth: 4, borderRadius: 4 } },
+        { name: '北', value: 15, itemStyle: { color: '#5B8DEE', borderColor: '#FFFCF5', borderWidth: 4, borderRadius: 4 } }
+      ],
+      label: { show: true, formatter: '{b}\n{d}%', fontSize: 11, color: '#0F0F0F', fontFamily: 'JetBrains Mono' }
+    }]
+  });
+  new ResizeObserver(() => ch.resize()).observe(el);
+});
+
+// §04 单价区间柱状 (玫红主调 + 圆角顶部 6px)
+safeRender('chart-price-dist', () => {
+  const el = document.getElementById('chart-price-dist');
+  const ch = echarts.init(el);
+  ch.setOption({
+    ...rpEchartsBase,
+    legend: { show: false },
+    tooltip: { ...rpEchartsBase.tooltip, formatter: p => `${p[0].name}: ${p[0].value} 套` },
+    xAxis: { ...rpEchartsBase.xAxis, data: ['<40 万', '40-70', '70-100', '100-150', '>150'] },
+    yAxis: { ...rpEchartsBase.yAxis },
+    grid: { left: 40, right: 20, top: 20, bottom: 40, containLabel: true },
+    series: [{
+      type: 'bar', barWidth: '54%',
+      data: [12, 38, 19, 15, 16],
+      itemStyle: { color: '#E13B7A', borderRadius: [6, 6, 0, 0] },
+      emphasis: { itemStyle: { color: '#c12d68' } }
+    }]
+  });
+  new ResizeObserver(() => ch.resize()).observe(el);
+});
+
+// §03 三圈层 6 维特征 (radar, 玫红 + 紫 + 浅玫红)
+safeRender('chart-radar', () => {
+  const el = document.getElementById('chart-radar');
+  if (!el) return;
+  const ch = echarts.init(el);
+  const COLORS = { '普通小区': '#A48CD9', '高档小区': '#5B8DEE', '豪华小区': '#E13B7A' };
+  ch.setOption({
+    textStyle: rpEchartsBase.textStyle,
+    backgroundColor: 'transparent',
+    legend: { data: Object.keys(COLORS), bottom: 0, textStyle: { color: '#5A5246', fontSize: 11 } },
+    tooltip: { trigger: 'item' },
+    radar: {
+      indicator: [
+        { name: '面积', max: 200 }, { name: '总价 万', max: 200 },
+        { name: '楼龄', max: 20 }, { name: '户型', max: 150 },
+        { name: '地铁分', max: 100 }, { name: '学区分', max: 100 }
+      ],
+      center: ['50%', '52%'], radius: '58%',
+      axisName: { color: '#8A8275', fontSize: 10, fontFamily: 'JetBrains Mono' },
+      splitArea: { areaStyle: { color: ['rgba(225,59,122,0.04)', 'rgba(15,15,15,0.02)'] } },
+      splitLine: { lineStyle: { color: 'rgba(15,15,15,0.10)' } },
+      axisLine: { lineStyle: { color: 'rgba(15,15,15,0.14)' } }
+    },
+    series: [{ type: 'radar', data: [
+      { name: '普通小区', value: [75, 33, 14, 78, 65, 70],
+        itemStyle: { color: COLORS['普通小区'] },
+        areaStyle: { color: COLORS['普通小区'], opacity: 0.16 },
+        lineStyle: { color: COLORS['普通小区'], width: 1.6 } },
+      { name: '高档小区', value: [105, 65, 11, 110, 80, 85],
+        itemStyle: { color: COLORS['高档小区'] },
+        areaStyle: { color: COLORS['高档小区'], opacity: 0.18 },
+        lineStyle: { color: COLORS['高档小区'], width: 1.8 } },
+      { name: '豪华小区', value: [170, 152, 8, 140, 90, 95],
+        itemStyle: { color: COLORS['豪华小区'] },
+        areaStyle: { color: COLORS['豪华小区'], opacity: 0.22 },
+        lineStyle: { color: COLORS['豪华小区'], width: 2.2 } }
+    ] }]
+  });
+  new ResizeObserver(() => ch.resize()).observe(el);
+});
+
+// §03 四代房屋 双线时序 (line + area, 玫红主 + 紫副)
+safeRender('chart-timeline', () => {
+  const el = document.getElementById('chart-timeline');
+  if (!el) return;
+  const ch = echarts.init(el);
+  ch.setOption({
+    ...rpEchartsBase,
+    legend: { ...rpEchartsBase.legend, data: ['均价 (万)', '单价 (元/㎡)'], top: 4 },
+    tooltip: { ...rpEchartsBase.tooltip, trigger: 'axis' },
+    grid: { left: 60, right: 60, top: 40, bottom: 40, containLabel: true },
+    xAxis: { ...rpEchartsBase.xAxis, data: ['2009–12', '2013–16', '2017–19', '2020–22'] },
+    yAxis: [
+      { ...rpEchartsBase.yAxis, name: '均价 万', position: 'left',
+        nameTextStyle: { color: '#8A8275', fontSize: 10 } },
+      { ...rpEchartsBase.yAxis, name: '单价 ¥/㎡', position: 'right',
+        nameTextStyle: { color: '#8A8275', fontSize: 10 } }
+    ],
+    series: [
+      { name: '均价 (万)', type: 'line', smooth: true, symbol: 'circle', symbolSize: 10,
+        data: [48, 62, 89, 122], yAxisIndex: 0,
+        lineStyle: { color: '#E13B7A', width: 2.8 },
+        itemStyle: { color: '#E13B7A', borderColor: '#FFFCF5', borderWidth: 2 },
+        areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [
+          { offset: 0, color: 'rgba(225, 59, 122, 0.32)' },
+          { offset: 1, color: 'rgba(225, 59, 122, 0)' }] } } },
+      { name: '单价 (元/㎡)', type: 'line', smooth: true, symbol: 'diamond', symbolSize: 9,
+        data: [4200, 5600, 7100, 9300], yAxisIndex: 1,
+        lineStyle: { color: '#A48CD9', width: 2, type: 'dashed' },
+        itemStyle: { color: '#A48CD9', borderColor: '#FFFCF5', borderWidth: 2 } }
+    ]
+  });
+  new ResizeObserver(() => ch.resize()).observe(el);
+});
+
+// §05B 朝向 × 装修 热力图 (玫红渐变)
+safeRender('chart-heatmap', () => {
+  const el = document.getElementById('chart-heatmap');
+  if (!el) return;
+  const ch = echarts.init(el);
+  const xCats = ['毛坯', '简装修', '精装修', '豪华装修'];
+  const yCats = ['南', '东', '西', '北'];
+  const raw = [
+    [0,0,5],[1,0,12],[2,0,17],[3,0,17],
+    [0,1,3],[1,1,4],[2,1,5],[3,1,3],
+    [0,2,4],[1,2,5],[2,2,7],[3,2,3],
+    [0,3,5],[1,3,5],[2,3,3],[3,3,2]
+  ];
+  ch.setOption({
+    textStyle: rpEchartsBase.textStyle,
+    backgroundColor: 'transparent',
+    tooltip: { ...rpEchartsBase.tooltip, position: 'top',
+      formatter: p => `${yCats[p.data[1]]} 向 × ${xCats[p.data[0]]}<br/><strong>${p.data[2]} 套</strong>` },
+    grid: { left: 70, right: 60, top: 20, bottom: 50, containLabel: false },
+    xAxis: { type: 'category', data: xCats, splitArea: { show: true }, axisTick: { show: false },
+      axisLabel: { color: '#5A5246', fontSize: 11, fontFamily: 'JetBrains Mono' },
+      axisLine: { lineStyle: { color: 'rgba(15,15,15,0.14)' } } },
+    yAxis: { type: 'category', data: yCats, splitArea: { show: true }, axisTick: { show: false },
+      axisLabel: { color: '#5A5246', fontSize: 11, fontFamily: 'JetBrains Mono' },
+      axisLine: { lineStyle: { color: 'rgba(15,15,15,0.14)' } } },
+    visualMap: { min: 0, max: 17, calculable: true, orient: 'horizontal', left: 'center', bottom: 6,
+      textStyle: { color: '#5A5246', fontSize: 10 },
+      inRange: { color: ['rgba(225,59,122,0.08)', '#E13B7A', '#c12d68'] } },
+    series: [{ type: 'heatmap', data: raw,
+      label: { show: true, color: '#0F0F0F', fontSize: 11, fontWeight: 600,
+        formatter: p => p.data[2] || '' },
+      itemStyle: { borderColor: '#FFFCF5', borderWidth: 2 } }]
+  });
+  new ResizeObserver(() => ch.resize()).observe(el);
+});
+
+// §05B 圈层 → 户型 矩形树图 (玫红 / 紫 / 蓝 三圈层色)
+safeRender('chart-treemap', () => {
+  const el = document.getElementById('chart-treemap');
+  if (!el) return;
+  const ch = echarts.init(el);
+  ch.setOption({
+    textStyle: rpEchartsBase.textStyle,
+    backgroundColor: 'transparent',
+    tooltip: { ...rpEchartsBase.tooltip, formatter: p => `${p.name}<br/><strong>${p.value} 套</strong>` },
+    series: [{
+      type: 'treemap', roam: false, nodeClick: false, breadcrumb: { show: false },
+      data: [
+        { name: '普通小区', value: 47, itemStyle: { color: '#A48CD9' }, children: [
+          { name: '普通 · 1-2 室', value: 19 }, { name: '普通 · 3 室', value: 22 }, { name: '普通 · 4-5 室', value: 6 } ] },
+        { name: '高档小区', value: 32, itemStyle: { color: '#5B8DEE' }, children: [
+          { name: '高档 · 2 室', value: 8 }, { name: '高档 · 3 室', value: 18 }, { name: '高档 · 4-5 室', value: 6 } ] },
+        { name: '豪华小区', value: 21, itemStyle: { color: '#E13B7A' }, children: [
+          { name: '豪华 · 3 室', value: 4 }, { name: '豪华 · 4 室', value: 9 }, { name: '豪华 · 5 室', value: 8 } ] }
+      ],
+      levels: [
+        { itemStyle: { borderColor: '#FFFCF5', borderWidth: 4, gapWidth: 4 } },
+        { itemStyle: { borderColor: 'rgba(255,252,245,0.7)', borderWidth: 2, gapWidth: 2 } }
+      ],
+      label: { show: true, color: '#fff', fontSize: 11, fontWeight: 600, fontFamily: 'Noto Sans SC', formatter: '{b}\n{c}' }
+    }]
+  });
+  new ResizeObserver(() => ch.resize()).observe(el);
+});
+
+</script>
+</body>
+</html>
