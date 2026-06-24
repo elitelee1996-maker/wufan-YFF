@@ -1,0 +1,54 @@
+{
+  "name": "jdy_sign_flow_task",
+  "display_name": "流程待办加签",
+  "description_zh": "给流程待办任务加签审批人",
+  "description": "Add a signer to a pending workflow task. sign_type: 'before'=前加签, 'after'=后加签. Requires username, instance_id (same as data_id), task_id, and sign_user_names. Rate limit: 20/s.",
+  "params": {
+    "username": {
+      "type": "string",
+      "description": "操作人username（必填）"
+    },
+    "instance_id": {
+      "type": "string",
+      "description": "流程实例ID，即数据的_id（必填）"
+    },
+    "task_id": {
+      "type": "string",
+      "description": "待办任务ID（必填）"
+    },
+    "sign_user_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "加签人username列表（必填）"
+    },
+    "sign_type": {
+      "type": "string",
+      "description": "加签类型：before=前加签，after=后加签",
+      "default": "after"
+    },
+    "comment": {
+      "type": "string",
+      "description": "加签说明（可选）",
+      "default": ""
+    }
+  },
+  "api": {
+    "url": "https://api.jiandaoyun.com/api/v1/workflow/task/sign",
+    "method": "POST",
+    "headers": {
+      "Authorization": "Bearer ${conn:jiandaoyun.api_key}",
+      "Content-Type": "application/json"
+    }
+  },
+  "requires_connections": [
+    {
+      "category": "jiandaoyun",
+      "fields": [
+        "api_key"
+      ],
+      "required": true
+    }
+  ]
+}
