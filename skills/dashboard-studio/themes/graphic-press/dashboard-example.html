@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>房产分析驾驶舱 · 100 套样本自助探索</title>
+
+<!-- ╔══════════════════════════════════════════════════════════════════════╗
+     ║ ⚠⚠⚠ 完全自包含 HTML · 严禁数据外置 (D 死路) ⚠⚠⚠                 ║
+     ╠══════════════════════════════════════════════════════════════════════╣
+     ║ 所有业务数据 inline 在 <script>const D = {...}</script> 里            ║
+     ║ ❌ 严禁 fetch("data.json") / <script src="data.js">                  ║
+     ║ ❌ 严禁产物目录里出现 data.json / data.js 等业务数据文件             ║
+     ║ 原因: 用户双击 HTML 用 file:// 打开, 浏览器禁止跨文件 fetch (CORS)   ║
+     ║       外置 = 双击全屏空白 = 用户觉得"做的不能用"                       ║
+     ║ ✅ 唯一允许的"外部资源" = ECharts / 字体的 https:// CDN               ║
+     ╚══════════════════════════════════════════════════════════════════════╝ -->
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     Graphic Press · Dashboard 样板 · 房产分析数据
+     ════════════════════════════════════════════════════════════════════════
+     ▶ Agent 你应该:
+        1. read 整个文件, 重点看 5 件套结构 + KPI 灵魂胶囊设计
+        2. 抄 <style> 段全部 CSS (含 hero-vis 横幅 + 4 灵魂 KPI 胶囊)
+        3. KPI 一排 4 个, 不是 8 个 — 精致大于密集
+        4. 把 D / D.rows 替成你的业务数据 (数据**必须 inline**, 见上方警告)
+        5. ECharts 柱状用渐变胶囊 (gpBarSeries 工厂)
+        6. 一次 write 整页 (路径 A) 或一次 execute_python 内构造 (路径 B), 不要分段追加
+     ▶ 跟 editorial 核心差异: 没大字 Hero 主标 (Header 紧凑) / 有筛选+明细+下钻 / 高密度 panel
+     ════════════════════════════════════════════════════════════════════════ -->
+
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+/* ════════════════════════════════════════════════════════════════════════
+   GRAPHIC PRESS · 主题 tokens (跟 editorial 共用)
+   ════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --grad-fire:  linear-gradient(135deg, #ff2a2a 0%, #ff8c00 100%);
+  --grad-ocean: linear-gradient(135deg, #00b359 0%, #0055ff 100%);
+  --grad-berry: linear-gradient(135deg, #a322ff 0%, #ff4d88 100%);
+  --grad-sun:   linear-gradient(135deg, #ffb300 0%, #ff5500 100%);
+  --grad-smoke: linear-gradient(135deg, #2a2a2a 0%, #8c8c8c 100%);
+  --grad-mint:  linear-gradient(135deg, #00d9c4 0%, #00a2ff 100%);
+  --c-fire:#ff5500; --c-ocean:#0055ff; --c-berry:#a322ff;
+  --c-sun:#ffb300; --c-smoke:#2a2a2a; --c-mint:#00b8a3;
+  --bg-paper:#e9e7e2; --bg-elevated:#dfddd8;
+  --bg-card:rgba(255,255,255,0.40); --bg-solid:#ffffff; --bg-soft:#f5f3ed;
+  --text-primary:#1a1918; --text-secondary:#4a4845; --text-muted:#7a7873;
+  --hairline:rgba(0,0,0,0.08); --hairline-soft:rgba(0,0,0,0.05);
+  --font-display:'Space Grotesk',sans-serif;
+  --font-body:'Noto Sans SC','Inter',sans-serif;
+  --texture-lines-light: repeating-linear-gradient(45deg, transparent 0 1px, rgba(255,255,255,0.4) 1px 2px, transparent 2px 6px);
+  --texture-lines-dense: repeating-linear-gradient(45deg, transparent 0 2px, rgba(0,0,0,0.025) 2px 3px, transparent 3px 5px);
+  --texture-lines-dark:  repeating-linear-gradient(45deg, transparent 0 1px, rgba(0,0,0,0.04) 1px 2px, transparent 2px 6px);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  font-family: var(--font-body); color: var(--text-primary);
+  background: var(--bg-paper); -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: var(--texture-lines-dense); opacity: 0.6;
+}
+.dash { position: relative; z-index: 1; max-width: 1440px; margin: 0 auto;
+  padding: clamp(20px, 3vw, 32px) clamp(16px, 2.5vw, 28px); }
+
+/* ─── 紧凑 Header (Dashboard 不放大字 Hero) ─── */
+.dash-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 22px; border-radius: 999px; background: var(--bg-solid);
+  border: 0.5px solid var(--hairline-soft); margin-bottom: 18px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.03);
+}
+.dash-title-zh {
+  font-family: var(--font-display); font-weight: 700; font-size: 18px;
+  color: var(--text-primary); margin-right: 12px; letter-spacing: -0.01em;
+}
+.dash-title-en {
+  font-family: var(--font-display); font-size: 12px;
+  color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase;
+}
+.dash-meta {
+  font-family: var(--font-display); font-size: 11px;
+  color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase;
+}
+.live-dot {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--c-fire); margin-right: 6px;
+  animation: live-pulse 1.5s infinite;
+}
+@keyframes live-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+/* ════════════════════════════════════════════════════════════════════════
+   ⭐ Hero Spotlight 带 (横幅 hero-vis 色棍交叉, dashboard 顶部灵魂)
+   ════════════════════════════════════════════════════════════════════════ */
+.spotlight {
+  position: relative; height: 160px;
+  border-radius: 28px; overflow: hidden;
+  background: var(--bg-elevated);
+  margin-bottom: 18px;
+  display: flex; align-items: center;
+  isolation: isolate;
+}
+.spotlight::after {
+  content: ''; position: absolute; inset: 0;
+  background-image: var(--texture-lines-dark);
+  opacity: 0.5; mix-blend-mode: overlay; pointer-events: none; z-index: 5;
+}
+.sp-cyl {
+  position: absolute; border-radius: 999px;
+  mix-blend-mode: multiply;
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+}
+.sp-cyl-1 { background: var(--grad-fire);  width: 70%; height: 60px;
+  transform: rotate(-12deg) translate(-10%, -30px); left: 0; top: 50%; z-index: 2; }
+.sp-cyl-2 { background: var(--grad-ocean); width: 65%; height: 70px;
+  transform: rotate(8deg) translate(10%, -10px); right: 0; top: 50%; z-index: 1; }
+.sp-cyl-3 { background: var(--grad-berry); width: 55%; height: 55px;
+  transform: rotate(-5deg) translate(15%, 30px); left: 25%; top: 50%; z-index: 3; }
+
+.sp-content {
+  position: relative; z-index: 10;
+  display: flex; align-items: center; gap: 32px;
+  padding: 0 36px;
+  width: 100%; justify-content: space-between;
+}
+.sp-headline {
+  background: rgba(233, 231, 226, 0.88);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  padding: 14px 28px; border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  display: flex; align-items: center; gap: 18px;
+}
+.sp-label {
+  font-family: var(--font-display); font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--text-muted); font-weight: 600;
+}
+.sp-value {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: 2.4rem; line-height: 1; letter-spacing: -0.04em;
+  color: var(--text-primary); font-variant-numeric: tabular-nums;
+}
+.sp-meta-pill {
+  background: rgba(233, 231, 226, 0.88);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  padding: 10px 18px; border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  font-family: var(--font-display); font-size: 11px;
+  color: var(--text-secondary); letter-spacing: 0.08em;
+  text-transform: uppercase; font-weight: 600;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   ⭐ KPI 阵 (4 张, 一排, 灵魂版半透玻璃胶囊卡)
+       — 半透明玻璃底 + 底部渐变胶囊填充条 + 上方大数字 + 趋势 chip
+   ════════════════════════════════════════════════════════════════════════ */
+.kpi-row {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+  margin-bottom: 20px;
+}
+@media (max-width: 1080px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+
+.kpi {
+  position: relative; overflow: hidden;
+  background: var(--bg-card);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(0,0,0,0.05);
+  border-radius: 24px;
+  padding: 22px 22px 20px;
+  min-height: 150px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.kpi-label-row {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.kpi-label {
+  font-family: var(--font-display); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--text-muted); font-weight: 600;
+}
+.kpi-trend {
+  font-family: var(--font-display); font-size: 12px; font-weight: 500;
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 999px;
+}
+.kpi-trend.up   { color: #008a44; background: rgba(0, 138, 68, 0.08); }
+.kpi-trend.down { color: #d92626; background: rgba(217, 38, 38, 0.08); }
+.kpi-trend.flat { color: var(--text-muted); background: rgba(122, 120, 115, 0.08); }
+.kpi-value {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: 2rem; line-height: 1; letter-spacing: -0.02em;
+  color: var(--text-primary); font-variant-numeric: tabular-nums;
+}
+.kpi-unit { font-size: 0.55em; opacity: 0.6; margin-left: 3px; font-weight: 500; }
+.kpi-meta {
+  font-size: 12px; color: var(--text-secondary); line-height: 1.5;
+  font-family: var(--font-body);
+}
+/* 底部 6px 渐变胶囊填充条 (pill-metric 灵魂) */
+.kpi-bar {
+  height: 6px; width: 100%; margin-top: auto;
+  background: rgba(0,0,0,0.05);
+  border-radius: 999px; overflow: hidden;
+  position: relative;
+}
+.kpi-fill {
+  height: 100%; border-radius: 999px;
+  transition: width 800ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  position: relative;
+}
+.kpi-fill::after {
+  content: ''; position: absolute; inset: 0;
+  background-image: var(--texture-lines-light); opacity: 0.5;
+}
+.kpi-fill.f-fire  { background: var(--grad-fire);  }
+.kpi-fill.f-ocean { background: var(--grad-ocean); }
+.kpi-fill.f-berry { background: var(--grad-berry); }
+.kpi-fill.f-sun   { background: var(--grad-sun);   }
+
+/* ════════════════════════════════════════════════════════════════════════
+   筛选胶囊条
+   ════════════════════════════════════════════════════════════════════════ */
+.filter-bar {
+  display: grid; grid-template-columns: auto 1fr auto;
+  gap: 16px; align-items: center;
+  padding: 14px 20px; border-radius: 999px;
+  background: var(--bg-solid); border: 0.5px solid var(--hairline-soft);
+  margin-bottom: 20px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.03);
+}
+.filter-label {
+  font-family: var(--font-display); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--text-muted); font-weight: 600;
+}
+.filter-groups { display: flex; gap: 18px; flex-wrap: wrap; }
+.filter-group { display: flex; gap: 4px; align-items: center; }
+.filter-group-label {
+  font-size: 11px; color: var(--text-muted); margin-right: 6px;
+  font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.08em;
+}
+.pill-toggle {
+  padding: 4px 12px; border-radius: 999px; border: 0;
+  font-size: 12px; cursor: pointer;
+  background: var(--bg-soft); color: var(--text-secondary);
+  font-family: var(--font-body); transition: all 0.15s;
+}
+.pill-toggle:hover { background: rgba(255,85,0,0.08); color: var(--c-fire); }
+.pill-toggle.is-active {
+  background: var(--grad-fire); color: #fff; font-weight: 600;
+}
+.filter-summary {
+  display: flex; gap: 6px; align-items: center;
+  font-family: var(--font-display); font-size: 12px;
+  color: var(--text-muted);
+}
+.filter-summary .num {
+  font-size: 20px; font-weight: 700; color: var(--c-fire);
+  letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
+}
+.filter-reset {
+  margin-left: 12px; padding: 4px 12px; border-radius: 999px;
+  background: transparent; border: 1px solid var(--hairline);
+  cursor: pointer; font-size: 11px; color: var(--text-secondary);
+  font-family: var(--font-display); text-transform: uppercase;
+}
+.filter-reset:hover { border-color: var(--c-fire); color: var(--c-fire); }
+
+/* ════════════════════════════════════════════════════════════════════════
+   Panel grid (多 chart)
+   ════════════════════════════════════════════════════════════════════════ */
+.panel-grid {
+  display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px;
+  margin-bottom: 20px;
+}
+.panel {
+  background: var(--bg-solid); border-radius: 24px;
+  padding: 20px; border: 0.5px solid var(--hairline-soft);
+}
+.panel.col-6 { grid-column: span 6; }
+.panel.col-4 { grid-column: span 4; }
+.panel.col-8 { grid-column: span 8; }
+@media (max-width: 1080px) {
+  .panel.col-6, .panel.col-4, .panel.col-8 { grid-column: span 12; }
+}
+.panel-hd {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 14px;
+}
+.panel-title {
+  font-family: var(--font-body); font-weight: 600; font-size: 14px;
+  color: var(--text-primary);
+}
+.panel-meta {
+  font-family: var(--font-display); font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);
+}
+.chart-host { width: 100%; height: 300px; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   明细表 (排序+搜索+分页)
+   ════════════════════════════════════════════════════════════════════════ */
+.table-panel {
+  background: var(--bg-solid); border-radius: 24px;
+  padding: 20px; border: 0.5px solid var(--hairline-soft);
+  margin-bottom: 20px;
+}
+.table-hd {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 14px; gap: 16px;
+}
+.table-title { font-weight: 600; font-size: 14px; }
+.table-search {
+  flex: 1; max-width: 280px;
+  padding: 8px 16px; border-radius: 999px;
+  border: 1px solid var(--hairline); background: var(--bg-soft);
+  font-size: 13px; outline: 0; font-family: var(--font-body);
+}
+.table-search:focus { border-color: var(--c-fire); background: #fff; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table thead th {
+  padding: 10px 12px; text-align: left;
+  font-family: var(--font-display); font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-muted); cursor: pointer; user-select: none;
+  border-bottom: 1.5px solid var(--text-primary);
+}
+.data-table thead th:hover { color: var(--c-fire); }
+.data-table thead th.sort-asc::after  { content: ' ▲'; font-size: 9px; }
+.data-table thead th.sort-desc::after { content: ' ▼'; font-size: 9px; }
+.data-table tbody tr {
+  cursor: pointer; border-bottom: 1px solid var(--hairline-soft);
+  transition: background 0.15s;
+}
+.data-table tbody tr:hover { background: var(--bg-soft); }
+.data-table td { padding: 10px 12px; color: var(--text-primary); }
+.tag-pill {
+  display: inline-block; padding: 2px 9px; border-radius: 999px;
+  font-family: var(--font-display); font-size: 10px; font-weight: 600;
+  color: #fff;
+}
+.tag-pill.tg-fire  { background: var(--c-fire); }
+.tag-pill.tg-ocean { background: var(--c-ocean); }
+.tag-pill.tg-berry { background: var(--c-berry); }
+.tag-pill.tg-smoke { background: var(--c-smoke); }
+.tag-light {
+  display: inline-block; padding: 2px 9px; border-radius: 999px;
+  font-size: 11px; background: var(--bg-soft); color: var(--text-secondary);
+}
+.table-pager {
+  display: flex; gap: 12px; align-items: center; justify-content: center;
+  padding-top: 14px; font-family: var(--font-display); font-size: 12px;
+  color: var(--text-muted);
+}
+.table-pager button {
+  padding: 4px 14px; border-radius: 999px;
+  background: var(--bg-soft); border: 0; cursor: pointer;
+  font-family: var(--font-display); font-size: 12px;
+}
+.table-pager button:hover:not(:disabled) { background: var(--c-fire); color: #fff; }
+.table-pager button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   下钻抽屉
+   ════════════════════════════════════════════════════════════════════════ */
+.drawer {
+  position: fixed; top: 0; right: 0; bottom: 0;
+  width: 420px; max-width: 90vw;
+  background: var(--bg-solid);
+  box-shadow: -12px 0 40px rgba(0,0,0,0.18);
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1000; overflow-y: auto;
+}
+.drawer.is-open { transform: translateX(0); }
+.drawer-mask {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.3);
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  z-index: 999;
+}
+.drawer-mask.is-open { opacity: 1; pointer-events: auto; }
+.drawer-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 22px 28px; border-bottom: 1px solid var(--hairline-soft);
+  position: sticky; top: 0; background: var(--bg-solid); z-index: 1;
+}
+.drawer-title-id {
+  font-family: var(--font-display); font-size: 11px;
+  color: var(--text-muted); letter-spacing: 0.1em;
+  display: block;
+}
+.drawer-title-main {
+  font-family: var(--font-body); font-weight: 700; font-size: 18px;
+  margin-top: 4px;
+}
+.drawer-close {
+  background: 0; border: 0; font-size: 24px; cursor: pointer;
+  color: var(--text-muted); padding: 4px 8px; border-radius: 50%;
+  width: 36px; height: 36px;
+}
+.drawer-close:hover { background: var(--bg-soft); color: var(--c-fire); }
+.drawer-body { padding: 28px; }
+.drawer-price {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: 38px; letter-spacing: -0.03em; margin-bottom: 4px;
+  background: var(--grad-fire); -webkit-background-clip: text;
+  background-clip: text; -webkit-text-fill-color: transparent;
+}
+.drawer-price-meta {
+  font-size: 12px; color: var(--text-muted); margin-bottom: 24px;
+  font-family: var(--font-display); letter-spacing: 0.04em;
+}
+.field-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+}
+.field-card {
+  background: var(--bg-soft); border-radius: 14px; padding: 12px 14px;
+}
+.field-label {
+  font-family: var(--font-display); font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);
+}
+.field-value {
+  font-family: var(--font-display); font-weight: 600;
+  font-size: 15px; margin-top: 4px; color: var(--text-primary);
+}
+.drawer-section { margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--hairline-soft); }
+.drawer-section-title { font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 12px; }
+
+/* ─── Footer ─── */
+.dash-footer {
+  margin-top: 18px; padding: 12px 22px;
+  display: flex; justify-content: space-between;
+  font-family: var(--font-display); font-size: 11px;
+  color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase;
+}
+</style>
+</head>
+<body>
+
+<div class="dash">
+
+  <!-- ════════════ 紧凑 Header ════════════ -->
+  <header class="dash-header">
+    <div>
+      <span class="dash-title-zh">房产分析驾驶舱</span>
+      <span class="dash-title-en">100 Houses · Self-Service Explorer</span>
+    </div>
+    <div class="dash-meta">
+      <span class="live-dot"></span>实时 · 2026-05-28
+    </div>
+  </header>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       ⭐ Hero Spotlight 带 (横幅 hero-vis 色棍交叉)
+       ════════════════════════════════════════════════════════════════ -->
+  <section class="spotlight">
+    <div class="sp-cyl sp-cyl-1"></div>
+    <div class="sp-cyl sp-cyl-2"></div>
+    <div class="sp-cyl sp-cyl-3"></div>
+    <div class="sp-content">
+      <div class="sp-headline">
+        <div>
+          <div class="sp-label">价格跨度</div>
+          <div class="sp-value">9.1<span style="font-size:0.5em;opacity:0.6;">x</span></div>
+        </div>
+        <div style="width:1px;height:40px;background:rgba(0,0,0,0.1);"></div>
+        <div>
+          <div class="sp-label">样本总数</div>
+          <div class="sp-value" style="font-size:1.8rem;">100<span style="font-size:0.55em;opacity:0.6;"> 套</span></div>
+        </div>
+      </div>
+      <div class="sp-meta-pill">3 个圈层 · 4 维筛选 · 实时联动</div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       ⭐ KPI 阵 (4 张, 一排, 灵魂版半透玻璃胶囊卡)
+       ════════════════════════════════════════════════════════════════ -->
+  <section class="kpi-row">
+    <div class="kpi">
+      <div class="kpi-label-row">
+        <span class="kpi-label">Avg Price · 平均房价</span>
+        <span class="kpi-trend up" id="trend-1">↑ vs 中位 +31%</span>
+      </div>
+      <div class="kpi-value" data-kpi="avg_price">¥74.6<span class="kpi-unit">万</span></div>
+      <div class="kpi-meta" data-kpi-meta="avg_price">100 套均值 · 中位 ¥57 万</div>
+      <div class="kpi-bar"><div class="kpi-fill f-fire" style="width: 75%;"></div></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label-row">
+        <span class="kpi-label">Unit Price · 平均单价</span>
+        <span class="kpi-trend flat">P10-P90 跨 2.8x</span>
+      </div>
+      <div class="kpi-value" data-kpi="unit_price">¥6,000<span class="kpi-unit">/㎡</span></div>
+      <div class="kpi-meta">P10 ¥3,728 → P90 ¥10,432</div>
+      <div class="kpi-bar"><div class="kpi-fill f-ocean" style="width: 60%;"></div></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label-row">
+        <span class="kpi-label">South Share · 南向占比</span>
+        <span class="kpi-trend up">↑ 主导</span>
+      </div>
+      <div class="kpi-value" data-kpi="south_share">51<span class="kpi-unit">%</span></div>
+      <div class="kpi-meta">南 51 · 西 19 · 东 15 · 北 15</div>
+      <div class="kpi-bar"><div class="kpi-fill f-berry" style="width: 51%;"></div></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label-row">
+        <span class="kpi-label">Luxury · 豪华小区</span>
+        <span class="kpi-trend up">利润核心</span>
+      </div>
+      <div class="kpi-value" data-kpi="luxury">21<span class="kpi-unit">套</span></div>
+      <div class="kpi-meta">21% 样本 · 占 47% 市值</div>
+      <div class="kpi-bar"><div class="kpi-fill f-sun" style="width: 47%;"></div></div>
+    </div>
+  </section>
+
+  <!-- ════════════ 全局筛选条 (4 维 toggle) ════════════ -->
+  <section class="filter-bar">
+    <span class="filter-label">筛选维度</span>
+    <div class="filter-groups" id="filter-groups"></div>
+    <div class="filter-summary">
+      <span class="num" id="filter-count">100</span>
+      <span>套匹配</span>
+      <button class="filter-reset" onclick="resetFilters()">重置</button>
+    </div>
+  </section>
+
+  <!-- ════════════ Panel grid 1: 主图 + 辅图 ════════════ -->
+  <section class="panel-grid">
+    <div class="panel col-8">
+      <div class="panel-hd">
+        <div class="panel-title">面积 × 单价 (按小区类型分色)</div>
+        <div class="panel-meta">SCATTER · AREA-UNIT</div>
+      </div>
+      <div class="chart-host" id="chart-scatter"></div>
+    </div>
+    <div class="panel col-4">
+      <div class="panel-hd">
+        <div class="panel-title">单价区间分布</div>
+        <div class="panel-meta">BAR · 渐变胶囊柱</div>
+      </div>
+      <div class="chart-host" id="chart-price-dist"></div>
+    </div>
+  </section>
+
+  <!-- ════════════ Panel grid 2: 三列 donut / radar ════════════ -->
+  <section class="panel-grid">
+    <div class="panel col-4">
+      <div class="panel-hd">
+        <div class="panel-title">朝向分布</div>
+        <div class="panel-meta">环图</div>
+      </div>
+      <div class="chart-host" id="chart-orient"></div>
+    </div>
+    <div class="panel col-4">
+      <div class="panel-hd">
+        <div class="panel-title">装修等级占比</div>
+        <div class="panel-meta">环图</div>
+      </div>
+      <div class="chart-host" id="chart-decoration"></div>
+    </div>
+    <div class="panel col-4">
+      <div class="panel-hd">
+        <div class="panel-title">小区类型 · 6 维特征</div>
+        <div class="panel-meta">雷达图</div>
+      </div>
+      <div class="chart-host" id="chart-radar"></div>
+    </div>
+  </section>
+
+  <!-- ════════════ Panel grid 3: 高级形态 heatmap + treemap (chart 多样性必带) ════════════ -->
+  <section class="panel-grid">
+    <div class="panel col-8">
+      <div class="panel-hd">
+        <div class="panel-title">朝向 × 装修 · 分布密度</div>
+        <div class="panel-meta">热力图</div>
+      </div>
+      <div class="chart-host" id="chart-heatmap" style="height: 280px;"></div>
+    </div>
+    <div class="panel col-4">
+      <div class="panel-hd">
+        <div class="panel-title">圈层 → 户型 · 层级占比</div>
+        <div class="panel-meta">矩形树图</div>
+      </div>
+      <div class="chart-host" id="chart-treemap" style="height: 280px;"></div>
+    </div>
+  </section>
+
+  <!-- ════════════ 明细表 ════════════ -->
+  <section class="table-panel">
+    <div class="table-hd">
+      <div class="table-title">房源明细 · 100 套样本</div>
+      <input type="text" class="table-search" placeholder="搜索 ID / 朝向 / 装修..." oninput="onSearch(this.value)">
+      <span style="font-family:var(--font-display);font-size:11px;color:var(--text-muted);letter-spacing:0.08em;">点行 → 详情</span>
+    </div>
+    <table class="data-table">
+      <thead><tr id="table-head"></tr></thead>
+      <tbody id="table-body"></tbody>
+    </table>
+    <div class="table-pager">
+      <button onclick="setPage(page - 1)" id="prev-btn">← 上一页</button>
+      <span id="page-info">1 / 5</span>
+      <button onclick="setPage(page + 1)" id="next-btn">下一页 →</button>
+    </div>
+  </section>
+
+  <!-- ─── Footer ─── -->
+  <div class="dash-footer">
+    <div>房产分析驾驶舱 · 100 套样本</div>
+    <div>2026 · GRAPHIC PRESS</div>
+  </div>
+
+</div>
+
+<!-- ════════════ 下钻抽屉 ════════════ -->
+<aside class="drawer" id="drawer">
+  <div class="drawer-hd">
+    <div>
+      <span class="drawer-title-id" id="drawer-id">H001</span>
+      <span class="drawer-title-main" id="drawer-name">100㎡ · 3 室 · 精装修</span>
+    </div>
+    <button class="drawer-close" onclick="closeDrawer()">×</button>
+  </div>
+  <div class="drawer-body">
+    <div class="drawer-price" id="drawer-price">¥60 万</div>
+    <div class="drawer-price-meta" id="drawer-price-meta">单价 6,000 元/㎡ · 房龄 5 年</div>
+    <div class="field-grid" id="drawer-fields"></div>
+    <div class="drawer-section">
+      <div class="drawer-section-title">本套 vs 同类型均值</div>
+      <div id="drawer-mini" style="height: 240px;"></div>
+    </div>
+  </div>
+</aside>
+<div class="drawer-mask" id="drawer-mask" onclick="closeDrawer()"></div>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     JavaScript · ECharts + 筛选 + 明细表 + 下钻
+     ════════════════════════════════════════════════════════════════════════ -->
+<script>
+
+// ⭐ graphic-press · ECharts base + 渐变胶囊柱工厂
+const gpEchartsBase = {
+  color: ['#ff5500', '#a322ff', '#0055ff', '#00b359', '#ff4d88', '#ffb300', '#2a2a2a'],
+  textStyle: { fontFamily: "'Space Grotesk', 'Noto Sans SC', sans-serif", color: '#1a1918' },
+  backgroundColor: 'transparent',
+  tooltip: {
+    trigger: 'axis',
+    backgroundColor: 'rgba(255,255,255,0.96)',
+    borderColor: 'rgba(0,0,0,0.08)', borderWidth: 0.5,
+    textStyle: { color: '#1a1918', fontSize: 12 }, padding: 12
+  },
+  legend: { top: 0, right: 10, textStyle: { fontSize: 11, color: '#4a4845' } },
+  xAxis: {
+    type: 'category',
+    axisLine: { lineStyle: { color: 'rgba(0,0,0,0.18)', width: 0.5 } },
+    axisTick: { show: false },
+    axisLabel: { color: '#7a7873', fontSize: 11 },
+    splitLine: { show: false }
+  },
+  yAxis: {
+    type: 'value',
+    axisLine: { show: false }, axisTick: { show: false },
+    axisLabel: { color: '#7a7873', fontSize: 11 },
+    splitLine: { lineStyle: { color: 'rgba(0,0,0,0.06)', type: 'dashed' } }
+  }
+};
+
+// ⭐ graphic-press · 渐变胶囊柱 series 工厂 (chart 必用)
+function gpBarSeries(name, data, toneFrom, toneTo) {
+  return {
+    name, type: 'bar', barWidth: 18,
+    data,
+    itemStyle: {
+      color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [
+        { offset: 0, color: toneFrom },
+        { offset: 1, color: toneTo }
+      ]},
+      borderRadius: [10, 10, 0, 0]
+    }
+  };
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// 数据 (demo 30 行示意, Agent 真实场景用 100 行)
+// ════════════════════════════════════════════════════════════════════════
+const D = {
+  rows: [
+    {id:'H001',area:85.5,rooms:2,bath:1,floor:8,total_floor:18,year:2015,subway:0.3,school:0.5,mall:0.4,decoration:'精装修',orient:'南',type:'高档小区',price:520000},
+    {id:'H002',area:120.3,rooms:3,bath:2,floor:12,total_floor:25,year:2018,subway:0.8,school:1.2,mall:0.6,decoration:'豪华装修',orient:'南',type:'豪华小区',price:1080000},
+    {id:'H003',area:95.2,rooms:2,bath:1,floor:5,total_floor:15,year:2012,subway:1.5,school:0.8,mall:1.1,decoration:'简装修',orient:'东',type:'普通小区',price:420000},
+    {id:'H004',area:68.8,rooms:1,bath:1,floor:3,total_floor:12,year:2010,subway:2.1,school:1.5,mall:0.9,decoration:'毛坯',orient:'北',type:'普通小区',price:280000},
+    {id:'H005',area:145.6,rooms:4,bath:2,floor:15,total_floor:28,year:2020,subway:0.4,school:0.6,mall:0.5,decoration:'豪华装修',orient:'南',type:'豪华小区',price:1200000},
+    {id:'H006',area:78.9,rooms:2,bath:1,floor:6,total_floor:18,year:2014,subway:0.6,school:0.9,mall:0.7,decoration:'精装修',orient:'西',type:'高档小区',price:450000},
+    {id:'H007',area:102.4,rooms:3,bath:2,floor:10,total_floor:22,year:2017,subway:1.2,school:0.8,mall:1.3,decoration:'精装修',orient:'南',type:'高档小区',price:580000},
+    {id:'H008',area:156.7,rooms:4,bath:3,floor:18,total_floor:30,year:2021,subway:0.3,school:0.4,mall:0.3,decoration:'豪华装修',orient:'南',type:'豪华小区',price:1450000},
+    {id:'H009',area:89.3,rooms:2,bath:1,floor:7,total_floor:20,year:2011,subway:1.8,school:1.3,mall:1.0,decoration:'简装修',orient:'东',type:'普通小区',price:350000},
+    {id:'H010',area:134.2,rooms:3,bath:2,floor:14,total_floor:25,year:2019,subway:0.5,school:0.7,mall:0.6,decoration:'豪华装修',orient:'南',type:'豪华小区',price:920000},
+    {id:'H011',area:72.1,rooms:2,bath:1,floor:4,total_floor:15,year:2013,subway:1.3,school:1.6,mall:1.4,decoration:'精装修',orient:'西',type:'高档小区',price:320000},
+    {id:'H012',area:198.5,rooms:5,bath:3,floor:20,total_floor:32,year:2022,subway:0.2,school:0.3,mall:0.4,decoration:'豪华装修',orient:'南',type:'豪华小区',price:1800000},
+    {id:'H013',area:91.7,rooms:2,bath:1,floor:6,total_floor:18,year:2015,subway:0.9,school:1.1,mall:0.8,decoration:'精装修',orient:'东',type:'高档小区',price:485000},
+    {id:'H014',area:115.8,rooms:3,bath:2,floor:11,total_floor:24,year:2018,subway:0.7,school:0.8,mall:0.9,decoration:'精装修',orient:'南',type:'高档小区',price:650000},
+    {id:'H015',area:63.4,rooms:1,bath:1,floor:2,total_floor:10,year:2009,subway:2.5,school:1.8,mall:1.6,decoration:'毛坯',orient:'北',type:'普通小区',price:230000},
+    {id:'H016',area:128.9,rooms:3,bath:2,floor:13,total_floor:26,year:2020,subway:0.4,school:0.5,mall:0.3,decoration:'豪华装修',orient:'南',type:'豪华小区',price:780000},
+    {id:'H017',area:87.6,rooms:2,bath:1,floor:5,total_floor:16,year:2014,subway:1.1,school:1.0,mall:0.9,decoration:'简装修',orient:'西',type:'普通小区',price:380000},
+    {id:'H018',area:176.3,rooms:4,bath:3,floor:17,total_floor:30,year:2021,subway:0.3,school:0.4,mall:0.5,decoration:'豪华装修',orient:'南',type:'豪华小区',price:1350000},
+    {id:'H019',area:94.8,rooms:2,bath:1,floor:8,total_floor:20,year:2016,subway:0.6,school:0.7,mall:0.5,decoration:'精装修',orient:'南',type:'高档小区',price:520000},
+    {id:'H020',area:108.2,rooms:3,bath:2,floor:9,total_floor:22,year:2017,subway:0.8,school:1.0,mall:0.7,decoration:'精装修',orient:'东',type:'高档小区',price:620000},
+    {id:'H021',area:75.5,rooms:2,bath:1,floor:4,total_floor:14,year:2012,subway:1.5,school:1.3,mall:1.2,decoration:'简装修',orient:'北',type:'普通小区',price:340000},
+    {id:'H022',area:142.7,rooms:3,bath:2,floor:15,total_floor:28,year:2019,subway:0.5,school:0.6,mall:0.4,decoration:'豪华装修',orient:'南',type:'豪华小区',price:1100000},
+    {id:'H023',area:82.3,rooms:2,bath:1,floor:6,total_floor:17,year:2013,subway:1.2,school:1.0,mall:1.1,decoration:'精装修',orient:'西',type:'高档小区',price:360000},
+    {id:'H024',area:167.9,rooms:4,bath:3,floor:18,total_floor:30,year:2021,subway:0.3,school:0.4,mall:0.3,decoration:'豪华装修',orient:'南',type:'豪华小区',price:1520000},
+    {id:'H025',area:96.1,rooms:3,bath:2,floor:7,total_floor:20,year:2016,subway:0.7,school:0.9,mall:0.6,decoration:'精装修',orient:'东',type:'高档小区',price:550000},
+    {id:'H026',area:119.4,rooms:3,bath:2,floor:12,total_floor:24,year:2018,subway:0.6,school:0.7,mall:0.5,decoration:'精装修',orient:'南',type:'高档小区',price:680000},
+    {id:'H027',area:71.8,rooms:2,bath:1,floor:3,total_floor:12,year:2011,subway:1.8,school:1.5,mall:1.4,decoration:'简装修',orient:'北',type:'普通小区',price:290000},
+    {id:'H028',area:153.6,rooms:4,bath:3,floor:16,total_floor:28,year:2020,subway:0.4,school:0.5,mall:0.4,decoration:'豪华装修',orient:'南',type:'豪华小区',price:1050000},
+    {id:'H029',area:88.7,rooms:2,bath:1,floor:5,total_floor:18,year:2014,subway:0.9,school:1.1,mall:0.8,decoration:'精装修',orient:'东',type:'高档小区',price:390000},
+    {id:'H030',area:201.3,rooms:5,bath:4,floor:22,total_floor:32,year:2022,subway:0.2,school:0.3,mall:0.3,decoration:'豪华装修',orient:'南',type:'豪华小区',price:2100000}
+  ],
+  facets: {
+    decoration: ['毛坯', '简装修', '精装修', '豪华装修'],
+    orient: ['南', '北', '东', '西'],
+    type: ['普通小区', '高档小区', '豪华小区'],
+    rooms: [1, 2, 3, 4, 5]
+  }
+};
+
+const state = {
+  filters: { decoration: null, orient: null, type: null, rooms: null },
+  search: '', sort: { key: null, dir: 1 }, page: 0, pageSize: 8
+};
+const charts = {};
+
+function safeRender(name, fn) { try { fn(); } catch (e) { console.warn('[render]', name, e); } }
+
+// ════════════════════════════════════════════════════════════════════════
+// 筛选条
+// ════════════════════════════════════════════════════════════════════════
+function renderFilters() {
+  const groups = document.getElementById('filter-groups');
+  const LABELS = { decoration: '装修', orient: '朝向', type: '小区', rooms: '房间' };
+  groups.innerHTML = Object.entries(D.facets).map(([key, options]) => `
+    <div class="filter-group">
+      <span class="filter-group-label">${LABELS[key]}</span>
+      <button class="pill-toggle ${state.filters[key] === null ? 'is-active' : ''}"
+              onclick="setFilter('${key}', null)">全部</button>
+      ${options.map(opt => `
+        <button class="pill-toggle ${state.filters[key] === opt ? 'is-active' : ''}"
+                onclick="setFilter('${key}', ${typeof opt === 'number' ? opt : `'${opt}'`})">${typeof opt === 'number' ? opt + '室' : opt}</button>
+      `).join('')}
+    </div>
+  `).join('');
+}
+function setFilter(key, value) { state.filters[key] = value; state.page = 0; applyAndRender(); }
+function resetFilters() {
+  Object.keys(state.filters).forEach(k => state.filters[k] = null);
+  state.search = ''; document.querySelector('.table-search').value = '';
+  state.page = 0; applyAndRender();
+}
+function onSearch(q) { state.search = q.trim().toLowerCase(); state.page = 0; applyAndRender(); }
+
+function applyFilters() {
+  return D.rows.filter(r => {
+    for (const [k, v] of Object.entries(state.filters)) {
+      if (v !== null && r[k] !== v) return false;
+    }
+    if (state.search) {
+      const hay = `${r.id} ${r.orient} ${r.decoration} ${r.type}`.toLowerCase();
+      if (!hay.includes(state.search)) return false;
+    }
+    return true;
+  });
+}
+
+function applyAndRender() {
+  const filtered = applyFilters();
+  document.getElementById('filter-count').textContent = filtered.length;
+  renderFilters();
+  renderKPI(filtered);
+  renderCharts(filtered);
+  renderTable(filtered);
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// KPI 重算 (4 个灵魂胶囊)
+// ════════════════════════════════════════════════════════════════════════
+function renderKPI(rows) {
+  if (rows.length === 0) {
+    document.querySelectorAll('[data-kpi]').forEach(el => el.innerHTML = '— <span class="kpi-unit">无</span>');
+    return;
+  }
+  const n = rows.length;
+  const avg = (k) => rows.reduce((s, r) => s + r[k], 0) / n;
+  const fmt = (v) => (v / 10000).toFixed(1);
+
+  document.querySelector('[data-kpi="avg_price"]').innerHTML = '¥' + fmt(avg('price')) + '<span class="kpi-unit">万</span>';
+  document.querySelector('[data-kpi="unit_price"]').innerHTML = '¥' + Math.round(avg('price') / avg('area')).toLocaleString() + '<span class="kpi-unit">/㎡</span>';
+  const south = rows.filter(r => r.orient === '南').length;
+  document.querySelector('[data-kpi="south_share"]').innerHTML = Math.round(south / n * 100) + '<span class="kpi-unit">%</span>';
+  const luxury = rows.filter(r => r.type === '豪华小区').length;
+  document.querySelector('[data-kpi="luxury"]').innerHTML = luxury + '<span class="kpi-unit">套</span>';
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// Charts
+// ════════════════════════════════════════════════════════════════════════
+function renderCharts(rows) {
+  renderScatter(rows);
+  renderPriceDist(rows);
+  renderOrient(rows);
+  renderDecoration(rows);
+  renderRadar(rows);
+  renderHeatmap(rows);
+  renderTreemap(rows);
+}
+
+function renderScatter(rows) {
+  safeRender('scatter', () => {
+    const el = document.getElementById('chart-scatter');
+    if (!charts.scatter) charts.scatter = echarts.init(el);
+    const TYPE_COLOR = { '普通小区': '#8c8c8c', '高档小区': '#00b359', '豪华小区': '#ff5500' };
+    const series = ['普通小区', '高档小区', '豪华小区'].map(t => ({
+      name: t, type: 'scatter', symbolSize: 14,
+      data: rows.filter(r => r.type === t).map(r => [r.area, Math.round(r.price / r.area)]),
+      itemStyle: { color: TYPE_COLOR[t], opacity: 0.75 }
+    }));
+    charts.scatter.setOption({
+      ...gpEchartsBase,
+      legend: { ...gpEchartsBase.legend, data: ['普通小区', '高档小区', '豪华小区'] },
+      tooltip: { ...gpEchartsBase.tooltip, trigger: 'item', formatter: p => `面积 ${p.data[0]}㎡<br/>单价 ¥${p.data[1].toLocaleString()}/㎡` },
+      xAxis: { ...gpEchartsBase.xAxis, type: 'value', name: '面积 (㎡)' },
+      yAxis: { ...gpEchartsBase.yAxis, name: '单价 (元/㎡)' },
+      grid: { left: 60, right: 30, top: 40, bottom: 40, containLabel: true },
+      series
+    });
+    new ResizeObserver(() => charts.scatter.resize()).observe(el);
+  });
+}
+
+function renderPriceDist(rows) {
+  safeRender('price-dist', () => {
+    const el = document.getElementById('chart-price-dist');
+    if (!charts.priceDist) charts.priceDist = echarts.init(el);
+    const bins = [
+      { label: '<40万', max: 400000 },
+      { label: '40-70万', max: 700000 },
+      { label: '70-100万', max: 1000000 },
+      { label: '100-150万', max: 1500000 },
+      { label: '>150万', max: Infinity }
+    ];
+    let prev = 0;
+    const counts = bins.map(b => {
+      const c = rows.filter(r => r.price >= prev && r.price < b.max).length;
+      prev = b.max; return c;
+    });
+    charts.priceDist.setOption({
+      ...gpEchartsBase,
+      legend: { show: false },
+      tooltip: { ...gpEchartsBase.tooltip, formatter: p => `${p[0].name}: ${p[0].value} 套` },
+      xAxis: { ...gpEchartsBase.xAxis, data: bins.map(b => b.label), axisLabel: { ...gpEchartsBase.xAxis.axisLabel, rotate: 30 } },
+      yAxis: { ...gpEchartsBase.yAxis, name: '套数' },
+      grid: { left: 50, right: 20, top: 30, bottom: 50, containLabel: true },
+      series: [gpBarSeries('套数', counts, '#ff2a2a', '#ff8c00')]
+    });
+    new ResizeObserver(() => charts.priceDist.resize()).observe(el);
+  });
+}
+
+function renderOrient(rows) {
+  safeRender('orient', () => {
+    const el = document.getElementById('chart-orient');
+    if (!charts.orient) charts.orient = echarts.init(el);
+    const counts = ['南', '西', '东', '北'].map(o => ({
+      name: o, value: rows.filter(r => r.orient === o).length
+    }));
+    charts.orient.setOption({
+      ...gpEchartsBase,
+      color: ['#ff5500', '#a322ff', '#0055ff', '#00b359'],
+      legend: { ...gpEchartsBase.legend, orient: 'vertical', right: 0, top: 'middle', itemGap: 8 },
+      tooltip: { ...gpEchartsBase.tooltip, trigger: 'item', formatter: '{b}: {c} 套 ({d}%)' },
+      series: [{
+        type: 'pie', radius: ['46%', '70%'], center: ['38%', '50%'],
+        data: counts,
+        itemStyle: { borderColor: '#fff', borderWidth: 3 },
+        label: { show: true, formatter: '{b}\n{d}%', fontSize: 11, color: '#4a4843' }
+      }]
+    });
+    new ResizeObserver(() => charts.orient.resize()).observe(el);
+  });
+}
+
+function renderDecoration(rows) {
+  safeRender('decoration', () => {
+    const el = document.getElementById('chart-decoration');
+    if (!charts.decoration) charts.decoration = echarts.init(el);
+    const counts = ['毛坯', '简装修', '精装修', '豪华装修'].map(d => ({
+      name: d, value: rows.filter(r => r.decoration === d).length
+    }));
+    charts.decoration.setOption({
+      ...gpEchartsBase,
+      color: ['#8c8c8c', '#00b359', '#ff8c00', '#a322ff'],
+      legend: { ...gpEchartsBase.legend, orient: 'vertical', right: 0, top: 'middle', itemGap: 8 },
+      tooltip: { ...gpEchartsBase.tooltip, trigger: 'item', formatter: '{b}: {c} 套 ({d}%)' },
+      series: [{
+        type: 'pie', radius: ['46%', '70%'], center: ['38%', '50%'],
+        data: counts,
+        itemStyle: { borderColor: '#fff', borderWidth: 3 },
+        label: { show: true, formatter: '{b}\n{d}%', fontSize: 11, color: '#4a4843' }
+      }]
+    });
+    new ResizeObserver(() => charts.decoration.resize()).observe(el);
+  });
+}
+
+function renderRadar(rows) {
+  safeRender('radar', () => {
+    const el = document.getElementById('chart-radar');
+    if (!charts.radar) charts.radar = echarts.init(el);
+    const avgBy = (typeRows, k) => typeRows.length ? typeRows.reduce((s, r) => s + r[k], 0) / typeRows.length : 0;
+    const TYPES = ['普通小区', '高档小区', '豪华小区'];
+    const COLORS = { '普通小区': '#8c8c8c', '高档小区': '#00b359', '豪华小区': '#ff5500' };
+    const radarData = TYPES.map(t => {
+      const rs = rows.filter(r => r.type === t);
+      return {
+        name: t,
+        value: [
+          avgBy(rs, 'area'),
+          avgBy(rs, 'price') / 10000,
+          (2026 - avgBy(rs, 'year')),
+          avgBy(rs, 'rooms') * 30,
+          (1 - avgBy(rs, 'subway') / 3) * 100,
+          (1 - avgBy(rs, 'school') / 3) * 100
+        ],
+        itemStyle: { color: COLORS[t] },
+        areaStyle: { color: COLORS[t], opacity: 0.18 },
+        lineStyle: { color: COLORS[t], width: 2 }
+      };
+    });
+    charts.radar.setOption({
+      textStyle: gpEchartsBase.textStyle,
+      backgroundColor: 'transparent',
+      legend: { data: TYPES, bottom: 0, textStyle: { fontSize: 10, color: '#4a4843' } },
+      tooltip: { trigger: 'item' },
+      radar: {
+        indicator: [
+          { name: '面积(㎡)', max: 200 },
+          { name: '总价(万)', max: 200 },
+          { name: '房龄', max: 20 },
+          { name: '房间', max: 150 },
+          { name: '近地铁', max: 100 },
+          { name: '近学校', max: 100 }
+        ],
+        center: ['50%', '48%'], radius: '58%',
+        axisName: { color: '#4a4843', fontSize: 10 },
+        splitArea: { areaStyle: { color: ['rgba(245,243,237,0.3)','rgba(255,255,255,0.5)'] } },
+        splitLine: { lineStyle: { color: 'rgba(0,0,0,0.06)' } },
+        axisLine: { lineStyle: { color: 'rgba(0,0,0,0.12)' } }
+      },
+      series: [{ type: 'radar', data: radarData }]
+    });
+    new ResizeObserver(() => charts.radar.resize()).observe(el);
+  });
+}
+
+// 朝向 × 装修 热力图 (chart 多样性必备 — fire 渐变)
+function renderHeatmap(rows) {
+  safeRender('heatmap', () => {
+    const el = document.getElementById('chart-heatmap');
+    if (!el) return;
+    if (!charts.heatmap) charts.heatmap = echarts.init(el);
+    const xCats = ['毛坯', '简装修', '精装修', '豪华装修'];
+    const yCats = ['南', '东', '西', '北'];
+    const raw = [];
+    yCats.forEach((y, yi) => xCats.forEach((x, xi) => {
+      const c = rows.filter(r => r.orient === y && r.decoration === x).length;
+      raw.push([xi, yi, c]);
+    }));
+    const max = Math.max(1, ...raw.map(p => p[2]));
+    charts.heatmap.setOption({
+      textStyle: gpEchartsBase.textStyle,
+      backgroundColor: 'transparent',
+      tooltip: { ...gpEchartsBase.tooltip, position: 'top',
+        formatter: p => `${yCats[p.data[1]]} 向 × ${xCats[p.data[0]]}<br/><strong>${p.data[2]} 套</strong>` },
+      grid: { left: 70, right: 60, top: 20, bottom: 50, containLabel: false },
+      xAxis: { type: 'category', data: xCats, splitArea: { show: true }, axisTick: { show: false },
+        axisLabel: { color: '#7a7873', fontSize: 11 },
+        axisLine: { lineStyle: { color: 'rgba(0,0,0,0.14)' } } },
+      yAxis: { type: 'category', data: yCats, splitArea: { show: true }, axisTick: { show: false },
+        axisLabel: { color: '#7a7873', fontSize: 11 },
+        axisLine: { lineStyle: { color: 'rgba(0,0,0,0.14)' } } },
+      visualMap: { min: 0, max, calculable: true, orient: 'horizontal', left: 'center', bottom: 6,
+        textStyle: { color: '#7a7873', fontSize: 10 },
+        inRange: { color: ['rgba(255,179,0,0.10)', '#ff8c00', '#ff2a2a'] } },
+      series: [{ type: 'heatmap', data: raw,
+        label: { show: true, color: '#1a1918', fontSize: 11, fontWeight: 600,
+          formatter: p => p.data[2] || '' },
+        itemStyle: { borderColor: '#fff', borderWidth: 2 } }]
+    });
+    new ResizeObserver(() => charts.heatmap.resize()).observe(el);
+  });
+}
+
+// 圈层 → 户型 矩形树图 (chart 多样性必备 — 5 套渐变胶囊色)
+function renderTreemap(rows) {
+  safeRender('treemap', () => {
+    const el = document.getElementById('chart-treemap');
+    if (!el) return;
+    if (!charts.treemap) charts.treemap = echarts.init(el);
+    const TYPE_COLOR = { '普通小区': '#8c8c8c', '高档小区': '#0055ff', '豪华小区': '#ff5500' };
+    function bucket(rs) {
+      const b = { '1-2 室': 0, '3 室': 0, '4-5 室': 0 };
+      rs.forEach(r => { if (r.rooms <= 2) b['1-2 室']++; else if (r.rooms === 3) b['3 室']++; else b['4-5 室']++; });
+      return b;
+    }
+    const data = ['普通小区', '高档小区', '豪华小区'].map(t => {
+      const rs = rows.filter(r => r.type === t); const b = bucket(rs);
+      return { name: t, value: rs.length, itemStyle: { color: TYPE_COLOR[t] },
+        children: Object.entries(b).filter(([_, v]) => v > 0)
+          .map(([k, v]) => ({ name: `${t.replace('小区', '')} · ${k}`, value: v })) };
+    });
+    charts.treemap.setOption({
+      textStyle: gpEchartsBase.textStyle,
+      backgroundColor: 'transparent',
+      tooltip: { ...gpEchartsBase.tooltip, formatter: p => `${p.name}<br/><strong>${p.value} 套</strong>` },
+      series: [{
+        type: 'treemap', roam: false, nodeClick: false, breadcrumb: { show: false },
+        data, levels: [
+          { itemStyle: { borderColor: '#fff', borderWidth: 4, gapWidth: 4 } },
+          { itemStyle: { borderColor: 'rgba(255,255,255,0.6)', borderWidth: 2, gapWidth: 2 } }
+        ],
+        label: { show: true, color: '#fff', fontSize: 10, fontWeight: 600, fontFamily: 'Noto Sans SC',
+          formatter: '{b}\n{c}' }
+      }]
+    });
+    new ResizeObserver(() => charts.treemap.resize()).observe(el);
+  });
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// 明细表
+// ════════════════════════════════════════════════════════════════════════
+const COLS = [
+  { key: 'id', label: '房屋ID' }, { key: 'area', label: '面积(㎡)' },
+  { key: 'rooms', label: '室' }, { key: 'floor', label: '楼层' },
+  { key: 'year', label: '年份' }, { key: 'decoration', label: '装修' },
+  { key: 'orient', label: '朝向' }, { key: 'type', label: '类型' },
+  { key: 'price', label: '总价(万)' }
+];
+const TYPE_TAG = { '普通小区': 'tg-smoke', '高档小区': 'tg-ocean', '豪华小区': 'tg-fire' };
+
+function renderTable(rows) {
+  let sorted = [...rows];
+  if (state.sort.key) {
+    sorted.sort((a, b) => {
+      const av = a[state.sort.key], bv = b[state.sort.key];
+      if (av < bv) return -1 * state.sort.dir;
+      if (av > bv) return 1 * state.sort.dir;
+      return 0;
+    });
+  }
+  const head = document.getElementById('table-head');
+  if (!head.children.length) {
+    head.innerHTML = COLS.map(c => `<th onclick="onSort('${c.key}')" data-col="${c.key}">${c.label}</th>`).join('');
+  }
+  head.querySelectorAll('th').forEach(th => {
+    th.classList.remove('sort-asc', 'sort-desc');
+    if (th.dataset.col === state.sort.key) th.classList.add(state.sort.dir === 1 ? 'sort-asc' : 'sort-desc');
+  });
+  const start = state.page * state.pageSize;
+  const slice = sorted.slice(start, start + state.pageSize);
+  const totalPages = Math.max(1, Math.ceil(sorted.length / state.pageSize));
+  const tbody = document.getElementById('table-body');
+  if (slice.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="${COLS.length}" style="text-align:center;padding:40px;color:var(--text-muted)">没匹配的房源</td></tr>`;
+  } else {
+    tbody.innerHTML = slice.map((r, i) => `
+      <tr onclick="openDrawer(${start + i})">
+        <td><strong>${r.id}</strong></td>
+        <td>${r.area}</td>
+        <td>${r.rooms}室${r.bath}卫</td>
+        <td>${r.floor}/${r.total_floor}</td>
+        <td>${r.year}</td>
+        <td><span class="tag-light">${r.decoration}</span></td>
+        <td>${r.orient}</td>
+        <td><span class="tag-pill ${TYPE_TAG[r.type]}">${r.type}</span></td>
+        <td><strong>${(r.price / 10000).toFixed(0)}</strong></td>
+      </tr>
+    `).join('');
+  }
+  document.getElementById('page-info').textContent = `${state.page + 1} / ${totalPages}`;
+  document.getElementById('prev-btn').disabled = state.page === 0;
+  document.getElementById('next-btn').disabled = state.page >= totalPages - 1;
+  window.__currentRows = sorted;
+}
+function onSort(key) {
+  if (state.sort.key === key) state.sort.dir *= -1;
+  else { state.sort.key = key; state.sort.dir = 1; }
+  renderTable(applyFilters());
+}
+function setPage(p) {
+  const filtered = applyFilters();
+  const totalPages = Math.ceil(filtered.length / state.pageSize);
+  state.page = Math.max(0, Math.min(totalPages - 1, p));
+  renderTable(filtered);
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// 下钻抽屉
+// ════════════════════════════════════════════════════════════════════════
+function openDrawer(idx) {
+  const r = window.__currentRows[idx];
+  if (!r) return;
+  document.getElementById('drawer-id').textContent = r.id;
+  document.getElementById('drawer-name').textContent = `${r.area}㎡ · ${r.rooms}室${r.bath}卫 · ${r.decoration}`;
+  document.getElementById('drawer-price').textContent = '¥' + (r.price / 10000).toFixed(0) + ' 万';
+  document.getElementById('drawer-price-meta').textContent =
+    `单价 ${Math.round(r.price / r.area).toLocaleString()} 元/㎡ · 房龄 ${2026 - r.year} 年`;
+  document.getElementById('drawer-fields').innerHTML = `
+    <div class="field-card"><div class="field-label">面积</div><div class="field-value">${r.area} ㎡</div></div>
+    <div class="field-card"><div class="field-label">户型</div><div class="field-value">${r.rooms}室${r.bath}卫</div></div>
+    <div class="field-card"><div class="field-label">楼层</div><div class="field-value">${r.floor} / ${r.total_floor}</div></div>
+    <div class="field-card"><div class="field-label">建造年</div><div class="field-value">${r.year}</div></div>
+    <div class="field-card"><div class="field-label">朝向</div><div class="field-value">${r.orient}</div></div>
+    <div class="field-card"><div class="field-label">小区</div><div class="field-value">${r.type}</div></div>
+    <div class="field-card"><div class="field-label">地铁</div><div class="field-value">${r.subway} km</div></div>
+    <div class="field-card"><div class="field-label">学校</div><div class="field-value">${r.school} km</div></div>
+  `;
+  safeRender('drawer-mini', () => {
+    const el = document.getElementById('drawer-mini');
+    const sameType = D.rows.filter(x => x.type === r.type);
+    const avg = (k) => sameType.reduce((s, x) => s + x[k], 0) / sameType.length;
+    const ch = echarts.init(el);
+    ch.setOption({
+      textStyle: gpEchartsBase.textStyle,
+      backgroundColor: 'transparent',
+      radar: {
+        indicator: [
+          { name: '面积', max: 200 }, { name: '总价(万)', max: 200 },
+          { name: '房龄', max: 20 }, { name: '配套', max: 5 }
+        ],
+        center: ['50%', '52%'], radius: '60%',
+        axisName: { color: '#4a4843', fontSize: 10 },
+        splitArea: { areaStyle: { color: ['rgba(245,243,237,0.3)','rgba(255,255,255,0.5)'] } },
+        splitLine: { lineStyle: { color: 'rgba(0,0,0,0.06)' } },
+        axisLine: { lineStyle: { color: 'rgba(0,0,0,0.12)' } }
+      },
+      legend: { data: ['本套', '同类均值'], bottom: 0, textStyle: { fontSize: 10 } },
+      series: [{
+        type: 'radar',
+        data: [
+          { name: '本套', value: [r.area, r.price / 10000, 2026 - r.year, 5 - (r.subway + r.school + r.mall)],
+            itemStyle: { color: '#ff5500' }, areaStyle: { opacity: 0.2 }, lineStyle: { color: '#ff5500', width: 2 } },
+          { name: '同类均值', value: [avg('area'), avg('price') / 10000, 2026 - avg('year'), 5 - (avg('subway') + avg('school') + avg('mall'))],
+            itemStyle: { color: '#a322ff' }, areaStyle: { opacity: 0.15 }, lineStyle: { color: '#a322ff', width: 2 } }
+        ]
+      }]
+    });
+  });
+  document.getElementById('drawer').classList.add('is-open');
+  document.getElementById('drawer-mask').classList.add('is-open');
+}
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('is-open');
+  document.getElementById('drawer-mask').classList.remove('is-open');
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+
+// 初始化
+renderFilters();
+applyAndRender();
+
+</script>
+</body>
+</html>
